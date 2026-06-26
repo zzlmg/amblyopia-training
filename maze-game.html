@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>走迷宫 — 弱视精细目力与手眼协调训练</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  :root {
+    --blue: #4da6ff; --pink: #ff6b9d; --green: #45c4a0;
+    --orange: #ffa940; --purple: #9b7ef0; --yellow: #ffd43b;
+    --bg: #fefdf8; --text: #3a3a4a; --text-muted: #7a7a8a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(180deg, #e6fff0 0%, #fefdf8 30%, #e6f2ff 70%, #fefdf8 100%);
+    min-height: 100vh; color: var(--text); overflow-x: hidden;
+    display: flex; flex-direction: column; align-items: center;
+    user-select: none; -webkit-user-select: none;
+    touch-action: none;
+  }
+
+  .top-bar {
+    width: 100%; max-width: 560px; display: flex;
+    align-items: center; justify-content: space-between;
+    padding: 16px 20px;
+  }
+  .back-link {
+    text-decoration: none; color: var(--green); font-weight: 600; font-size: 15px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .back-link:hover { opacity: 0.8; }
+
+  .game-header {
+    text-align: center; padding: 8px 20px 16px;
+  }
+  .game-header h1 {
+    font-size: 30px; font-weight: 800; margin-bottom: 4px;
+    background: linear-gradient(135deg, #45c4a0, #4da6ff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .game-header .sub {
+    font-size: 15px; color: var(--text-muted);
+  }
+
+  .hud {
+    width: 100%; max-width: 560px; display: flex;
+    justify-content: center; gap: 16px; padding: 0 20px 12px;
+  }
+  .hud-item {
+    background: #fff; border-radius: 16px; padding: 10px 18px;
+    border: 2px solid #f0f0f5; text-align: center; min-width: 80px;
+  }
+  .hud-label { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
+  .hud-value { font-size: 22px; font-weight: 800; }
+  .hud-value.score { color: var(--orange); }
+  .hud-value.mazes { color: var(--green); }
+  .hud-value.time { color: var(--blue); }
+
+  .difficulty-selector {
+    display: flex; gap: 10px; justify-content: center;
+    padding: 8px 20px 16px; flex-wrap: wrap;
+  }
+  .diff-btn {
+    padding: 10px 22px; border-radius: 50px;
+    border: 2px solid #e0e0e8; background: #fff;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    transition: all 0.2s; color: var(--text-muted);
+  }
+  .diff-btn:hover { border-color: var(--green); color: var(--green); }
+  .diff-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
+
+  .game-wrapper {
+    width: 100%; max-width: 560px; padding: 0 20px;
+    display: flex; justify-content: center; flex-direction: column; align-items: center;
+  }
+  .canvas-container {
+    position: relative; width: 100%; max-width: 400px;
+    border-radius: 24px; overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    background: #fafbfc;
+    touch-action: none;
+  }
+  canvas {
+    display: block; width: 100%; height: auto;
+    touch-action: none;
+  }
+
+  .btn-row {
+    display: flex; gap: 12px; justify-content: center;
+    padding: 16px 20px 24px; flex-wrap: wrap;
+  }
+  .btn {
+    padding: 14px 36px; border-radius: 50px; border: none;
+    font-size: 17px; font-weight: 700; cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-start {
+    background: linear-gradient(135deg, #45c4a0, #4da6ff);
+    color: #fff; box-shadow: 0 4px 16px rgba(69,196,160,0.35);
+  }
+  .btn-start:hover { box-shadow: 0 6px 24px rgba(69,196,160,0.5); }
+  .btn-start:disabled {
+    background: #ccc; box-shadow: none; cursor: not-allowed; color: #888;
+  }
+
+  .progress-bar-outer {
+    width: 100%; max-width: 560px; height: 8px;
+    background: #f0f0f5; border-radius: 4px; margin: 0 auto 8px; overflow: hidden;
+  }
+  .progress-bar-inner {
+    height: 100%; border-radius: 4px;
+    background: linear-gradient(90deg, #45c4a0, #4da6ff);
+    transition: width 0.3s linear;
+  }
+  .progress-text {
+    text-align: center; font-size: 13px; color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    animation: fadeIn 0.2s ease-out;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: #fff; border-radius: 28px; padding: 32px 28px;
+    max-width: 400px; width: 90%; text-align: center;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+    animation: modalIn 0.3s ease-out;
+  }
+  @keyframes modalIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .modal h2 { font-size: 24px; font-weight: 800; margin-bottom: 12px; }
+  .modal p { font-size: 15px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6; }
+  .modal .highlight {
+    background: #fff7e6; padding: 12px 16px; border-radius: 14px;
+    border: 2px solid #ffe066; margin-bottom: 20px;
+    font-size: 14px; color: #ba7517; font-weight: 600;
+  }
+
+  .result-card {
+    background: #fff; border-radius: 28px; padding: 32px 28px;
+    max-width: 420px; width: 90%; text-align: center;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+  }
+  .result-score { font-size: 56px; font-weight: 900; color: var(--orange); }
+  .result-label { font-size: 14px; color: var(--text-muted); margin-bottom: 4px; }
+  .result-stat {
+    display: flex; justify-content: center; gap: 28px; margin: 18px 0; flex-wrap: wrap;
+  }
+  .result-stat-item { text-align: center; }
+  .result-stat-value { font-size: 28px; font-weight: 800; }
+  .result-stat-label { font-size: 12px; color: var(--text-muted); }
+  .rest-reminder {
+    background: #fffbe6; border: 2px solid #ffe066;
+    border-radius: 16px; padding: 16px; margin: 16px 0;
+    font-size: 14px; color: #ba7517; line-height: 1.6;
+  }
+
+  @media (max-width: 420px) {
+    .hud { gap: 8px; flex-wrap: wrap; }
+    .hud-item { padding: 8px 12px; min-width: 60px; }
+    .hud-value { font-size: 18px; }
+    .game-header h1 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="index.html" class="back-link">&#8592; 返回科普站</a>
+  <a href="index.html#games" class="back-link">&#8592; 训练游戏</a>
+  <a href="progress.html" class="back-link">📊 训练进度</a>
+</div>
+
+<div class="game-header">
+  <h1>走迷宫</h1>
+  <p class="sub">精细目力与手眼协调训练 · 用手指引导小球穿过迷宫</p>
+</div>
+
+<div class="difficulty-selector" id="diffSelector">
+  <button class="diff-btn active" data-diff="easy">简单</button>
+  <button class="diff-btn" data-diff="medium">中等</button>
+  <button class="diff-btn" data-diff="hard">困难</button>
+</div>
+
+<div class="hud">
+  <div class="hud-item">
+    <div class="hud-label">得分</div>
+    <div class="hud-value score" id="scoreDisplay">0</div>
+  </div>
+  <div class="hud-item">
+    <div class="hud-label">通过</div>
+    <div class="hud-value mazes" id="mazeDisplay">0</div>
+  </div>
+  <div class="hud-item">
+    <div class="hud-label">时间</div>
+    <div class="hud-value time" id="timeDisplay">2:00</div>
+  </div>
+</div>
+
+<div class="progress-bar-outer">
+  <div class="progress-bar-inner" id="progressBar" style="width:0%"></div>
+</div>
+<p class="progress-text" id="progressText">准备开始 &mdash; 用手指拖动小球，从 起点 走到 终点</p>
+
+<div class="btn-row">
+  <button class="btn btn-start" id="btnStart" onclick="startGame()">开始训练</button>
+</div>
+
+<div class="game-wrapper">
+  <div class="canvas-container" id="canvasContainer">
+    <canvas id="mazeCanvas"></canvas>
+  </div>
+</div>
+
+<div id="modalContainer"></div>
+
+<script>
+  const PROGRESS_KEY='amblyopia_progress';
+  function initProgress(){let r=localStorage.getItem(PROGRESS_KEY);if(!r){const p={version:1,totalPoints:0,streak:{current:0,best:0,lastDate:''},games:{'whack-a-mole':{plays:0,bestScore:0,totalHits:0,totalMisses:0,bestCombo:0},'spot-difference':{plays:0,bestScore:0,totalCorrect:0,totalWrong:0},'matching-game':{plays:0,bestScore:0,totalPairs:0,bestCombo:0},'maze-game':{plays:0,bestScore:0,totalMazes:0,fastestTime:null},'chase-the-light':{plays:0,bestScore:0,totalCaptures:0,bestCombo:0},'fly-swatter':{plays:0,bestScore:0,totalKills:0,totalEscapes:0}},calendar:{},achievements:[],settings:{difficulties:{}}};localStorage.setItem(PROGRESS_KEY,JSON.stringify(p));return p;}try{return JSON.parse(r);}catch(e){return null;}}
+  function getToday(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  const ACH=[{id:'first_game',check(p){return p.totalPoints>0;}},{id:'five_games',check(p){return Object.values(p.games).filter(g=>g.plays>0).length>=6;}},{id:'high_score_200',check(p){return Object.values(p.games).some(g=>g.bestScore>=200);}},{id:'streak_3',check(p){return p.streak.best>=3;}},{id:'streak_7',check(p){return p.streak.best>=7;}},{id:'total_1000',check(p){return p.totalPoints>=1000;}},{id:'no_escape',check(p){const g=p.games['fly-swatter'];return g.plays>0&&g.totalEscapes===0;}},{id:'ten_plays',check(p){return Object.values(p.games).reduce((s,g)=>s+g.plays,0)>=10;}},{id:'perfect_whack',check(p){const g=p.games['whack-a-mole'];return g.totalHits>=10&&g.totalHits/(g.totalHits+g.totalMisses)>=0.9;}}];
+  function saveGameResult(gameId,data){let p=initProgress();if(!p)return;const g=p.games[gameId];g.plays++;if(data.score>g.bestScore)g.bestScore=data.score;if(data.hits!==undefined)g.totalHits=(g.totalHits||0)+data.hits;if(data.misses!==undefined)g.totalMisses=(g.totalMisses||0)+data.misses;if(data.combo!==undefined&&data.combo>(g.bestCombo||0))g.bestCombo=data.combo;if(data.correct!==undefined)g.totalCorrect=(g.totalCorrect||0)+data.correct;if(data.wrong!==undefined)g.totalWrong=(g.totalWrong||0)+data.wrong;if(data.pairs!==undefined)g.totalPairs=(g.totalPairs||0)+data.pairs;if(data.mazes!==undefined)g.totalMazes=(g.totalMazes||0)+data.mazes;if(data.time!==undefined&&(g.fastestTime===null||data.time<g.fastestTime))g.fastestTime=data.time;if(data.captures!==undefined)g.totalCaptures=(g.totalCaptures||0)+data.captures;if(data.kills!==undefined)g.totalKills=(g.totalKills||0)+data.kills;if(data.escapes!==undefined)g.totalEscapes=(g.totalEscapes||0)+data.escapes;p.totalPoints+=data.score;const today=getToday();if(!p.calendar[today])p.calendar[today]={points:0,gamesPlayed:0,duration:0};p.calendar[today].points+=data.score;p.calendar[today].gamesPlayed++;p.calendar[today].duration+=data.duration||120;updateStreak(p,today);checkAch(p);if(data.difficulty)p.settings.difficulties[gameId]=data.difficulty;localStorage.setItem(PROGRESS_KEY,JSON.stringify(p));}
+  function updateStreak(p,today){if(!p.streak.lastDate){p.streak.current=1;p.streak.lastDate=today;}else{const last=new Date(p.streak.lastDate),curr=new Date(today);const diff=Math.floor((curr-last)/86400000);if(diff===1)p.streak.current++;else if(diff>1)p.streak.current=1;p.streak.lastDate=today;}if(p.streak.current>p.streak.best)p.streak.best=p.streak.current;}
+  function checkAch(p){const unlocked=new Set(p.achievements.map(a=>a.id));for(const ach of ACH){if(!unlocked.has(ach.id)&&ach.check(p)){p.achievements.push({id:ach.id,unlockedAt:getToday()});}}}
+  const TOTAL_TIME = 120;
+
+  // 难度参数（基于精细目力训练临床标准：通道从宽到窄）
+  const DIFFICULTY = {
+    easy: {
+      label: '简单',
+      cols: 8, rows: 6,
+      cellSize: 48,
+      wallWidth: 3,
+      ballRadius: 15,
+      wallColor: '#7ec8a0',
+      floorColor: '#f5fdf8',
+      label_: 'easy'
+    },
+    medium: {
+      label: '中等',
+      cols: 12, rows: 9,
+      cellSize: 34,
+      wallWidth: 2.5,
+      ballRadius: 11,
+      wallColor: '#4da6cc',
+      floorColor: '#f5fafe',
+      label_: 'medium'
+    },
+    hard: {
+      label: '困难',
+      cols: 16, rows: 12,
+      cellSize: 26,
+      wallWidth: 2,
+      ballRadius: 8,
+      wallColor: '#9b7ec0',
+      floorColor: '#faf5ff',
+      label_: 'hard'
+    }
+  };
+
+  let currentDiff = 'easy';
+  let score = 0, mazesCompleted = 0, wallTouches = 0;
+  let timeLeft = TOTAL_TIME;
+  let gameRunning = false;
+  let timerId = null;
+  let audioCtx = null;
+
+  // 迷宫数据结构
+  let maze = null;          // { rows, cols, cells[r][c] = { top,bottom,left,right } }
+  let ballX = 0, ballY = 0; // 球心在canvas上的绝对像素坐标
+  let goalX = 0, goalY = 0; // 终点格中心
+  let startX = 0, startY = 0;
+  let cellSize = 0;
+  let dragging = false;
+  let trailPoints = [];     // 走过的轨迹
+  let mazeStartTime = 0;    // 当前迷宫开始时的毫秒时间戳
+
+  // Canvas 相关
+  let canvas, ctx;
+  let canvasW = 0, canvasH = 0;
+
+  // ====== 迷宫生成（递归回溯）======
+  function generateMaze() {
+    const diff = DIFFICULTY[currentDiff];
+    const { cols, rows } = diff;
+    maze = { rows, cols, cells: [] };
+
+    // 初始化：所有墙都存在
+    for (let r = 0; r < rows; r++) {
+      maze.cells[r] = [];
+      for (let c = 0; c < cols; c++) {
+        maze.cells[r][c] = { top: true, right: true, bottom: true, left: true, visited: false };
+      }
+    }
+
+    // 递归回溯
+    const stack = [];
+    const startCell = { r: 0, c: 0 };
+    maze.cells[0][0].visited = true;
+    stack.push(startCell);
+
+    while (stack.length > 0) {
+      const current = stack[stack.length - 1];
+      const neighbors = getUnvisitedNeighbors(current.r, current.c);
+      if (neighbors.length > 0) {
+        const next = neighbors[Math.floor(Math.random() * neighbors.length)];
+        removeWall(current.r, current.c, next.r, next.c);
+        maze.cells[next.r][next.c].visited = true;
+        stack.push(next);
+      } else {
+        stack.pop();
+      }
+    }
+
+    // 起点：左上角 (0, 0)
+    startX = 0; startY = 0;
+    // 终点：右下角 (rows-1, cols-1)
+    const gr = rows - 1, gc = cols - 1;
+    goalX = gc; goalY = gr;
+
+    // 重置球位置
+    resetBallToStart();
+    trailPoints = [];
+    mazeStartTime = Date.now();
+  }
+
+  function getUnvisitedNeighbors(r, c) {
+    const neighbors = [];
+    const dirs = [[-1,0,'top','bottom'],[0,1,'right','left'],[1,0,'bottom','top'],[0,-1,'left','right']];
+    for (const [dr, dc] of dirs) {
+      const nr = r + dr, nc = c + dc;
+      if (nr >= 0 && nr < maze.rows && nc >= 0 && nc < maze.cols && !maze.cells[nr][nc].visited) {
+        neighbors.push({ r: nr, c: nc });
+      }
+    }
+    return neighbors;
+  }
+
+  function removeWall(r1, c1, r2, c2) {
+    if (r1 === r2) {
+      if (c2 > c1) { maze.cells[r1][c1].right = false; maze.cells[r2][c2].left = false; }
+      else         { maze.cells[r1][c1].left = false;  maze.cells[r2][c2].right = false; }
+    } else {
+      if (r2 > r1) { maze.cells[r1][c1].bottom = false; maze.cells[r2][c2].top = false; }
+      else         { maze.cells[r1][c1].top = false;    maze.cells[r2][c2].bottom = false; }
+    }
+  }
+
+  function resetBallToStart() {
+    const diff = DIFFICULTY[currentDiff];
+    cellSize = diff.cellSize;
+    // 球心在起始格的中央
+    const pad = 2; // 小边距
+    ballX = pad + cellSize / 2;
+    ballY = pad + cellSize / 2;
+  }
+
+  function isAtGoal() {
+    const diff = DIFFICULTY[currentDiff];
+    const pad = 2;
+    const gcx = pad + goalX * cellSize + cellSize / 2;
+    const gcy = pad + goalY * cellSize + cellSize / 2;
+    const dx = ballX - gcx, dy = ballY - gcy;
+    return Math.sqrt(dx * dx + dy * dy) < diff.ballRadius + cellSize * 0.4;
+  }
+
+  // ====== 渲染 ======
+  function setupCanvas() {
+    canvas = document.getElementById('mazeCanvas');
+    ctx = canvas.getContext('2d');
+    const diff = DIFFICULTY[currentDiff];
+    const { cols, rows, cellSize: cs } = diff;
+    const pad = 2;
+    canvasW = cs * cols + pad * 2;
+    canvasH = cs * rows + pad * 2;
+    canvas.width = canvasW;
+    canvas.height = canvasH;
+  }
+
+  function render() {
+    if (!maze) return;
+    const diff = DIFFICULTY[currentDiff];
+    const { cols, rows, cellSize: cs, wallWidth, wallColor, floorColor, ballRadius } = diff;
+    const pad = 2;
+
+    ctx.clearRect(0, 0, canvasW, canvasH);
+
+    // 地板
+    ctx.fillStyle = floorColor;
+    ctx.fillRect(0, 0, canvasW, canvasH);
+
+    // 绘制墙体（每格只画右墙和下墙，避免重复；边界画外框）
+    ctx.strokeStyle = wallColor;
+    ctx.lineWidth = wallWidth;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+
+    // 外框
+    ctx.rect(pad, pad, cs * cols, cs * rows);
+
+    // 内部墙
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const cell = maze.cells[r][c];
+        const x = pad + c * cs, y = pad + r * cs;
+        if (cell.right && c < cols - 1) {
+          ctx.moveTo(x + cs, y);
+          ctx.lineTo(x + cs, y + cs);
+        }
+        if (cell.bottom && r < rows - 1) {
+          ctx.moveTo(x, y + cs);
+          ctx.lineTo(x + cs, y + cs);
+        }
+      }
+    }
+    ctx.stroke();
+
+    // 路径轨迹
+    if (trailPoints.length > 1) {
+      ctx.strokeStyle = 'rgba(255,180,100,0.35)';
+      ctx.lineWidth = ballRadius * 1.2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(trailPoints[0].x, trailPoints[0].y);
+      for (let i = 1; i < trailPoints.length; i++) {
+        ctx.lineTo(trailPoints[i].x, trailPoints[i].y);
+      }
+      ctx.stroke();
+    }
+
+    // 起点标记
+    const sx = pad + startX * cs + cs / 2;
+    const sy = pad + startY * cs + cs / 2;
+    ctx.fillStyle = '#45c4a0';
+    ctx.beginPath();
+    ctx.arc(sx, sy, ballRadius * 0.9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${ballRadius*1.2}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('入', sx, sy);
+
+    // 终点标记
+    const gx = pad + goalX * cs + cs / 2;
+    const gy = pad + goalY * cs + cs / 2;
+    // 光晕
+    const glowGrad = ctx.createRadialGradient(gx, gy, ballRadius * 0.5, gx, gy, ballRadius * 2);
+    glowGrad.addColorStop(0, 'rgba(255,212,59,0.6)');
+    glowGrad.addColorStop(1, 'rgba(255,212,59,0)');
+    ctx.fillStyle = glowGrad;
+    ctx.beginPath();
+    ctx.arc(gx, gy, ballRadius * 2, 0, Math.PI * 2);
+    ctx.fill();
+    // 星形
+    drawStar(gx, gy, ballRadius * 1.3, '#ffa940');
+
+    // 小球
+    const ballGrad = ctx.createRadialGradient(ballX - ballRadius*0.3, ballY - ballRadius*0.3, ballRadius*0.1, ballX, ballY, ballRadius);
+    ballGrad.addColorStop(0, '#ffd43b');
+    ballGrad.addColorStop(0.5, '#ffa940');
+    ballGrad.addColorStop(1, '#e67700');
+    ctx.fillStyle = ballGrad;
+    ctx.beginPath();
+    ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
+    ctx.fill();
+    // 小球高光
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.beginPath();
+    ctx.arc(ballX - ballRadius*0.25, ballY - ballRadius*0.3, ballRadius*0.35, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  function drawStar(cx, cy, r, color) {
+    const spikes = 5, outerR = r, innerR = r * 0.45;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    for (let i = 0; i < spikes * 2; i++) {
+      const radius = i % 2 === 0 ? outerR : innerR;
+      const angle = (i * Math.PI) / spikes - Math.PI / 2;
+      const x = cx + Math.cos(angle) * radius;
+      const y = cy + Math.sin(angle) * radius;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // ====== 碰撞检测 ======
+  function collidesWithWall(bx, by) {
+    const diff = DIFFICULTY[currentDiff];
+    const { cellSize: cs, ballRadius: br, wallWidth: ww } = diff;
+    const pad = 2;
+    const halfW = ww / 2 + br;
+
+    // 外框
+    if (bx - br < pad - halfW) return true;
+    if (bx + br > pad + maze.cols * cs + halfW) return true;
+    if (by - br < pad - halfW) return true;
+    if (by + br > pad + maze.rows * cs + halfW) return true;
+
+    // 判断球所在的格子
+    const c = Math.floor((bx - pad) / cs);
+    const r = Math.floor((by - pad) / cs);
+    if (r < 0 || r >= maze.rows || c < 0 || c >= maze.cols) return false;
+
+    const cell = maze.cells[r][c];
+    const cx = pad + c * cs, cy = pad + r * cs;
+
+    // 检查四面墙（墙是一条线段，球到线段的距离 < halfW 则碰撞）
+    if (cell.top    && distToSegment(bx, by, cx, cy, cx + cs, cy) < halfW) return true;
+    if (cell.bottom && distToSegment(bx, by, cx, cy + cs, cx + cs, cy + cs) < halfW) return true;
+    if (cell.left   && distToSegment(bx, by, cx, cy, cx, cy + cs) < halfW) return true;
+    if (cell.right  && distToSegment(bx, by, cx + cs, cy, cx + cs, cy + cs) < halfW) return true;
+
+    // 也检查相邻格的墙（当前格的right就是右边格的left）
+    if (c > 0 && maze.cells[r][c-1].right) {
+      if (distToSegment(bx, by, cx, cy, cx, cy + cs) < halfW) return true;
+    }
+    if (r > 0 && maze.cells[r-1][c].bottom) {
+      if (distToSegment(bx, by, cx, cy, cx + cs, cy) < halfW) return true;
+    }
+
+    return false;
+  }
+
+  // 点到线段的最短距离
+  function distToSegment(px, py, x1, y1, x2, y2) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const lenSq = dx * dx + dy * dy;
+    if (lenSq === 0) return Math.hypot(px - x1, py - y1);
+    let t = ((px - x1) * dx + (py - y1) * dy) / lenSq;
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+  }
+
+  // ====== 交互处理 ======
+  function getCanvasPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvasW / rect.width;
+    const scaleY = canvasH / rect.height;
+    let clientX, clientY;
+    if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else if (e.changedTouches && e.changedTouches.length > 0) {
+      clientX = e.changedTouches[0].clientX;
+      clientY = e.changedTouches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  }
+
+  function onPointerDown(e) {
+    if (!gameRunning) return;
+    e.preventDefault();
+    const diff = DIFFICULTY[currentDiff];
+    const pos = getCanvasPos(e);
+    const dist = Math.hypot(pos.x - ballX, pos.y - ballY);
+    // 触摸点必须在球附近（2倍球半径内）才能拖动
+    if (dist < diff.ballRadius * 2.5) {
+      dragging = true;
+      canvas.style.cursor = 'grabbing';
+      initAudio();
+      if (trailPoints.length === 0) {
+        trailPoints.push({ x: ballX, y: ballY });
+      }
+    }
+  }
+
+  function onPointerMove(e) {
+    if (!dragging || !gameRunning) return;
+    e.preventDefault();
+    const pos = getCanvasPos(e);
+    moveBallToward(pos.x, pos.y);
+    render();
+  }
+
+  function onPointerUp(e) {
+    if (!dragging) return;
+    e.preventDefault();
+    dragging = false;
+    canvas.style.cursor = 'grab';
+  }
+
+  function moveBallToward(tx, ty) {
+    const diff = DIFFICULTY[currentDiff];
+    const maxStep = diff.cellSize * 0.9; // 每帧最大移动距离
+    const dx = tx - ballX, dy = ty - ballY;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 0.5) return;
+
+    const step = Math.min(maxStep, dist);
+    const nx = ballX + (dx / dist) * step;
+    const ny = ballY + (dy / dist) * step;
+
+    // 先试完整移动
+    if (!collidesWithWall(nx, ny)) {
+      ballX = nx;
+      ballY = ny;
+    } else if (!collidesWithWall(nx, ballY)) {
+      // 只水平
+      ballX = nx;
+      wallTouches++;
+      playBumpSound();
+    } else if (!collidesWithWall(ballX, ny)) {
+      // 只垂直
+      ballY = ny;
+      wallTouches++;
+      playBumpSound();
+    } else {
+      // 完全卡住 — 轻微反弹
+      wallTouches++;
+      playBumpSound();
+    }
+
+    // 记录轨迹（每8px）
+    if (trailPoints.length === 0 || 
+        Math.hypot(ballX - trailPoints[trailPoints.length-1].x, ballY - trailPoints[trailPoints.length-1].y) > 6) {
+      trailPoints.push({ x: ballX, y: ballY });
+    }
+
+    // 检查终点
+    if (isAtGoal()) {
+      onMazeComplete();
+    }
+  }
+
+  function onMazeComplete() {
+    mazesCompleted++;
+    const elapsed = (Date.now() - mazeStartTime) / 1000;
+    const bonus = elapsed < 15 ? 20 : elapsed < 30 ? 15 : elapsed < 60 ? 10 : 5;
+    score += 10 + bonus;
+    updateHUD();
+    playVictorySound();
+    showMazeCompleteMsg(bonus);
+
+    // 延迟生成新迷宫
+    setTimeout(() => {
+      if (!gameRunning) return;
+      generateMaze();
+      setupCanvas();
+      render();
+      updateHUD();
+    }, 1200);
+  }
+
+  function showMazeCompleteMsg(bonus) {
+    const msg = document.createElement('div');
+    msg.style.cssText = `
+      position:fixed; top:20%; left:50%; transform:translateX(-50%);
+      background: linear-gradient(135deg, #45c4a0, #ffa940);
+      color:#fff; padding:12px 28px; border-radius:50px;
+      font-size:20px; font-weight:800; z-index:100; pointer-events:none;
+      animation: popIn 0.4s ease-out, fadeOut 0.3s 1.2s ease-in forwards;
+      white-space: nowrap;
+    `;
+    msg.textContent = '🎉 通过！+' + bonus + '分 新迷宫来了';
+    document.body.appendChild(msg);
+    setTimeout(() => msg.remove(), 1600);
+  }
+
+  // 注入动画
+  const styleEl = document.createElement('style');
+  styleEl.textContent = `
+    @keyframes popIn { from{opacity:0;transform:translateX(-50%) scale(0.7)} to{opacity:1;transform:translateX(-50%) scale(1)} }
+    @keyframes fadeOut { from{opacity:1} to{opacity:0} }
+  `;
+  document.head.appendChild(styleEl);
+
+  // ====== 音效 ======
+  function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  function playBeep(freq, dur, vol = 0.06, type = 'sine') {
+    if (!audioCtx) return;
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type; osc.frequency.value = freq;
+      gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + dur);
+    } catch(e) {}
+  }
+  function playBumpSound() { playBeep(150, 0.1, 0.04, 'square'); }
+  function playVictorySound() {
+    playBeep(523, 0.1, 0.06); setTimeout(() => playBeep(659, 0.1, 0.06), 100);
+    setTimeout(() => playBeep(784, 0.15, 0.07), 200); setTimeout(() => playBeep(1047, 0.2, 0.08), 300);
+  }
+
+  // ====== HUD ======
+  function updateHUD() {
+    document.getElementById('scoreDisplay').textContent = score;
+    document.getElementById('mazeDisplay').textContent = mazesCompleted;
+    document.getElementById('timeDisplay').textContent = formatTime(timeLeft);
+    document.getElementById('progressBar').style.width = ((TOTAL_TIME - timeLeft) / TOTAL_TIME * 100) + '%';
+  }
+  function formatTime(s) {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return m + ':' + (sec < 10 ? '0' : '') + sec;
+  }
+
+  // ====== 游戏控制 ======
+  function startGame() {
+    if (gameRunning) return;
+    initAudio();
+    showPatchReminder();
+  }
+
+  function showPatchReminder() {
+    const diff = DIFFICULTY[currentDiff];
+    const container = document.getElementById('modalContainer');
+    container.innerHTML = `
+      <div class="modal-overlay" id="patchModal">
+        <div class="modal">
+          <h2>开始训练前</h2>
+          <p>请确认以下准备事项：</p>
+          <div class="highlight">
+            &#x1f6d1; 如果医生建议遮盖治疗，请先遮盖<strong>健眼（视力较好的眼睛）</strong><br>
+            让弱视眼独立完成本次训练
+          </div>
+          <p style="font-size:14px;">
+            难度：<strong>${diff.label}</strong> &nbsp; | &nbsp;
+            迷宫：<strong>${diff.cols}×${diff.rows}</strong> &nbsp; | &nbsp;
+            通道宽度：<strong>${diff.cellSize - diff.wallWidth}px</strong><br>
+            训练时长：<strong>2 分钟</strong> ·
+            保持眼睛与屏幕 30~40cm 距离
+          </p>
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">
+            &#x1f4a1; 用手指<strong>按住小球拖动</strong>，穿过迷宫到达 ⭐ 终点<br>
+            碰到墙壁会有提示，耐心找到正确路线
+          </p>
+          <button class="btn btn-start" onclick="beginGame()" style="margin-right:8px;">准备好了，开始！</button>
+          <button class="btn" style="background:#fff;color:var(--green);border:2px solid var(--green);" onclick="document.getElementById('patchModal').remove()">返回</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function beginGame() {
+    document.getElementById('modalContainer').innerHTML = '';
+    gameRunning = true;
+    score = 0; mazesCompleted = 0; wallTouches = 0;
+    timeLeft = TOTAL_TIME;
+    updateHUD();
+    document.getElementById('btnStart').disabled = true;
+    document.getElementById('btnStart').textContent = '训练中...';
+    document.getElementById('progressText').textContent = '难度：' + DIFFICULTY[currentDiff].label;
+    document.querySelectorAll('.diff-btn').forEach(b => b.style.pointerEvents = 'none');
+
+    generateMaze();
+    setupCanvas();
+    render();
+
+    // 绑定事件
+    canvas.addEventListener('pointerdown', onPointerDown, { passive: false });
+    canvas.addEventListener('pointermove', onPointerMove, { passive: false });
+    canvas.addEventListener('pointerup', onPointerUp, { passive: false });
+    canvas.addEventListener('pointerleave', onPointerUp, { passive: false });
+    canvas.addEventListener('pointercancel', onPointerUp, { passive: false });
+    canvas.style.cursor = 'grab';
+
+    // 动画循环
+    function animLoop() {
+      if (!gameRunning) return;
+      render();
+      requestAnimationFrame(animLoop);
+    }
+    requestAnimationFrame(animLoop);
+
+    timerId = setInterval(() => {
+      timeLeft--;
+      updateHUD();
+      if (timeLeft <= 0) endGame();
+    }, 1000);
+  }
+
+  function endGame() {
+    gameRunning = false;
+    if (timerId) { clearInterval(timerId); timerId = null; }
+    document.getElementById('btnStart').disabled = false;
+    document.getElementById('btnStart').textContent = '再来一局';
+    document.getElementById('progressText').textContent = '训练完成！';
+    document.querySelectorAll('.diff-btn').forEach(b => b.style.pointerEvents = 'auto');
+
+    let grade, gradeColor;
+    if (mazesCompleted >= 8) { grade = '优秀'; gradeColor = '#45c4a0'; }
+    else if (mazesCompleted >= 5) { grade = '良好'; gradeColor = '#4da6ff'; }
+    else if (mazesCompleted >= 3) { grade = '继续加油'; gradeColor = '#ffa940'; }
+    else { grade = '需要更多练习'; gradeColor = '#ff6b9d'; }
+
+    const container = document.getElementById('modalContainer');
+    container.innerHTML = `
+      <div class="modal-overlay">
+        <div class="result-card">
+          <div class="result-label">最终得分</div>
+          <div class="result-score">${score}</div>
+          <div style="font-size:18px;font-weight:700;color:${gradeColor};margin-top:8px;">${grade}</div>
+          <div class="result-stat">
+            <div class="result-stat-item">
+              <div class="result-stat-value" style="color:var(--green);">${mazesCompleted}</div>
+              <div class="result-stat-label">通过迷宫</div>
+            </div>
+            <div class="result-stat-item">
+              <div class="result-stat-value" style="color:var(--text);">${wallTouches}</div>
+              <div class="result-stat-label">碰壁次数</div>
+            </div>
+            <div class="result-stat-item">
+              <div class="result-stat-value" style="color:var(--orange);">${score}</div>
+              <div class="result-stat-label">总得分</div>
+            </div>
+          </div>
+          <div class="rest-reminder">
+            <strong>&#x23f0; 休息提醒</strong><br>
+            单次训练建议不超过 30 分钟。请让孩子休息 5~10 分钟后再继续。
+          </div>
+          <button class="btn btn-start" onclick="startGame()" style="margin-right:8px;">再来一局</button>
+          <button class="btn" style="background:#fff;color:var(--green);border:2px solid var(--green);" onclick="document.getElementById('modalContainer').innerHTML=''">关闭</button>
+        </div>
+      </div>
+    `;
+    saveGameResult('maze-game', {score, mazes:mazesCompleted, difficulty:currentDiff, duration:120});
+  }
+
+  function setDifficulty(diff) {
+    if (gameRunning) return;
+    currentDiff = diff;
+    document.querySelectorAll('.diff-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.diff === diff);
+    });
+    // 预览新难度迷宫
+    generateMaze();
+    setupCanvas();
+    render();
+  }
+
+  document.getElementById('diffSelector').addEventListener('click', function(e) {
+    if (e.target.classList.contains('diff-btn')) {
+      setDifficulty(e.target.dataset.diff);
+    }
+  });
+
+  // ====== 初始预览 ======
+  generateMaze();
+  setupCanvas();
+  render();
+</script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}</script>
+</body>
+</html>

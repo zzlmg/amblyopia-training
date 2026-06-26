@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>葵神辨向 · 弱视训练</title>
+<link rel="manifest" href="manifest.json">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:'PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif;
+  background:#FFF8E7;color:#4A3828;min-height:100vh;display:flex;
+  flex-direction:column;align-items:center;overflow-x:hidden;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+body{padding-bottom:30px}
+
+.top-bar{width:100%;max-width:560px;display:flex;align-items:center;
+  justify-content:space-between;padding:16px 20px;flex-shrink:0;
+  position:relative;z-index:101}
+.back-link{text-decoration:none;color:#7BC74D;font-weight:600;font-size:15px;
+  display:flex;align-items:center;gap:6px}
+.back-link:hover{opacity:0.8}
+
+.game-title{text-align:center;padding:2px 0 6px;flex-shrink:0}
+.game-title h1{font-size:22px;color:#2E7D32;margin:0;text-shadow:1px 1px 2px rgba(0,0,0,0.1)}
+
+.hud{display:flex;align-items:center;justify-content:space-between;
+  max-width:560px;width:100%;padding:6px 20px 8px;flex-shrink:0;gap:8px}
+.hud-item{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;
+  background:#fff;padding:7px 12px;border-radius:10px;color:#4A3828;
+  border:2px solid #E8E0D0;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.hud-icon{font-size:16px}
+.hud-value{color:#2E7D32;font-size:17px;font-weight:800;min-width:22px;text-align:center}
+.hud-label{color:#8D6E63;font-size:11px}
+.timer-warn{color:#EF5350 !important;animation:pulse 0.8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+
+.game-area{position:relative;width:520px;max-width:100vw;margin:0 auto;
+  display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+
+/* Canvas 容器 */
+.canvas-wrap{position:relative;width:520px;height:380px;max-width:100vw;
+  background:#808080;border-radius:16px;overflow:hidden;
+  border:3px solid #C8E6C9;box-shadow:0 2px 12px rgba(0,0,0,0.1)}
+#gameCanvas{display:block;width:100%;height:100%}
+
+/* 飞行光斑 */
+.flying-spark{position:absolute;width:18px;height:18px;background:#FFD54F;
+  border-radius:50%;pointer-events:none;z-index:5;
+  box-shadow:0 0 14px 6px rgba(255,213,79,0.7);transition:all 0.3s ease-out}
+.flying-spark.flash{transform:scale(3);opacity:0;transition:all 0.2s ease-out}
+
+/* 单朵向日葵 — CSS绘制 */
+.sunflower-wrap{display:flex;align-items:flex-end;justify-content:center;
+  margin-top:-28px;position:relative;z-index:3;transition:filter 0.4s}
+.sunflower-single{display:flex;flex-direction:column;align-items:center;gap:2px}
+.sunflower-wrap.wobble .sunflower-head{animation:wobble 0.6s ease-in-out}
+.sunflower-wrap.bounce{animation:bounce-up 0.7s ease-out}
+.sunflower-wrap.dim{filter:brightness(0.55) saturate(0.4)}
+.sunflower-wrap.glow{filter:brightness(1.3) drop-shadow(0 0 12px rgba(255,193,7,0.6))}
+
+/* radial-gradient 绘制太阳花：棕心 + 黄橙花瓣 */
+.sunflower-head{position:relative;width:64px;height:64px;
+  background:radial-gradient(circle,#5D4037 35%,#FFD54F 37%,#FFC107 65%,#FF9800 100%);
+  border-radius:50%;transition:transform 0.3s,filter 0.3s}
+.sunflower-head .center{position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);width:32px;height:32px;
+  background:radial-gradient(circle,#4E342E 50%,#6D4C41 100%);
+  border-radius:50%;z-index:2;box-shadow:inset 0 2px 3px rgba(0,0,0,0.3)}
+.sunflower-head::before{content:'';position:absolute;top:50%;left:50%;
+  width:58px;height:58px;transform:translate(-50%,-50%);
+  border-radius:50%;z-index:0;
+  box-shadow:
+    0px -28px 0 0 #FFE082,11px -26px 0 0 #FFD54F,22px -18px 0 0 #FFCA28,
+    28px 0px 0 0 #FFB300,22px 18px 0 0 #FFC107,11px 26px 0 0 #FFCA28,
+    0px 28px 0 0 #FFD54F,-11px 26px 0 0 #FFE082,-22px 18px 0 0 #FFC107,
+    -28px 0px 0 0 #FFB300,-22px -18px 0 0 #FFCA28,-11px -26px 0 0 #FFD54F}
+
+/* 茎和叶 */
+.stem-line{width:8px;height:52px;background:linear-gradient(180deg,#81C784,#43A047);
+  border-radius:4px}
+.leaf{width:24px;height:12px;background:#66BB6A;border-radius:50%;
+  position:absolute;bottom:10px;box-shadow:0 1px 2px rgba(0,0,0,0.1)}
+.leaf.left{left:-16px;transform:rotate(-40deg)}
+.leaf.right{right:-16px;transform:rotate(40deg)}
+
+/* 表情 */
+.sunflower-face{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-size:18px;z-index:3;pointer-events:none;transition:all 0.3s}
+.sunflower-face.happy{font-size:24px;animation:pop-in 0.4s ease-out}
+@keyframes pop-in{0%{transform:translate(-50%,-50%) scale(0.3)}60%{transform:translate(-50%,-50%) scale(1.2)}100%{transform:translate(-50%,-50%) scale(1)}}
+
+/* 动画关键帧 */
+@keyframes wobble{0%,100%{transform:rotate(0) scale(1)}25%{transform:rotate(-15deg) scale(1.08)}50%{transform:rotate(5deg) scale(1.02)}75%{transform:rotate(-8deg) scale(1.05)}}
+@keyframes bounce-up{0%{transform:translateY(0) scale(1)}30%{transform:translateY(-32px) scale(1.12)}60%{transform:translateY(-8px) scale(0.94)}100%{transform:translateY(0) scale(1)}}
+@keyframes sad-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+
+/* 方向按钮 */
+.btn-row{display:flex;gap:14px;justify-content:center;margin:12px 0 0;
+  padding:0 20px;max-width:520px;width:100%;flex-shrink:0}
+.btn-row.grid4{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.orient-btn{flex:1;min-height:56px;padding:12px 16px;border-radius:16px;
+  border:3px solid #7BC74D;background:#fff;color:#4A3828;
+  font-size:16px;font-weight:700;cursor:pointer;transition:all 0.15s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  user-select:none;-webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;box-shadow:0 2px 6px rgba(0,0,0,0.06)}
+.orient-btn:hover{background:#E8F5E9;transform:scale(1.03);border-color:#66BB6A}
+.orient-btn:active{transform:scale(0.95)}
+.orient-btn:disabled{pointer-events:none;opacity:0.5;cursor:not-allowed}
+.orient-btn.correct{background:#C8E6C9 !important;border-color:#4CAF50 !important;
+  box-shadow:0 0 16px rgba(76,175,80,0.3)}
+.orient-btn.wrong{background:#FFEBEE !important;border-color:#EF5350 !important;
+  animation:shake 0.4s ease}
+.orient-btn.highlight{background:#FFF9C4 !important;border-color:#FFB300 !important;
+  animation:pulse-green 0.6s infinite}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes pulse-green{0%,100%{box-shadow:0 0 8px rgba(255,179,0,0.4)}50%{box-shadow:0 0 20px rgba(255,179,0,0.7)}}
+
+.bottom-hint{text-align:center;padding:4px 0;font-size:12px;color:#8D6E63;flex-shrink:0}
+
+/* overlay 弹窗 */
+.overlay{position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.6);display:flex;align-items:center;
+  justify-content:center;z-index:100;flex-direction:column;padding:20px}
+.overlay.hidden{display:none}
+.overlay-card{background:#FFFDF5;border-radius:20px;padding:28px 24px;
+  max-width:400px;width:100%;text-align:center;
+  border:2px solid #C8E6C9;box-shadow:0 8px 32px rgba(0,0,0,0.15)}
+.overlay-card h2{font-size:21px;margin-bottom:8px;color:#2E7D32}
+.overlay-card .subtitle{font-size:13px;color:#8D6E63;margin-bottom:12px;line-height:1.7}
+.overlay-icon{font-size:48px;margin-bottom:8px;display:block}
+.btn-go{background:linear-gradient(180deg,#81C784,#43A047);color:#fff;border:none;
+  padding:14px 40px;font-size:18px;font-weight:700;border-radius:30px;cursor:pointer;
+  margin-top:12px;box-shadow:0 3px 10px rgba(76,175,80,0.3);transition:all 0.15s}
+.btn-go:hover{transform:scale(1.05);box-shadow:0 5px 16px rgba(76,175,80,0.4)}
+.btn-go:active{transform:scale(0.95)}
+
+.end-icon{font-size:42px;margin-bottom:6px;display:block}
+.stars{font-size:28px;margin:4px 0;letter-spacing:4px}
+.result-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.result-stat{background:#F1F8E9;border-radius:10px;padding:10px 8px;
+  border:1px solid #C8E6C9}
+.rs-label{font-size:11px;color:#8D6E63}.rs-value{font-size:20px;font-weight:800;color:#2E7D32}
+.tip{font-size:12px;color:#EF5350;margin:8px 0;line-height:1.6}
+
+/* 难度选择按钮 */
+.diff-select{display:flex;gap:8px;margin:10px 0 4px;justify-content:center;flex-wrap:wrap}
+.diff-btn{padding:10px 16px;border-radius:12px;border:2px solid #A5D6A7;
+  background:#fff;color:#4A3828;cursor:pointer;
+  font-size:14px;font-weight:600;transition:all 0.2s}
+.diff-btn:hover{background:#E8F5E9;border-color:#7BC74D}
+.diff-btn.active{background:#7BC74D;color:#fff;border-color:#66BB6A;
+  box-shadow:0 0 10px rgba(123,199,77,0.3)}
+
+/* 计时进度环 */
+.question-timer{width:100%;height:4px;background:#E0E0E0;border-radius:2px;
+  margin-top:10px;overflow:hidden}
+.question-timer-fill{height:100%;background:#7BC74D;border-radius:2px;
+  transition:width 0.1s linear}
+
+/* 自适应难度指示器 */
+.diff-indicator{display:flex;align-items:center;gap:4px;justify-content:center;
+  margin-top:8px;font-size:11px;color:#8D6E63}
+.diff-indicator .active-dot{width:8px;height:8px;border-radius:50%;background:#7BC74D}
+.diff-indicator .dot{width:8px;height:8px;border-radius:50%;background:#DDD}
+.diff-indicator .arrow{color:#FF9800;font-weight:900}
+
+@media(max-width:560px){
+  .game-area{width:100vw}
+  .canvas-wrap{width:100vw;height:72vw;border-radius:0;border-left:none;border-right:none}
+  .btn-row{padding:0 12px}
+  .orient-btn{font-size:14px;min-height:50px;padding:10px 12px}
+  .hud{padding:6px 12px 6px}
+  .hud-item{padding:5px 8px;font-size:11px}
+  .top-bar{padding:12px 16px}
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="index.html" class="back-link">&#8592; 返回科普站</a>
+  <a href="index.html#games" class="back-link">&#8592; 训练游戏</a>
+  <a href="progress.html" class="back-link">&#x1F4CA; 训练进度</a>
+</div>
+
+<div class="game-title">
+  <h1>&#x1F33B; 葵神辨向</h1>
+</div>
+
+<div class="hud" id="hud">
+  <div class="hud-item"><span class="hud-icon">&#x2B50;</span><div><span class="hud-value" id="hudScore">0</span><span class="hud-label">得分</span></div></div>
+  <div class="hud-item"><span class="hud-icon">&#x1F4CA;</span><div><span class="hud-value" id="hudAccuracy">-</span><span class="hud-label">正确率</span></div></div>
+  <div class="hud-item"><span class="hud-icon">&#x23F1;</span><div><span class="hud-value" id="hudTime">120</span><span class="hud-label">秒</span></div></div>
+  <div class="hud-item" style="cursor:pointer" id="hudSound" onclick="toggleSound()"><span class="hud-icon">&#x1F50A;</span><span class="hud-label">音效</span></div>
+</div>
+
+<div class="game-area" id="gameArea">
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="gameCanvas"></canvas>
+  </div>
+
+  <!-- 单朵向日葵 -->
+  <div class="sunflower-wrap" id="sunflowerWrap">
+    <div class="sunflower-single" id="sunflowerSingle">
+      <div class="sunflower-head" id="sunflowerH">
+        <div class="center"></div>
+        <div class="sunflower-face" id="faceSingle">&#x1F60A;</div>
+      </div>
+      <div class="stem-line"></div>
+      <div class="leaf left"></div>
+      <div class="leaf right"></div>
+    </div>
+  </div>
+
+  <!-- 方向按钮 -->
+  <div class="btn-row" id="btnRow">
+    <button class="orient-btn" data-angle="0" disabled>&#x2194; 横向条纹</button>
+    <button class="orient-btn" data-angle="90" disabled>&#x2195; 竖向条纹</button>
+  </div>
+</div>
+
+<div class="bottom-hint">&#x1F446; 观察条纹方向，点击对应按钮 · 连续答对升级，答错降级</div>
+
+<!-- start overlay: 难度选择 -->
+<div class="overlay" id="startOverlay">
+  <div class="overlay-card">
+    <span class="overlay-icon">&#x1F33B;</span>
+    <h2>葵神辨向训练</h2>
+    <p class="subtitle">观察屏幕中央的条纹朝向<br>判断是横、竖还是斜方向！<br>向日葵会为你加油打气 &#x1F33B;</p>
+    <div class="diff-select" id="diffSelect">
+      <button class="diff-btn active" data-diff="seedling">&#x1F331; 简单 2选1</button>
+      <button class="diff-btn" data-diff="mature">&#x1F33F; 中等 4选1</button>
+      <button class="diff-btn" data-diff="bloom">&#x1F33C; 困难 4选1</button>
+    </div>
+    <button class="btn-go" onclick="showCover()">&#x1F3AE; 开始训练</button>
+  </div>
+</div>
+
+<!-- cover overlay: 遮盖提醒 -->
+<div class="overlay hidden" id="coverOverlay">
+  <div class="overlay-card">
+    <span class="overlay-icon">&#x1F453;</span>
+    <h2>训练前准备</h2>
+    <p class="subtitle">
+      请佩戴矫正眼镜，按医嘱遮盖优势眼<br>
+      屏幕距离眼睛 30-40cm<br>
+      环境光线保持 400-600lux<br>
+      单局 2 分钟，全天不超过 15 分钟<br>
+      观察条纹方向，点击对应按钮
+    </p>
+    <button class="btn-go" onclick="startGame()">&#x2705; 准备好了！</button>
+  </div>
+</div>
+
+<!-- end overlay: 结果结算 -->
+<div class="overlay hidden" id="endOverlay">
+  <div class="overlay-card" id="endCard"></div>
+</div>
+
+<script>
+// ========== 常量与配置 ==========
+/** 1°视角≈75px（30cm屏距 + 24" 1920×1080 计算） */
+var DEG_TO_PX = 75;
+
+/** 方向按钮基准角度（度）— 四固定方向，均匀分布于 0°~180° */
+var BASE_ANGLES_2 = [0, 90];                // 幼苗：横/竖
+var BASE_ANGLES_4 = [0, 45, 90, 135];       // 成熟/开花：四固定方向，45°等间距
+
+/** 难度配置（无 thetaRange：方向已硬编码固定，不可运行时更改） */
+var DIFFICULTY = {
+  seedling: { cpd: 2.0, contrast: 0.9, sigmaPx: 28,
+              gaborSize: 160, buttonMode: '2', timeLimitSec: 4.0,
+              label: '幼苗', baseAngles: BASE_ANGLES_2 },
+  mature:   { cpd: 3.0, contrast: 0.7, sigmaPx: 22,
+              gaborSize: 160, buttonMode: '4', timeLimitSec: 3.5,
+              label: '成熟', baseAngles: BASE_ANGLES_4 },
+  bloom:    { cpd: 4.5, contrast: 0.5, sigmaPx: 18,
+              gaborSize: 160, buttonMode: '4', timeLimitSec: 3.0,
+              label: '开花', baseAngles: BASE_ANGLES_4 }
+};
+var DIFF_ORDER = ['seedling', 'mature', 'bloom'];
+
+// ========== DOM 引用 ==========
+var canvas = document.getElementById('gameCanvas');
+var ctx = canvas.getContext('2d');
+var canvasWrap = document.getElementById('canvasWrap');
+
+var btnRow = document.getElementById('btnRow');
+var sunflowerWrap = document.getElementById('sunflowerWrap');
+var sunflowerH = document.getElementById('sunflowerH');
+var faceSingle = document.getElementById('faceSingle');
+
+var hudScore = document.getElementById('hudScore');
+var hudAccuracy = document.getElementById('hudAccuracy');
+var hudTime = document.getElementById('hudTime');
+var hudSound = document.getElementById('hudSound');
+
+// ========== 游戏状态 ==========
+var score = 0, timeLeft = 120, timerId = null;
+var totalQuestions = 0, correctAnswers = 0;
+var consecutiveCorrect = 0, consecutiveWrong = 0;
+var maxConsecutive = 0;
+var running = false, gameOver = false;
+
+/** 当前难度 key */
+var currentDiff = 'seedling';
+/** 当前题目：{thetaDeg, correctAngle, timeLimitMs, questionStartTs} */
+var currentQuestion = null;
+/** 答题按钮是否已激活 */
+var buttonsActive = false;
+/** 当前题目计时器（requestAnimationFrame 追踪） */
+var questionRafId = null;
+var questionStartTime = 0;
+
+// ========== 音频 ==========
+var audioCtx = null, soundOn = true;
+
+function initAudio() {
+  if (audioCtx) return;
+  try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+}
+
+/** 通用音效函数 */
+function playTone(freq, dur, type, vol) {
+  if (!audioCtx || !soundOn) return;
+  type = type || 'sine'; vol = vol || 0.08;
+  try {
+    var o = audioCtx.createOscillator();
+    var g = audioCtx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    g.gain.setValueAtTime(vol, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + dur);
+  } catch(e) {}
+}
+
+function sndCorrect() {
+  playTone(523, 0.1, 'sine', 0.07);
+  setTimeout(function(){ playTone(659, 0.1, 'sine', 0.06); }, 50);
+}
+function sndWrong() { playTone(200, 0.2, 'sawtooth', 0.06); }
+function sndTimeout() { playTone(150, 0.3, 'square', 0.05); }
+function sndUpgrade() {
+  playTone(523, 0.08, 'sine', 0.06);
+  setTimeout(function(){ playTone(659, 0.08, 'sine', 0.06); }, 70);
+  setTimeout(function(){ playTone(784, 0.1, 'sine', 0.07); }, 140);
+}
+function sndDowngrade() {
+  playTone(400, 0.12, 'triangle', 0.07);
+  setTimeout(function(){ playTone(300, 0.15, 'triangle', 0.06); }, 100);
+}
+function sndDone() {
+  [523,659,784,1047].forEach(function(f,i){
+    setTimeout(function(){ playTone(f, 0.12, 'sine', 0.07); }, i*100);
+  });
+}
+function toggleSound() {
+  soundOn = !soundOn;
+  hudSound.querySelector('.hud-icon').textContent = soundOn ? '\u{1F50A}' : '\u{1F507}';
+  if (soundOn) initAudio();
+}
+
+// ========== Canvas 初始化 ==========
+var cw = 520, ch = 380; // 逻辑尺寸
+
+function resizeCanvas() {
+  var rect = canvasWrap.getBoundingClientRect();
+  var w = rect.width, h = rect.height;
+  var dpr = window.devicePixelRatio || 1;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(dpr * w / cw, dpr * h / ch);
+  cw = w; ch = h;
+}
+
+resizeCanvas();
+window.addEventListener('resize', function() {
+  resizeCanvas();
+  if (!running && !currentQuestion) drawIdleBackground();
+});
+
+// ========== Gabor 斑渲染 ==========
+/**
+ * 在 Canvas 上绘制 Gabor 斑
+ * 公式：gabor(x,y) = exp(-(x'²+y'²)/(2σ²)) * cos(2π·x'/λ)
+ * 像素值 = 128 + 128 × contrast × envelope × carrier（0-255 灰度）
+ *
+ * @param {CanvasRenderingContext2D} ctx - Canvas 2D 上下文
+ * @param {number} cx - 斑中心 X (逻辑像素)
+ * @param {number} cy - 斑中心 Y (逻辑像素)
+ * @param {number} thetaDeg - 朝向角度 (度)
+ * @param {number} lambdaPx - 载波波长 (逻辑像素)
+ * @param {number} sigmaPx - 高斯包络标准差 (逻辑像素)
+ * @param {number} contrast - 对比度 0~1
+ * @param {number} radius - 圆形裁切半径 (逻辑像素)
+ */
+function drawGabor(ctx, cx, cy, thetaDeg, lambdaPx, sigmaPx, contrast, radius) {
+  var theta = thetaDeg * Math.PI / 180;
+  var cosT = Math.cos(theta), sinT = Math.sin(theta);
+
+  // 计算包围盒
+  var x0 = Math.floor(cx - radius), y0 = Math.floor(cy - radius);
+  var size = Math.ceil(radius * 2);
+  x0 = Math.max(0, x0); y0 = Math.max(0, y0);
+  size = Math.min(size, Math.floor(cw - x0), Math.floor(ch - y0));
+
+  var imageData = ctx.createImageData(size, size);
+  var data = imageData.data;
+  var radius2 = radius * radius;
+  var twoSigma2 = 2 * sigmaPx * sigmaPx;
+
+  for (var dy = 0; dy < size; dy++) {
+    for (var dx = 0; dx < size; dx++) {
+      var px = x0 + dx, py = y0 + dy;
+      // 圆形裁切
+      var dist2 = (px - cx) * (px - cx) + (py - cy) * (py - cy);
+      if (dist2 > radius2) {
+        // 圆形外填充中性灰 #808080
+        var idx = (dy * size + dx) * 4;
+        data[idx] = 128; data[idx + 1] = 128;
+        data[idx + 2] = 128; data[idx + 3] = 255;
+        continue;
+      }
+      // 旋转坐标
+      var xp = (px - cx) * cosT + (py - cy) * sinT;
+      var yp = -(px - cx) * sinT + (py - cy) * cosT;
+      // 高斯包络
+      var envelope = Math.exp(-(xp * xp + yp * yp) / twoSigma2);
+      // 余弦载波
+      var carrier = Math.cos(2 * Math.PI * xp / lambdaPx);
+      // 灰度值
+      var gray = 128 + 128 * contrast * envelope * carrier;
+      gray = Math.max(0, Math.min(255, gray));
+      var idx = (dy * size + dx) * 4;
+      data[idx] = gray; data[idx + 1] = gray;
+      data[idx + 2] = gray; data[idx + 3] = 255;
+    }
+  }
+  ctx.putImageData(imageData, x0, y0);
+}
+
+/** 绘制空闲背景（中性灰） */
+function drawIdleBackground() {
+  ctx.fillStyle = '#808080';
+  ctx.fillRect(0, 0, cw, ch);
+}
+
+// ========== 向日葵动画 ==========
+function sunflowerWobble() {
+  sunflowerWrap.classList.remove('bounce','dim','glow');
+  void sunflowerWrap.offsetWidth; // 强制回流，确保动画重新触发
+  sunflowerWrap.classList.add('wobble');
+  // 花瓣抖动音效（沙沙声）
+  playTone(180, 0.08, 'triangle', 0.03);
+  setTimeout(function(){ playTone(220, 0.06, 'triangle', 0.02); }, 60);
+  setTimeout(function(){ sunflowerWrap.classList.remove('wobble'); }, 550);
+}
+
+function sunflowerCheer() {
+  sunflowerWrap.classList.remove('wobble','dim');
+  sunflowerWrap.classList.add('bounce','glow');
+  faceSingle.textContent = '\u{1F60D}';
+  faceSingle.classList.add('happy');
+  setTimeout(function(){
+    sunflowerWrap.classList.remove('bounce','glow');
+    faceSingle.textContent = '\u{1F60A}';
+    faceSingle.classList.remove('happy');
+  }, 700);
+}
+
+function sunflowerSad() {
+  sunflowerWrap.classList.remove('wobble','bounce','glow');
+  sunflowerWrap.classList.add('dim');
+  faceSingle.textContent = '\u{1F61F}';
+  sunflowerH.style.animation = 'sad-shake 0.5s ease';
+  setTimeout(function(){ sunflowerH.style.animation = ''; }, 500);
+  setTimeout(function(){
+    sunflowerWrap.classList.remove('dim');
+    faceSingle.textContent = '\u{1F60A}';
+  }, 600);
+}
+
+/** 光斑从向日葵飞向 Gabor 斑目标位置 */
+function sparkFly(targetCX, targetCY) {
+  var wrapRect = canvasWrap.getBoundingClientRect();
+  var sfRect = sunflowerWrap.getBoundingClientRect();
+  // 移除旧光斑
+  var old = document.querySelector('.flying-spark');
+  if (old) old.remove();
+  // 创建光斑，起始位置在向日葵上方
+  var spark = document.createElement('div');
+  spark.className = 'flying-spark';
+  spark.style.left = (sfRect.left - wrapRect.left + sfRect.width / 2 - 9) + 'px';
+  spark.style.top = (sfRect.top - wrapRect.top - 10) + 'px';
+  canvasWrap.appendChild(spark);
+  // 下一帧飞向 Gabor 位置（逻辑坐标 → CSS 坐标）
+  requestAnimationFrame(function(){
+    spark.style.left = (targetCX / cw * wrapRect.width - 9) + 'px';
+    spark.style.top = (targetCY / ch * wrapRect.height - 9) + 'px';
+    spark.classList.add('flash');
+  });
+  // 300ms 后移除
+  setTimeout(function(){ if (spark.parentNode) spark.remove(); }, 350);
+}
+
+// ========== 朝向生成 ==========
+/**
+ * 从四固定方向中随机选一个作为本题朝向。
+ * 方向硬编码为 baseAngles 数组中的固定值，不可运行时更改。
+ * @param {number[]} baseAngles - 固定候选角数组（如 [0,45,90,135]）
+ * @returns {{thetaDeg: number, correctAngle: number}}
+ */
+function generateOrientation(baseAngles) {
+  var theta = baseAngles[Math.floor(Math.random() * baseAngles.length)];
+  return { thetaDeg: theta, correctAngle: theta };
+}
+
+// ========== 按钮配置 ==========
+/* Gabor 朝向与条纹方向关系（四固定方向，均匀分布于 0°~180°）：
+   θ=0°  → cos 沿 x 轴变化 → 竖条纹 → "竖向"
+   θ=45° → 正斜杠 / → "右斜"
+   θ=90° → cos 沿 y 轴变化 → 横条纹 → "横向"
+   θ=135°→ 反斜杠 \ → "左斜" */
+var BTN_LAYOUTS = {
+  '2': [
+    { label: '\u{2195} 竖向', angle: 0, desc: '↑↓' },
+    { label: '\u{2194} 横向', angle: 90, desc: '←→' }
+  ],
+  '4': [
+    { label: '\u{2195} 竖向', angle: 0, desc: '↑↓' },
+    { label: '\u{2197} 右斜', angle: 45, desc: '↗' },
+    { label: '\u{2194} 横向', angle: 90, desc: '←→' },
+    { label: '\u{2196} 左斜', angle: 135, desc: '↖' }
+  ]
+};
+
+/** 根据当前难度重建按钮 */
+function buildButtons(mode) {
+  var layout = BTN_LAYOUTS[mode];
+  btnRow.innerHTML = '';
+  if (mode === '4') btnRow.classList.add('grid4');
+  else btnRow.classList.remove('grid4');
+
+  for (var i = 0; i < layout.length; i++) {
+    var btn = document.createElement('button');
+    btn.className = 'orient-btn';
+    btn.dataset.angle = layout[i].angle;
+    btn.textContent = layout[i].label;
+    btn.disabled = true;
+    btn.addEventListener('click', function(e) { onButtonClick(e.currentTarget); });
+    btnRow.appendChild(btn);
+  }
+}
+
+// ========== 答题逻辑 ==========
+function startQuestion() {
+  var cfg = DIFFICULTY[currentDiff];
+  var lambdaPx = DEG_TO_PX / cfg.cpd;
+  var orient = generateOrientation(cfg.baseAngles);
+  var radius = cfg.gaborSize / 2;
+
+  // 随机位置（不超出可视区域，预留 Gabor 半径边距）
+  var cx = radius + Math.random() * (cw - 2 * radius);
+  var cy = radius + Math.random() * (ch - 2 * radius);
+
+  currentQuestion = {
+    thetaDeg: orient.thetaDeg,
+    correctAngle: orient.correctAngle,
+    timeLimitMs: cfg.timeLimitSec * 1000,
+    questionStartTs: performance.now(),
+    lambdaPx: lambdaPx,
+    sigmaPx: cfg.sigmaPx,
+    contrast: cfg.contrast,
+    gaborSize: cfg.gaborSize,
+    answered: false,
+    cx: cx,
+    cy: cy
+  };
+
+  // 禁用按钮（0.5s 宽限期后激活）
+  disableButtons(true);
+  buttonsActive = false;
+
+  // 向日葵动画 + 光斑飞向随机位置
+  sunflowerWobble();
+  setTimeout(function(){ sparkFly(cx, cy); }, 100);
+
+  // 渲染 Gabor 斑（光斑到达时显示）
+  setTimeout(function(){
+    drawGabor(ctx, currentQuestion.cx, currentQuestion.cy, currentQuestion.thetaDeg,
+      currentQuestion.lambdaPx, currentQuestion.sigmaPx,
+      currentQuestion.contrast, currentQuestion.gaborSize / 2);
+    // 0.5s 宽限期后激活按钮
+    setTimeout(function(){
+      if (currentQuestion && !currentQuestion.answered && running) {
+        disableButtons(false);
+        buttonsActive = true;
+        // 启动每题计时器
+        questionStartTime = performance.now();
+        cancelAnimationFrame(questionRafId);
+        trackQuestionTimer();
+      }
+    }, 500);
+  }, 220);
+}
+
+function disableButtons(disabled) {
+  var btns = btnRow.querySelectorAll('.orient-btn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].disabled = disabled;
+    btns[i].classList.remove('correct', 'wrong', 'highlight');
+  }
+}
+
+/** 每题超时追踪 */
+function trackQuestionTimer() {
+  if (!currentQuestion || currentQuestion.answered || !running) return;
+  var elapsed = performance.now() - questionStartTime;
+  if (elapsed >= currentQuestion.timeLimitMs) {
+    handleTimeout();
+    return;
+  }
+  questionRafId = requestAnimationFrame(trackQuestionTimer);
+}
+
+function handleTimeout() {
+  if (!currentQuestion || currentQuestion.answered) return;
+  currentQuestion.answered = true;
+  totalQuestions++;
+  consecutiveCorrect = 0;
+  consecutiveWrong++;
+  sndTimeout();
+  sunflowerSad();
+  highlightCorrectAnswer();
+  disableButtons(true);
+  updateHUD();
+  setTimeout(nextQuestion, 2000);
+}
+
+function onButtonClick(btn) {
+  if (!buttonsActive || !currentQuestion || currentQuestion.answered || !running) return;
+  var angle = parseInt(btn.dataset.angle);
+  currentQuestion.answered = true;
+  totalQuestions++;
+  buttonsActive = false;
+  cancelAnimationFrame(questionRafId);
+
+  if (angle === currentQuestion.correctAngle) {
+    // 正确
+    correctAnswers++;
+    consecutiveCorrect++;
+    consecutiveWrong = 0;
+    if (consecutiveCorrect > maxConsecutive) maxConsecutive = consecutiveCorrect;
+    score += 10;
+    sndCorrect();
+    sunflowerCheer();
+    btn.classList.add('correct');
+    // 自适应升级
+    if (consecutiveCorrect >= 5) upgradeDifficulty();
+  } else {
+    // 错误
+    consecutiveCorrect = 0;
+    consecutiveWrong++;
+    sndWrong();
+    sunflowerSad();
+    btn.classList.add('wrong');
+    highlightCorrectAnswer();
+    // 自适应降级
+    if (consecutiveWrong >= 3) downgradeDifficulty();
+  }
+  disableButtons(true);
+  updateHUD();
+  setTimeout(nextQuestion, 2000);
+}
+
+/** 高亮正确答案按钮 */
+function highlightCorrectAnswer() {
+  if (!currentQuestion) return;
+  var btns = btnRow.querySelectorAll('.orient-btn');
+  for (var i = 0; i < btns.length; i++) {
+    if (parseInt(btns[i].dataset.angle) === currentQuestion.correctAngle) {
+      btns[i].classList.add('highlight');
+    }
+  }
+}
+
+/** 自适应升级 */
+function upgradeDifficulty() {
+  var idx = DIFF_ORDER.indexOf(currentDiff);
+  if (idx < DIFF_ORDER.length - 1) {
+    currentDiff = DIFF_ORDER[idx + 1];
+    consecutiveCorrect = 0;
+    consecutiveWrong = 0;
+    sndUpgrade();
+    sunflowerWrap.classList.add('bounce','glow');
+    faceSingle.textContent = '\u{2B50}';
+    faceSingle.classList.add('happy');
+    setTimeout(function(){
+      sunflowerWrap.classList.remove('bounce','glow');
+      faceSingle.textContent = '\u{1F60A}';
+      faceSingle.classList.remove('happy');
+    }, 700);
+    buildButtons(DIFFICULTY[currentDiff].buttonMode);
+  }
+}
+
+/** 自适应降级 */
+function downgradeDifficulty() {
+  var idx = DIFF_ORDER.indexOf(currentDiff);
+  if (idx > 0) {
+    currentDiff = DIFF_ORDER[idx - 1];
+    consecutiveCorrect = 0;
+    consecutiveWrong = 0;
+    sndDowngrade();
+    sunflowerWrap.classList.add('dim');
+    faceSingle.textContent = '\u{1F625}';
+    sunflowerH.style.animation = 'sad-shake 0.5s ease';
+    setTimeout(function(){ sunflowerH.style.animation = ''; }, 500);
+    setTimeout(function(){
+      sunflowerWrap.classList.remove('dim');
+      faceSingle.textContent = '\u{1F60A}';
+    }, 600);
+    buildButtons(DIFFICULTY[currentDiff].buttonMode);
+  }
+}
+
+function nextQuestion() {
+  if (!running || gameOver) return;
+  // 清除按钮状态
+  disableButtons(true);
+  // 绘制空闲背景
+  drawIdleBackground();
+  // 延迟后出新题
+  setTimeout(function(){
+    if (!running || gameOver) return;
+    startQuestion();
+  }, 2000);
+}
+
+// ========== HUD 与计时 ==========
+function updateHUD() {
+  hudScore.textContent = score;
+  if (totalQuestions > 0) {
+    hudAccuracy.textContent = Math.round(correctAnswers / totalQuestions * 100) + '%';
+  } else {
+    hudAccuracy.textContent = '-';
+  }
+  var te = hudTime;
+  te.textContent = timeLeft;
+  te.className = 'hud-value' + (timeLeft <= 15 ? ' timer-warn' : '');
+}
+
+function tick() {
+  timeLeft--;
+  updateHUD();
+  if (timeLeft <= 0) endGame();
+}
+
+// ========== Overlay 流程 ==========
+function showCover() {
+  initAudio();
+  // 保存初始难度选择
+  var activeBtn = document.querySelector('.diff-btn.active');
+  if (activeBtn) currentDiff = activeBtn.dataset.diff;
+  document.getElementById('startOverlay').classList.add('hidden');
+  document.getElementById('coverOverlay').classList.remove('hidden');
+}
+
+function startGame() {
+  document.getElementById('coverOverlay').classList.add('hidden');
+  document.getElementById('endOverlay').classList.add('hidden');
+
+  // 初始化状态
+  score = 0; timeLeft = 120; totalQuestions = 0;
+  correctAnswers = 0; consecutiveCorrect = 0; consecutiveWrong = 0;
+  maxConsecutive = 0;
+  running = true; gameOver = false;
+  currentQuestion = null; buttonsActive = false;
+
+  buildButtons(DIFFICULTY[currentDiff].buttonMode);
+  updateHUD();
+  drawIdleBackground();
+  resetSunflower();
+
+  // 启动总计时器
+  clearInterval(timerId);
+  timerId = setInterval(tick, 1000);
+
+  // 第一题
+  setTimeout(startQuestion, 400);
+}
+
+function resetSunflower() {
+  sunflowerWrap.classList.remove('bounce','dim','wobble','glow');
+  faceSingle.textContent = '\u{1F60A}';
+  faceSingle.classList.remove('happy');
+  sunflowerH.style.animation = '';
+}
+
+function endGame() {
+  running = false; gameOver = true;
+  clearInterval(timerId);
+  cancelAnimationFrame(questionRafId);
+  currentQuestion = null;
+  disableButtons(true);
+  drawIdleBackground();
+
+  var accuracy = totalQuestions > 0 ? Math.round(correctAnswers / totalQuestions * 100) : 0;
+  var starCount = accuracy >= 90 ? 3 : accuracy >= 70 ? 2 : 1;
+  var stars = '';
+  for (var i = 0; i < 3; i++) stars += i < starCount ? '\u{2B50}' : '\u{2606}';
+  var rating = starCount === 3 ? '优秀' : starCount === 2 ? '良好' : '继续加油';
+
+  document.getElementById('endCard').innerHTML =
+    '<span class="end-icon">\u{1F33B}</span>' +
+    '<h2>训练结束</h2>' +
+    '<div class="stars">' + stars + '</div>' +
+    '<p style="color:#8D6E63;font-size:13px">评级：' + rating + '</p>' +
+    '<div class="result-stats">' +
+      '<div class="result-stat"><div class="rs-label">总得分</div><div class="rs-value">' + score + '</div></div>' +
+      '<div class="result-stat"><div class="rs-label">正确率</div><div class="rs-value">' + accuracy + '%</div></div>' +
+      '<div class="result-stat"><div class="rs-label">答题数</div><div class="rs-value">' + totalQuestions + '</div></div>' +
+      '<div class="result-stat"><div class="rs-label">最高连对</div><div class="rs-value">' + maxConsecutive + '</div></div>' +
+    '</div>' +
+    '<p class="tip">\u{1F453} 记得远眺 5 分钟，让眼睛放松</p>' +
+    '<button class="btn-go" onclick="restartGame()">\u{1F504} 再玩一次</button>' +
+    '<button class="btn-go" style="background:linear-gradient(180deg,#A5D6A7,#66BB6A);margin-top:8px;font-size:15px" onclick="backToSelect()">\u{1F3E0} 返回选择</button>';
+  document.getElementById('endOverlay').classList.remove('hidden');
+
+  sndDone();
+}
+
+function restartGame() {
+  document.getElementById('endOverlay').classList.add('hidden');
+  document.getElementById('coverOverlay').classList.remove('hidden');
+}
+
+function backToSelect() {
+  document.getElementById('endOverlay').classList.add('hidden');
+  document.getElementById('startOverlay').classList.remove('hidden');
+  running = false; gameOver = true;
+  // 更新难度按钮选中状态
+  document.querySelectorAll('.diff-btn').forEach(function(b){
+    b.classList.toggle('active', b.dataset.diff === currentDiff);
+  });
+  resetSunflower();
+  drawIdleBackground();
+}
+
+// ========== 难度选择按钮事件 ==========
+document.querySelectorAll('.diff-btn').forEach(function(b){
+  b.addEventListener('click', function(){
+    if (running) return;
+    document.querySelectorAll('.diff-btn').forEach(function(x){ x.classList.remove('active'); });
+    b.classList.add('active');
+    currentDiff = b.dataset.diff;
+  });
+});
+
+// ========== 初始化 ==========
+drawIdleBackground();
+buildButtons('2');
+</script>
+
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}</script>
+</body>
+</html>

@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>辨E · 弱视训练</title>
+<link rel="manifest" href="manifest.json">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:'PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif;
+  background:#808080;color:#fff;min-height:100vh;display:flex;
+  flex-direction:column;align-items:center;overflow-x:hidden;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+body{padding-bottom:30px}
+
+.top-bar{width:100%;max-width:520px;display:flex;align-items:center;
+  justify-content:space-between;padding:16px 20px;flex-shrink:0;
+  position:relative;z-index:101}
+.back-link{text-decoration:none;color:#bbb;font-weight:600;font-size:15px;
+  display:flex;align-items:center;gap:6px}
+.back-link:hover{opacity:0.8}
+
+.game-title{text-align:center;padding:2px 0 4px;flex-shrink:0}
+.game-title h1{font-size:22px;color:#fff;margin:0;text-shadow:1px 1px 2px rgba(0,0,0,0.4)}
+
+.hud{display:flex;align-items:center;justify-content:space-between;
+  max-width:520px;width:100%;padding:6px 20px 8px;flex-shrink:0;gap:8px}
+.hud-item{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;
+  background:rgba(255,255,255,0.1);padding:7px 12px;border-radius:10px;color:#ddd;
+  border:1px solid rgba(255,255,255,0.15)}
+.hud-icon{font-size:16px}
+.hud-value{color:#fff;font-size:17px;font-weight:800;min-width:22px;text-align:center}
+.hud-label{color:#aaa;font-size:11px}
+.timer-warn{color:#FF8A65 !important;animation:pulse 0.8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+
+.game-area{position:relative;width:520px;max-width:100vw;margin:0 auto;
+  display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+
+.canvas-wrap{position:relative;width:520px;height:400px;max-width:100vw;
+  background:#808080;border-radius:16px;overflow:hidden;
+  border:2px solid rgba(255,255,255,0.2);box-shadow:0 2px 12px rgba(0,0,0,0.3)}
+#gameCanvas{display:block;width:100%;height:100%;touch-action:manipulation;position:relative;z-index:2}
+
+/* 方向按钮 */
+.btn-row{display:flex;gap:12px;justify-content:center;margin:12px 0 0;
+  padding:0 20px;max-width:520px;width:100%;flex-shrink:0}
+.btn-row.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.orient-btn{flex:1;min-height:52px;padding:12px 16px;border-radius:14px;
+  border:2px solid #fff;background:rgba(255,255,255,0.05);color:#ddd;
+  font-size:16px;font-weight:700;cursor:pointer;transition:all 0.15s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  user-select:none;-webkit-tap-highlight-color:transparent;
+  touch-action:manipulation}
+.orient-btn:hover{background:rgba(255,255,255,0.15)}
+.orient-btn:active{transform:scale(0.95)}
+.orient-btn:disabled{pointer-events:none;opacity:0.4}
+.orient-btn.correct{background:rgba(76,175,80,0.3)!important;border-color:#4CAF50!important}
+.orient-btn.wrong{background:rgba(239,83,80,0.3)!important;border-color:#EF5350!important}
+
+.bottom-hint{text-align:center;padding:4px 0;font-size:12px;color:#bbb;flex-shrink:0}
+
+/* contrast indicator bar */
+.contrast-bar-wrap{max-width:520px;width:100%;padding:0 20px;display:flex;align-items:center;gap:8px;margin-top:4px}
+.contrast-bar-label{font-size:11px;color:#aaa;white-space:nowrap}
+.contrast-bar{flex:1;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden}
+.contrast-bar-fill{height:100%;background:#fff;border-radius:3px;transition:width 0.3s}
+
+/* overlay */
+.overlay{position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.7);display:flex;align-items:center;
+  justify-content:center;z-index:100;flex-direction:column;padding:20px}
+.overlay.hidden{display:none}
+.overlay-card{background:#555;border-radius:20px;padding:28px 24px;
+  max-width:400px;width:100%;text-align:center;
+  border:1px solid rgba(255,255,255,0.2);box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+.overlay-card h2{font-size:21px;margin-bottom:8px;color:#fff}
+.overlay-card .subtitle{font-size:13px;color:#ccc;margin-bottom:12px;line-height:1.7}
+.overlay-icon{font-size:48px;margin-bottom:8px;display:block}
+.btn-go{background:#666;color:#fff;border:1px solid #999;
+  padding:14px 40px;font-size:18px;font-weight:700;border-radius:30px;cursor:pointer;
+  margin-top:12px;transition:all 0.15s}
+.btn-go:hover{background:#777;border-color:#bbb}
+.btn-go:active{transform:scale(0.95)}
+
+.end-icon{font-size:42px;margin-bottom:6px;display:block}
+.result-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.result-stat{background:rgba(255,255,255,0.08);border-radius:10px;padding:10px 8px;border:1px solid rgba(255,255,255,0.15)}
+.rs-label{font-size:11px;color:#aaa}.rs-value{font-size:20px;font-weight:800;color:#fff}
+.tip{font-size:12px;color:#FF8A65;margin:8px 0;line-height:1.6}
+.diff-select{display:flex;gap:8px;margin:10px 0 4px;justify-content:center;flex-wrap:wrap}
+.diff-btn{padding:10px 16px;border-radius:12px;border:1px solid #999;
+  background:rgba(255,255,255,0.08);color:#ccc;cursor:pointer;
+  font-size:14px;font-weight:600;transition:all 0.2s}
+.diff-btn:hover{background:rgba(255,255,255,0.15);border-color:#bbb}
+.diff-btn.active{background:#888;color:#fff;border-color:#bbb}
+
+@media(max-width:540px){
+  .game-area{width:100vw}
+  .canvas-wrap{width:100vw;height:75vw;border-radius:0;border-left:none;border-right:none}
+  .hud{padding:6px 12px 6px}
+  .hud-item{padding:5px 8px;font-size:11px}
+  .top-bar{padding:12px 16px}
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="index.html" class="back-link">&#8592; 返回科普站</a>
+  <a href="index.html#games" class="back-link">&#8592; 训练游戏</a>
+  <a href="progress.html" class="back-link">&#x1F4CA; 训练进度</a>
+</div>
+
+<div class="game-title">
+  <h1>&#x1F441; 辨E</h1>
+</div>
+
+<div class="hud" id="hud">
+  <div class="hud-item"><span class="hud-icon">&#x2B50;</span><div><span class="hud-value" id="hudScore">0</span><span class="hud-label">得分</span></div></div>
+  <div class="hud-item"><span class="hud-icon">&#x1F3AF;</span><div><span class="hud-value" id="hudAccuracy">-</span><span class="hud-label">正确率</span></div></div>
+  <div class="hud-item"><span class="hud-icon">&#x23F1;</span><div><span class="hud-value" id="hudTime">120</span><span class="hud-label">秒</span></div></div>
+  <div class="hud-item" style="cursor:pointer" id="hudSound" onclick="toggleSound()"><span class="hud-icon">&#x1F50A;</span><span class="hud-label">音效</span></div>
+</div>
+
+<div class="contrast-bar-wrap">
+  <span class="contrast-bar-label" id="contrastLabel">对比度 50%</span>
+  <div class="contrast-bar"><div class="contrast-bar-fill" id="contrastFill" style="width:50%"></div></div>
+</div>
+
+<div class="game-area" id="gameArea">
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="gameCanvas"></canvas>
+  </div>
+
+  <div class="btn-row" id="btnRow">
+    <button class="orient-btn" data-angle="0" disabled>&#x2B06; 上</button>
+    <button class="orient-btn" data-angle="1" disabled>&#x27A1; 右</button>
+    <button class="orient-btn" data-angle="2" disabled>&#x2B07; 下</button>
+    <button class="orient-btn" data-angle="3" disabled>&#x2B05; 左</button>
+  </div>
+</div>
+
+<div class="bottom-hint">&#x1F441; 识别淡灰色的 E 字开口朝向 · 对比度越低越难</div>
+
+<div class="overlay" id="startOverlay">
+  <div class="overlay-card">
+    <span class="overlay-icon">&#x1F441;</span>
+    <h2>辨E 对比度训练</h2>
+    <p class="subtitle">画面中央会出现淡灰色 E 字<br>判断 E 的开口朝向！<br>Pelli-Robson 范式 · 对比敏感度训练</p>
+    <div class="diff-select" id="diffSelect">
+      <button class="diff-btn active" data-diff="seedling">&#x1F7E2; 简单 · E vs F</button>
+      <button class="diff-btn" data-diff="mature">&#x1F7E1; 中等 · 四方向</button>
+      <button class="diff-btn" data-diff="bloom">&#x1F534; 困难 · 四方向</button>
+    </div>
+    <button class="btn-go" onclick="showCover()">&#x1F3AE; 开始训练</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="coverOverlay">
+  <div class="overlay-card">
+    <span class="overlay-icon">&#x1F453;</span>
+    <h2>训练前准备</h2>
+    <p class="subtitle">
+      请佩戴矫正眼镜，按医嘱遮盖优势眼<br>
+      屏幕距离眼睛 30-40cm<br>
+      环境光线保持 400-600lux<br>
+      单局 2 分钟，全天不超过 15 分钟<br>
+      识别淡灰色 E 字开口方向
+    </p>
+    <button class="btn-go" onclick="startGame()">&#x2705; 准备好了！</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="endOverlay">
+  <div class="overlay-card" id="endCard"></div>
+</div>
+
+<script>
+// ========== 常量 ==========
+var BASE_W = 520, BASE_H = 400;
+var E_SIZE = 140; // 固定 E 字尺寸（逻辑像素）
+var SW = E_SIZE / 5; // 笔划宽度
+
+// Michelson 对比度: C = |L_bg - L_E| / (L_bg + L_E)
+// 背景 L_bg=128，E 灰度 g: C = |128-g|/(128+g) → g = 128*(1-C)/(1+C)
+function contrastToGray(c) { return Math.round(128 * (1 - c) / (1 + c)); }
+
+// 对比度预设阶梯（逐步递减）
+var CONTRAST_STEPS_SEEDLING = [0.50,0.42,0.35,0.29,0.24,0.20,0.16,0.13,0.10,0.08,0.06,0.05];
+var CONTRAST_STEPS_MATURE    = [0.35,0.29,0.24,0.20,0.16,0.13,0.10,0.08,0.065,0.052,0.042,0.05];
+var CONTRAST_STEPS_BLOOM     = [0.20,0.16,0.13,0.10,0.08,0.065,0.052,0.042,0.034,0.027,0.022,0.05];
+var MIN_CONTRAST = 0.05;
+
+var DIFFICULTY = {
+  seedling: { steps: CONTRAST_STEPS_SEEDLING, buttonMode:'2', label:'简单', startIdx:0 },
+  mature:   { steps: CONTRAST_STEPS_MATURE,    buttonMode:'4', label:'中等', startIdx:0 },
+  bloom:    { steps: CONTRAST_STEPS_BLOOM,     buttonMode:'4', label:'困难', startIdx:0 }
+};
+var DIFF_ORDER = ['seedling','mature','bloom'];
+var currentDiff = 'seedling';
+
+// ========== DOM ==========
+var canvas = document.getElementById('gameCanvas');
+var ctx = canvas.getContext('2d');
+var cw = BASE_W, ch = BASE_H;
+
+var btnRow = document.getElementById('btnRow');
+var contrastFill = document.getElementById('contrastFill');
+var contrastLabel = document.getElementById('contrastLabel');
+
+// ========== 游戏状态 ==========
+var score = 0, timeLeft = 120, timerId = null;
+var totalTrials = 0, correctTrials = 0;
+var consecCorrect = 0, consecWrong = 0;
+var running = false, gameOver = false;
+var currentContrastIdx = 0; // 当前难度在对比度阶梯中的索引
+var currentTrial = null; // { type:'E'|'F', dir:0|1|2|3, gray:number, contrast:number }
+var trialAnswered = false;
+
+// ========== 音频 ==========
+var audioCtx = null, soundOn = true;
+function initAudio(){ if(!audioCtx)try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){} }
+function playTone(f,d,t,v){
+  if(!audioCtx||!soundOn)return;t=t||'sine';v=v||0.06;
+  try{var o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type=t;o.frequency.setValueAtTime(f,audioCtx.currentTime);
+  g.gain.setValueAtTime(v,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+d);
+  o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+d);}catch(e){}
+}
+function sndCorrect(){ playTone(660,0.1,'sine',0.06);setTimeout(function(){playTone(880,0.08,'sine',0.05)},50); }
+function sndWrong(){ playTone(200,0.2,'sawtooth',0.05); }
+function sndUp(){ playTone(523,0.08,'sine',0.05);setTimeout(function(){playTone(659,0.08,'sine',0.05)},70);setTimeout(function(){playTone(784,0.1,'sine',0.06)},140); }
+function sndDown(){ playTone(400,0.12,'triangle',0.06);setTimeout(function(){playTone(300,0.15,'triangle',0.05)},100); }
+function sndDone(){[523,659,784,1047].forEach(function(f,i){setTimeout(function(){playTone(f,0.12,'sine',0.06)},i*100);});}
+function toggleSound(){soundOn=!soundOn;document.getElementById('hudSound').querySelector('.hud-icon').textContent=soundOn?'\u{1F50A}':'\u{1F507}';if(soundOn)initAudio();}
+
+// ========== Canvas ==========
+function resizeCanvas(){
+  var rect=canvasWrap.getBoundingClientRect(),w=rect.width,h=rect.height;
+  var dpr=window.devicePixelRatio||1;
+  canvas.width=w*dpr;canvas.height=h*dpr;
+  canvas.style.width=w+'px';canvas.style.height=h+'px';
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.scale(dpr*w/BASE_W,dpr*h/BASE_H);
+}
+resizeCanvas();
+window.addEventListener('resize',function(){resizeCanvas();if(!running)drawIdle();});
+
+function drawIdle(){ctx.fillStyle='#808080';ctx.fillRect(0,0,BASE_W,BASE_H);}
+
+// ========== E 字绘制（纯 fillRect，无 CSS opacity） ==========
+function drawLetter(type, dir, gray){
+  // type: 'E' or 'F'; dir: 0=右 1=下 2=左 3=上
+  ctx.fillStyle='#808080';ctx.fillRect(0,0,BASE_W,BASE_H);
+
+  // 注视十字 #AAA
+  ctx.strokeStyle='#AAA';ctx.lineWidth=1.5;
+  var cxx=BASE_W/2,cyy=BASE_H/2,cl=10;
+  ctx.beginPath();ctx.moveTo(cxx-cl,cyy);ctx.lineTo(cxx+cl,cyy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cxx,cyy-cl);ctx.lineTo(cxx,cyy+cl);ctx.stroke();
+
+  // 绘制 E / F
+  var cx=BASE_W/2,cy=BASE_H/2;
+  ctx.save();ctx.translate(cx,cy);
+  var angle=[0,Math.PI/2,Math.PI,-Math.PI/2][dir];ctx.rotate(angle);
+  ctx.fillStyle='rgb('+gray+','+gray+','+gray+')';
+  var hs=E_SIZE/2;
+  // 脊柱（左侧竖条）
+  ctx.fillRect(-hs,-hs,SW,E_SIZE);
+  // 顶横条
+  ctx.fillRect(-hs,-hs,E_SIZE,SW);
+  // 中横条
+  ctx.fillRect(-hs,-hs+SW*2,E_SIZE*0.85,SW);
+  // 底横条（E 有，F 无）
+  if(type==='E')ctx.fillRect(-hs,-hs+SW*4,E_SIZE,SW);
+  ctx.restore();
+}
+
+// ========== 按钮 ==========
+function buildButtons(mode){
+  btnRow.innerHTML='';
+  if(mode==='2'){
+    btnRow.className='btn-row grid2';
+    var btns=[
+      {label:'E',val:'E',desc:'三横'},
+      {label:'F',val:'F',desc:'二横'}
+    ];
+    btns.forEach(function(b){
+      var el=document.createElement('button');el.className='orient-btn';
+      el.textContent=b.label+' ('+b.desc+')';el.dataset.val=b.val;
+      el.disabled=true;
+      el.addEventListener('click',function(){onButtonClick(el);});
+      btnRow.appendChild(el);
+    });
+  }else{
+    btnRow.className='btn-row';
+    var dirs=[
+      {label:'\u{2B06} 上',dir:'3'},
+      {label:'\u{27A1} 右',dir:'0'},
+      {label:'\u{2B07} 下',dir:'1'},
+      {label:'\u{2B05} 左',dir:'2'}
+    ];
+    dirs.forEach(function(d){
+      var el=document.createElement('button');el.className='orient-btn';
+      el.textContent=d.label;el.dataset.dir=d.dir;el.disabled=true;
+      el.addEventListener('click',function(){onButtonClick(el);});
+      btnRow.appendChild(el);
+    });
+  }
+}
+
+function disableButtons(v){
+  var btns=btnRow.querySelectorAll('.orient-btn');
+  for(var i=0;i<btns.length;i++){btns[i].disabled=v;btns[i].classList.remove('correct','wrong');}
+}
+
+// ========== 试验生成 ==========
+function generateTrial(){
+  var cfg=DIFFICULTY[currentDiff];
+  var steps=cfg.steps;
+  var contr=steps[currentContrastIdx];
+  var gray=contrastToGray(contr);
+  var type='E';
+  var dir=0;
+  if(cfg.buttonMode==='2'){
+    type=Math.random()<0.5?'E':'F';
+    dir=0; // 均朝右
+  }else{
+    type='E';
+    dir=Math.floor(Math.random()*4);
+  }
+  return {type:type,dir:dir,gray:gray,contrast:contr};
+}
+
+function startTrial(){
+  if(!running||gameOver)return;
+  currentTrial=generateTrial();
+  trialAnswered=false;
+  disableButtons(true);
+  drawLetter(currentTrial.type,currentTrial.dir,currentTrial.gray);
+  // 短延迟后激活按钮
+  setTimeout(function(){
+    if(trialAnswered||!running)return;
+    disableButtons(false);
+  },300);
+}
+
+// ========== 答题 ==========
+function onButtonClick(el){
+  if(!running||!currentTrial||trialAnswered)return;
+  trialAnswered=true;totalTrials++;disableButtons(true);
+
+  var correct=false;
+  if(DIFFICULTY[currentDiff].buttonMode==='2'){
+    correct=(el.dataset.val===currentTrial.type);
+  }else{
+    correct=(el.dataset.dir===String(currentTrial.dir));
+  }
+
+  if(correct){
+    correctTrials++;consecCorrect++;consecWrong=0;
+    score+=10;sndCorrect();el.classList.add('correct');
+    // 4 连对 → 降对比度
+    if(consecCorrect>=4)decreaseContrast();
+  }else{
+    consecCorrect=0;consecWrong++;
+    sndWrong();el.classList.add('wrong');
+    // 3 连错 → 升对比度
+    if(consecWrong>=3)increaseContrast();
+  }
+  updateHUD();
+
+  // 间隔后下一题
+  setTimeout(function(){if(running&&!gameOver)startTrial();},800);
+}
+
+// ========== 自适应对比度 ==========
+function decreaseContrast(){
+  var cfg=DIFFICULTY[currentDiff];
+  if(currentContrastIdx<cfg.steps.length-1){
+    currentContrastIdx++;consecCorrect=0;
+    sndUp();
+  }
+}
+function increaseContrast(){
+  if(currentContrastIdx>0){
+    currentContrastIdx--;consecWrong=0;
+    sndDown();
+  }
+}
+
+// ========== HUD ==========
+function updateHUD(){
+  document.getElementById('hudScore').textContent=score;
+  document.getElementById('hudAccuracy').textContent=totalTrials>0?Math.round(correctTrials/totalTrials*100)+'%':'-';
+  var te=document.getElementById('hudTime');te.textContent=timeLeft;
+  te.className='hud-value'+(timeLeft<=15?' timer-warn':'');
+  // 对比度条
+  var cfg=DIFFICULTY[currentDiff];
+  var contr=cfg.steps[currentContrastIdx];
+  var pct=Math.round((currentContrastIdx/(cfg.steps.length-1))*100);
+  contrastFill.style.width=pct+'%';
+  contrastLabel.textContent='对比度 '+(contr*100).toFixed(1)+'%';
+}
+function tick(){timeLeft--;updateHUD();if(timeLeft<=0)endGame();}
+
+// ========== Overlay ==========
+function showCover(){
+  initAudio();var ab=document.querySelector('.diff-btn.active');
+  if(ab)currentDiff=ab.dataset.diff;
+  document.getElementById('startOverlay').classList.add('hidden');
+  document.getElementById('coverOverlay').classList.remove('hidden');
+}
+function startGame(){
+  document.getElementById('coverOverlay').classList.add('hidden');
+  document.getElementById('endOverlay').classList.add('hidden');
+  score=0;timeLeft=120;totalTrials=0;correctTrials=0;
+  consecCorrect=0;consecWrong=0;running=true;gameOver=false;
+  var cfg=DIFFICULTY[currentDiff];
+  currentContrastIdx=cfg.startIdx;
+  buildButtons(cfg.buttonMode);updateHUD();
+  clearInterval(timerId);timerId=setInterval(tick,1000);
+  startTrial();
+}
+function endGame(){
+  running=false;gameOver=true;clearInterval(timerId);
+  currentTrial=null;drawIdle();
+  var cfg=DIFFICULTY[currentDiff];
+  var minC=cfg.steps[currentContrastIdx];
+  var acc=totalTrials>0?Math.round(correctTrials/totalTrials*100):0;
+  document.getElementById('endCard').innerHTML=
+    '<span class="end-icon">\u{1F441}</span>'+
+    '<h2>训练结束</h2>'+
+    '<p style="color:#ccc;font-size:14px;margin:6px 0">最低可辨对比度：<b style="color:#fff;font-size:18px">'+(minC*100).toFixed(1)+'%</b></p>'+
+    '<div class="result-stats">'+
+      '<div class="result-stat"><div class="rs-label">总得分</div><div class="rs-value">'+score+'</div></div>'+
+      '<div class="result-stat"><div class="rs-label">正确率</div><div class="rs-value">'+acc+'%</div></div>'+
+      '<div class="result-stat"><div class="rs-label">答题数</div><div class="rs-value">'+totalTrials+'</div></div>'+
+      '<div class="result-stat"><div class="rs-label">最低对比度</div><div class="rs-value">'+(minC*100).toFixed(1)+'%</div></div>'+
+    '</div>'+
+    '<p class="tip">\u{1F453} 记得远眺 5 分钟，让眼睛放松</p>'+
+    '<button class="btn-go" onclick="restartGame()">\u{1F504} 再玩一次</button>'+
+    '<button class="btn-go" style="margin-top:8px;font-size:15px" onclick="backToSelect()">\u{1F3E0} 返回选择</button>';
+  document.getElementById('endOverlay').classList.remove('hidden');sndDone();
+}
+function restartGame(){
+  document.getElementById('endOverlay').classList.add('hidden');
+  document.getElementById('coverOverlay').classList.remove('hidden');
+}
+function backToSelect(){
+  document.getElementById('endOverlay').classList.add('hidden');
+  document.getElementById('startOverlay').classList.remove('hidden');
+  running=false;gameOver=true;
+  document.querySelectorAll('.diff-btn').forEach(function(b){b.classList.toggle('active',b.dataset.diff===currentDiff);});
+  drawIdle();
+}
+document.querySelectorAll('.diff-btn').forEach(function(b){
+  b.addEventListener('click',function(){
+    if(running)return;
+    document.querySelectorAll('.diff-btn').forEach(function(x){x.classList.remove('active');});
+    b.classList.add('active');currentDiff=b.dataset.diff;
+  });
+});
+
+// ========== 初始化 ==========
+buildButtons('2');
+drawIdle();
+</script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}</script>
+</body>
+</html>

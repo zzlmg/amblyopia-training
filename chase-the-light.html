@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>追光点 · 弱视视觉追踪训练</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  :root {
+    --bg: #0a0a1a;
+    --surface: #141430;
+    --gold: #ffd54f;
+    --cyan: #4de8ff;
+    --pink: #ff6ec7;
+    --green: #64ffda;
+    --white: #f0f0ff;
+    --text: #c8c8e0;
+    --danger: #ff5252;
+    --card: #1a1a40;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+  body {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 8px; gap: 8px;
+  }
+
+  /* ── Top Nav ── */
+  .top-bar {
+    width: 100%; max-width: 700px; display: flex;
+    align-items: center; justify-content: space-between; padding: 16px 20px; flex-shrink: 0;
+  }
+  .back-link {
+    text-decoration: none; color: var(--cyan); font-weight: 600; font-size: 15px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .back-link:hover { opacity: 0.8; }
+
+  /* ── Header ── */
+  .header {
+    width: 100%; max-width: 700px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 16px;
+    background: var(--surface);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+  }
+  .header h1 {
+    font-size: 1.15rem; font-weight: 700; color: var(--white);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .header h1 span { font-size: 1.4rem; }
+  .header-right {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .diff-badge {
+    font-size: 0.78rem; font-weight: 600; padding: 3px 12px;
+    border-radius: 20px; color: #fff;
+  }
+  .diff-easy  { background: linear-gradient(135deg, #64ffda, #00bfa5); }
+  .diff-medium { background: linear-gradient(135deg, #ffd54f, #ff9800); }
+  .diff-hard   { background: linear-gradient(135deg, #ff6ec7, #e040fb); }
+
+  /* ── HUD ── */
+  .hud {
+    width: 100%; max-width: 700px;
+    display: flex; gap: 8px; flex-shrink: 0;
+  }
+  .hud-item {
+    flex:1; background: var(--surface); border-radius: 12px;
+    padding: 8px 12px; text-align: center;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .hud-label { font-size: 0.7rem; color: var(--text); text-transform: uppercase; letter-spacing: 1px; }
+  .hud-value { font-size: 1.4rem; font-weight: 700; color: var(--white); margin-top: 2px; }
+  .hud-value.gold { color: var(--gold); }
+  .hud-value.cyan { color: var(--cyan); }
+
+  .timer-ring {
+    display: inline-block; width: 48px; height: 48px; flex-shrink: 0;
+  }
+
+  /* ── Canvas Wrapper ── */
+  .canvas-wrap {
+    flex:1; width: 100%; max-width: 700px;
+    min-height: 0;
+    background: var(--surface);
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.08);
+    position: relative; overflow: hidden;
+    cursor: crosshair;
+  }
+  canvas {
+    display: block; width: 100%; height: 100%;
+  }
+
+  /* ── Overlays ── */
+  .overlay {
+    position: absolute; inset: 0;
+    background: rgba(10,10,26,0.88);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 10;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+  }
+  .overlay.hidden { display: none; }
+
+  .overlay-card {
+    background: var(--card); border-radius: 20px;
+    padding: 28px 22px; max-width: 400px; width: 90%;
+    text-align: center;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .overlay-card h2 { font-size: 1.5rem; color: var(--white); margin-bottom: 6px; }
+  .overlay-card p { font-size: 0.9rem; color: var(--text); line-height: 1.7; margin: 10px 0; }
+  .overlay-card .icon-large { font-size: 3.5rem; margin-bottom: 8px; display: block; }
+
+  .diff-select {
+    display: flex; gap: 8px; margin: 16px 0; justify-content: center; flex-wrap: wrap;
+  }
+  .diff-btn {
+    padding: 8px 18px; border-radius: 24px; border: 2px solid rgba(255,255,255,0.15);
+    background: transparent; color: var(--text); font-size: 0.9rem;
+    font-weight: 600; cursor: pointer; transition: all 0.2s;
+  }
+  .diff-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .diff-btn.active { background: var(--gold); color: #0a0a1a; border-color: var(--gold); }
+
+  .btn-go {
+    display: inline-block; padding: 12px 36px; border-radius: 30px;
+    font-size: 1.05rem; font-weight: 700; cursor: pointer; border: none;
+    background: linear-gradient(135deg, var(--gold), #ff9800);
+    color: #0a0a1a; margin-top: 12px;
+    box-shadow: 0 4px 20px rgba(255,213,79,0.4);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .btn-go:hover { transform: scale(1.04); box-shadow: 0 6px 30px rgba(255,213,79,0.55); }
+  .btn-go:active { transform: scale(0.96); }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    font-size: 2rem; font-weight: 800; color: var(--gold);
+    pointer-events: none; z-index: 100;
+    opacity: 0; transition: opacity 0.15s;
+    text-shadow: 0 0 30px rgba(255,213,79,0.7);
+  }
+  .toast.show { opacity: 1; }
+
+  /* ── Responsive ── */
+  @media (max-width: 500px) {
+    .header { padding: 6px 12px; }
+    .header h1 { font-size: 1rem; }
+    .hud-item { padding: 6px 8px; }
+    .hud-value { font-size: 1.1rem; }
+    .overlay-card { padding: 22px 16px; }
+    .overlay-card h2 { font-size: 1.25rem; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- Top Nav -->
+<div class="top-bar">
+  <a href="index.html" class="back-link">&#8592; 返回科普站</a>
+  <a href="index.html#games" class="back-link">&#8592; 训练游戏</a>
+  <a href="progress.html" class="back-link">📊 训练进度</a>
+</div>
+
+<!-- ═══ In-game Header ═══ -->
+<div class="header">
+  <h1><span>✨</span>追光点</h1>
+  <div class="header-right">
+    <span class="diff-badge diff-easy" id="diffBadge">简单</span>
+    <span style="color:var(--text);font-size:0.8rem;" id="roundInfo">0 / 0</span>
+  </div>
+</div>
+
+<!-- HUD -->
+<div class="hud">
+  <div class="hud-item">
+    <div class="hud-label">⭐ 捕获</div>
+    <div class="hud-value gold" id="hudScore">0</div>
+  </div>
+  <div class="hud-item">
+    <div class="hud-label">🎯 连击</div>
+    <div class="hud-value cyan" id="hudCombo">0</div>
+  </div>
+  <div class="hud-item">
+    <div class="hud-label">💫 奖励星</div>
+    <div class="hud-value" style="color:var(--pink)" id="hudBonus">0</div>
+  </div>
+  <div class="hud-item" style="display:flex;align-items:center;justify-content:center;">
+    <canvas id="timerCanvas" width="48" height="48" class="timer-ring"></canvas>
+  </div>
+</div>
+
+<!-- Canvas Game Area -->
+<div class="canvas-wrap" id="canvasWrap">
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- Start Overlay -->
+  <div class="overlay" id="startOverlay">
+    <div class="overlay-card">
+      <span class="icon-large">✨</span>
+      <h2>追光点训练</h2>
+      <p>训练<b>平滑追随</b> + <b>周边视野</b><br>
+      用眼睛追随移动的光点，<br>当光点<b>变大变亮</b>时点击捕获！<br>
+      偶尔有奖励星星在边缘一闪而过 👀</p>
+      <div class="diff-select" id="diffSelect">
+        <button class="diff-btn active" data-diff="easy">⭐ 简单</button>
+        <button class="diff-btn" data-diff="medium">⭐⭐ 中等</button>
+        <button class="diff-btn" data-diff="hard">⭐⭐⭐ 困难</button>
+      </div>
+      <button class="btn-go" id="btnStart">开始训练</button>
+    </div>
+  </div>
+
+  <!-- Cover Reminder Overlay -->
+  <div class="overlay hidden" id="coverOverlay">
+    <div class="overlay-card">
+      <span class="icon-large">🩺</span>
+      <h2>遮盖提醒</h2>
+      <p>请<b>遮盖健眼（好眼）</b>，<br>仅用<b>弱视眼</b>进行训练。</p>
+      <p style="font-size:0.78rem;color:#ff8a80;">遮盖不严会影响训练效果</p>
+      <button class="btn-go" id="btnReady">准备好了</button>
+    </div>
+  </div>
+
+  <!-- End Overlay -->
+  <div class="overlay hidden" id="endOverlay">
+    <div class="overlay-card" id="endCard"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Audio -->
+<audio id="sfxCatch" preload="auto">
+  <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAf39/f4B/f3+AgH9/gH9/f3+Af39/gIB/f3+Af39/gIB/gH9/f3+Af39/gIB/f3+AgH9/gH+Af39/gIB/f3+AgH9/gH+Af3+AgH9/gH+Af3+AgH+Af3+AgH+Af3+AgH9/gIB/f4B/f3+Af39/gH+Af39/gH9/gH9/f4B/gH9/f4B/f3+Af3+Af39/gH9/gH9/f4B/gH9/f4B/f3+AgH9/gH+Af39/gH9/gIB/f3+Af3+Af3+AgH9/gH+Af3+AgH9/gH+Af3+AgH9/gH+Af3+AgH9/gH+Af3+AgH9/gH+Af4=">
+</audio>
+<audio id="sfxBonus" preload="auto">
+  <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAf39/f4B/f3+AgH9/gH9/f3+Af39/gIB/f3+Af39/gIB/gH9/f3+Af39/gIB/f3+AgH9/gH+Af39/gIB/f3+AgH9/gH+Af3+AgH9/gH+Af3+AgH+Af3+AgH+Af3+AgH9/gIB/f4B/f3+Af39/gH+Af39/gH9/gH9/f4B/gH9/f4B/f3+Af3+Af39/gH9/gH9/f4B/gH9/f4B/f3+AgH9/gH+Af39/gH9/gIB/f3+Af3+Af3+AgH9/gH+Af3+AgH9/gH+Af3+AgH9/gH+Af3+AgH+Af3+AgH9/gH+Af4=">
+</audio>
+<audio id="sfxCombo" preload="auto">
+  <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAf39/f4B/f3+AgH9/gH9/f3+Af39/gIB/f3+Af39/gIB/gH9/f3+Af39/gIB/f3+AgH9/gH+Af39/gIB/f3+AgH9/gH+Af3+AgH9/gH+Af3+AgH+Af3+AgH+Af3+AgH9/gIB/f4B/f3+Af39/gH+Af39/gH9/gH9/f4B/gH9/f4B/f3+Af3+Af39/gH9/gH9/f4B/gH9/f4B/f3+AgH9/gH+Af39/gH9/gIB/f3+Af3+Af3+AgH9/gH+Af3+AgH9/gH+Af3+AgH9/gH+Af3+AgH+Af3+AgH9/gH+Af4=">
+</audio>
+
+<script>
+/* ============================================================
+   追光点 - 平滑追随 + 周边视野训练游戏
+   临床依据：PMC4849536 (弱视平滑追随延迟),
+            PMC6753964 (儿童平滑追随增益参考值)
+   ============================================================ */
+/* ── localStorage 进度系统 ── */
+const PROGRESS_KEY='amblyopia_progress';
+function initProgress(){let r=localStorage.getItem(PROGRESS_KEY);if(!r){const p={version:1,totalPoints:0,streak:{current:0,best:0,lastDate:''},games:{'whack-a-mole':{plays:0,bestScore:0,totalHits:0,totalMisses:0,bestCombo:0},'spot-difference':{plays:0,bestScore:0,totalCorrect:0,totalWrong:0},'matching-game':{plays:0,bestScore:0,totalPairs:0,bestCombo:0},'maze-game':{plays:0,bestScore:0,totalMazes:0,fastestTime:null},'chase-the-light':{plays:0,bestScore:0,totalCaptures:0,bestCombo:0},'fly-swatter':{plays:0,bestScore:0,totalKills:0,totalEscapes:0}},calendar:{},achievements:[],settings:{difficulties:{}}};localStorage.setItem(PROGRESS_KEY,JSON.stringify(p));return p;}try{return JSON.parse(r);}catch(e){return null;}}
+function getToday(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+const ACH=[{id:'first_game',check(p){return p.totalPoints>0;}},{id:'five_games',check(p){return Object.values(p.games).filter(g=>g.plays>0).length>=6;}},{id:'high_score_200',check(p){return Object.values(p.games).some(g=>g.bestScore>=200);}},{id:'streak_3',check(p){return p.streak.best>=3;}},{id:'streak_7',check(p){return p.streak.best>=7;}},{id:'total_1000',check(p){return p.totalPoints>=1000;}},{id:'no_escape',check(p){const g=p.games['fly-swatter'];return g.plays>0&&g.totalEscapes===0;}},{id:'ten_plays',check(p){return Object.values(p.games).reduce((s,g)=>s+g.plays,0)>=10;}},{id:'perfect_whack',check(p){const g=p.games['whack-a-mole'];return g.totalHits>=10&&g.totalHits/(g.totalHits+g.totalMisses)>=0.9;}}];
+function saveGameResult(gameId,data){let p=initProgress();if(!p)return;const g=p.games[gameId];g.plays++;if(data.score>g.bestScore)g.bestScore=data.score;if(data.hits!==undefined)g.totalHits=(g.totalHits||0)+data.hits;if(data.misses!==undefined)g.totalMisses=(g.totalMisses||0)+data.misses;if(data.combo!==undefined&&data.combo>(g.bestCombo||0))g.bestCombo=data.combo;if(data.correct!==undefined)g.totalCorrect=(g.totalCorrect||0)+data.correct;if(data.wrong!==undefined)g.totalWrong=(g.totalWrong||0)+data.wrong;if(data.pairs!==undefined)g.totalPairs=(g.totalPairs||0)+data.pairs;if(data.mazes!==undefined)g.totalMazes=(g.totalMazes||0)+data.mazes;if(data.time!==undefined&&(g.fastestTime===null||data.time<g.fastestTime))g.fastestTime=data.time;if(data.captures!==undefined)g.totalCaptures=(g.totalCaptures||0)+data.captures;if(data.kills!==undefined)g.totalKills=(g.totalKills||0)+data.kills;if(data.escapes!==undefined)g.totalEscapes=(g.totalEscapes||0)+data.escapes;p.totalPoints+=data.score;const today=getToday();if(!p.calendar[today])p.calendar[today]={points:0,gamesPlayed:0,duration:0};p.calendar[today].points+=data.score;p.calendar[today].gamesPlayed++;p.calendar[today].duration+=data.duration||120;updateStreak(p,today);checkAch(p);if(data.difficulty)p.settings.difficulties[gameId]=data.difficulty;localStorage.setItem(PROGRESS_KEY,JSON.stringify(p));}
+function updateStreak(p,today){if(!p.streak.lastDate){p.streak.current=1;p.streak.lastDate=today;}else{const last=new Date(p.streak.lastDate),curr=new Date(today);const diff=Math.floor((curr-last)/86400000);if(diff===1)p.streak.current++;else if(diff>1)p.streak.current=1;p.streak.lastDate=today;}if(p.streak.current>p.streak.best)p.streak.best=p.streak.current;}
+function checkAch(p){const unlocked=new Set(p.achievements.map(a=>a.id));for(const ach of ACH){if(!unlocked.has(ach.id)&&ach.check(p)){p.achievements.push({id:ach.id,unlockedAt:getToday()});}}}
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const wrap = document.getElementById('canvasWrap');
+const timerCanvas = document.getElementById('timerCanvas');
+const timerCtx = timerCanvas.getContext('2d');
+
+const TOTAL_TIME = 120; // 2分钟
+let W, H;
+
+/* ── Difficulty ── */
+const DIFFICULTY = {
+  easy:   { speed: 50,  radius: 28, trailLen: 18, bonusFreq: 0.012, spawnInterval: 1800, label: '简单' },
+  medium: { speed: 80,  radius: 22, trailLen: 14, bonusFreq: 0.020, spawnInterval: 1500, label: '中等' },
+  hard:   { speed: 110, radius: 16, trailLen: 10, bonusFreq: 0.028, spawnInterval: 1200, label: '困难' }
+};
+let diff = 'easy';
+let cfg = DIFFICULTY[diff];
+
+/* ── State ── */
+let score = 0, combo = 0, maxCombo = 0, bonusStars = 0;
+let timeLeft = TOTAL_TIME;
+let running = false, paused = false;
+let gameLoopId = null;
+
+/* ── Orb ── */
+let orb = { x: 0, y: 0, vx: 0, vy: 0, phase: 0, canCatch: false, catchTimer: 0,
+            trail: [], catchableUntil: 0 };
+let particles = [];
+let bonuses = [];
+let targetX = 0, targetY = 0;
+
+/* ── Audio ── */
+function playSfx(id) {
+  const a = document.getElementById(id);
+  if (!a) return;
+  a.currentTime = 0;
+  a.play().catch(()=>{});
+}
+
+/* ── Toast ── */
+const toast = document.getElementById('toast');
+let toastTimer = null;
+function showToast(msg, duration=600) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toast.classList.remove('show'), duration);
+}
+
+/* ── Resize ── */
+function resize() {
+  const rect = wrap.getBoundingClientRect();
+  W = rect.width; H = rect.height;
+  canvas.width = W * window.devicePixelRatio;
+  canvas.height = H * window.devicePixelRatio;
+  canvas.style.width = W+'px'; canvas.style.height = H+'px';
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+}
+window.addEventListener('resize', ()=>{ if(running) resize(); });
+
+/* ── Timer ring ── */
+function drawTimer() {
+  const tw = 48, th = 48, cx = 24, cy = 24, r = 20;
+  timerCtx.clearRect(0,0,tw,th);
+  timerCtx.beginPath();
+  timerCtx.arc(cx,cy,r,0,Math.PI*2);
+  timerCtx.strokeStyle = 'rgba(255,255,255,0.1)';
+  timerCtx.lineWidth = 3;
+  timerCtx.stroke();
+  const pct = timeLeft / TOTAL_TIME;
+  timerCtx.beginPath();
+  timerCtx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*pct);
+  timerCtx.strokeStyle = pct>0.3 ? '#ffd54f' : '#ff5252';
+  timerCtx.lineWidth = 3; timerCtx.lineCap = 'round';
+  timerCtx.stroke();
+  timerCtx.fillStyle = '#f0f0ff';
+  timerCtx.font = 'bold 12px -apple-system, sans-serif';
+  timerCtx.textAlign = 'center'; timerCtx.textBaseline = 'middle';
+  timerCtx.fillText(Math.ceil(timeLeft)+'s', cx, cy);
+}
+
+/* ── Particles ── */
+function spawnParticles(x, y, color, count) {
+  for (let i=0; i<count; i++) {
+    const angle = Math.random()*Math.PI*2;
+    const speed = 1.5 + Math.random()*4;
+    particles.push({
+      x, y, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed,
+      life: 1, decay: 0.015 + Math.random()*0.03,
+      radius: 2+Math.random()*4, color
+    });
+  }
+}
+
+/* ── Bonus Star ── */
+function spawnBonus() {
+  if (bonuses.length >= 3) return;
+  const edge = Math.floor(Math.random()*4);
+  let bx, by;
+  const m = 60;
+  switch(edge) {
+    case 0: bx = m + Math.random()*(W-m*2); by = m; break;
+    case 1: bx = W-m; by = m + Math.random()*(H-m*2); break;
+    case 2: bx = m + Math.random()*(W-m*2); by = H-m; break;
+    case 3: bx = m; by = m + Math.random()*(H-m*2); break;
+  }
+  bonuses.push({
+    x: bx, y: by, life: 1, decay: 0.008 + Math.random()*0.012,
+    radius: 10+Math.random()*8, pulse: Math.random()*Math.PI*2
+  });
+}
+
+/* ── New orb target ── */
+function newOrbTarget() {
+  const pad = cfg.radius + 30;
+  targetX = pad + Math.random()*(W-pad*2);
+  targetY = pad + Math.random()*(H-pad*2);
+  orb.canCatch = false;
+  orb.catchTimer = 0;
+  orb.catchableUntil = 0;
+}
+
+/* ── Make orb catchable ── */
+function makeCatchable() {
+  orb.canCatch = true;
+  orb.catchTimer = 0;
+  orb.catchableUntil = Date.now() + 2000; // 2秒窗口
+}
+
+/* ── Reset orb ── */
+function resetOrb() {
+  orb.x = W/2;
+  orb.y = H/2;
+  orb.trail = [];
+  orb.canCatch = false;
+  orb.catchTimer = 0;
+  orb.catchableUntil = 0;
+  newOrbTarget();
+}
+
+/* ── Move orb toward target ── */
+function moveOrb() {
+  const dx = targetX - orb.x;
+  const dy = targetY - orb.y;
+  const dist = Math.sqrt(dx*dx+dy*dy);
+  if (dist < 4) {
+    newOrbTarget();
+    return;
+  }
+  // Smooth movement with easing
+  const speed = cfg.speed;
+  const step = Math.min(speed / 60, dist);
+  orb.x += (dx/dist)*step;
+  orb.y += (dy/dist)*step;
+
+  // Trail
+  orb.trail.push({x:orb.x, y:orb.y, life:1});
+  if (orb.trail.length > cfg.trailLen) orb.trail.shift();
+  for (let t of orb.trail) t.life -= 0.03;
+
+  // Catchable timing
+  if (!orb.canCatch) {
+    orb.catchTimer += 16.67; // ~60fps
+    const interval = diff==='easy' ? 2200 : diff==='medium' ? 1800 : 1400;
+    if (orb.catchTimer >= interval) {
+      makeCatchable();
+    }
+  } else {
+    if (Date.now() > orb.catchableUntil) {
+      orb.canCatch = false;
+      orb.catchTimer = 0;
+      combo = 0;
+      updateHUD();
+    }
+  }
+}
+
+/* ── Update ── */
+function update() {
+  if (!running || paused) return;
+
+  moveOrb();
+
+  // Particles
+  for (let i=particles.length-1; i>=0; i--) {
+    let p = particles[i];
+    p.x += p.vx; p.y += p.vy;
+    p.life -= p.decay;
+    if (p.life<=0) particles.splice(i,1);
+  }
+
+  // Bonuses
+  for (let i=bonuses.length-1; i>=0; i--) {
+    let b = bonuses[i];
+    b.life -= b.decay;
+    b.pulse += 0.12;
+    if (b.life<=0) bonuses.splice(i,1);
+  }
+  if (Math.random() < cfg.bonusFreq) spawnBonus();
+}
+
+/* ── Draw ── */
+function draw() {
+  ctx.clearRect(0,0,W,H);
+
+  // Background grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.lineWidth = 0.5;
+  const gs = 40;
+  for (let x=gs; x<W; x+=gs) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for (let y=gs; y<H; y+=gs) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+  // Trail
+  for (let t of orb.trail) {
+    if (t.life <= 0) continue;
+    ctx.beginPath();
+    ctx.arc(t.x, t.y, cfg.radius*0.45*t.life, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(255,213,79,${t.life*0.25})`;
+    ctx.fill();
+  }
+
+  // Bonus stars
+  for (let b of bonuses) {
+    const alpha = b.life*0.7;
+    const r = b.radius*(0.8+0.2*Math.sin(b.pulse));
+    // Outer glow
+    const glow = ctx.createRadialGradient(b.x,b.y,r*0.3,b.x,b.y,r*2.5);
+    glow.addColorStop(0,`rgba(255,110,199,${alpha})`);
+    glow.addColorStop(0.5,`rgba(255,110,199,${alpha*0.3})`);
+    glow.addColorStop(1,'rgba(255,110,199,0)');
+    ctx.beginPath(); ctx.arc(b.x,b.y,r*2.5,0,Math.PI*2);
+    ctx.fillStyle = glow; ctx.fill();
+    // Star shape
+    drawStar(b.x, b.y, r, r*0.45, 5, alpha);
+  }
+
+  // Orb glow layers
+  const catchPulse = orb.canCatch ? (0.6+0.4*Math.sin(Date.now()*0.008)) : 1;
+  const orbRadius = cfg.radius * catchPulse;
+
+  // Outer aura
+  const aura = ctx.createRadialGradient(orb.x, orb.y, orbRadius*0.4, orb.x, orb.y, orbRadius*3);
+  const auraColor = orb.canCatch ? 'rgba(255,213,79,' : 'rgba(255,255,255,';
+  aura.addColorStop(0, auraColor+'0.4)');
+  aura.addColorStop(0.5, auraColor+'0.12)');
+  aura.addColorStop(1, auraColor+'0)');
+  ctx.beginPath(); ctx.arc(orb.x, orb.y, orbRadius*3, 0, Math.PI*2);
+  ctx.fillStyle = aura; ctx.fill();
+
+  // Core glow
+  const core = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, orbRadius);
+  if (orb.canCatch) {
+    core.addColorStop(0, 'rgba(255,255,255,1)');
+    core.addColorStop(0.25, 'rgba(255,235,150,0.95)');
+    core.addColorStop(0.6, 'rgba(255,180,40,0.7)');
+    core.addColorStop(1, 'rgba(255,140,0,0)');
+  } else {
+    core.addColorStop(0, 'rgba(255,255,255,0.85)');
+    core.addColorStop(0.3, 'rgba(200,210,255,0.6)');
+    core.addColorStop(0.7, 'rgba(100,140,255,0.25)');
+    core.addColorStop(1, 'rgba(60,80,200,0)');
+  }
+  ctx.beginPath(); ctx.arc(orb.x, orb.y, orbRadius, 0, Math.PI*2);
+  ctx.fillStyle = core; ctx.fill();
+
+  // Catch ring (pulsing when catchable)
+  if (orb.canCatch) {
+    const ringR = orbRadius + 8 + 4*Math.sin(Date.now()*0.005);
+    ctx.beginPath();
+    ctx.arc(orb.x, orb.y, ringR, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(255,213,79,0.6)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6,4]); ctx.lineDashOffset = -Date.now()*0.05;
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Particles
+  for (let p of particles) {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.radius*p.life, 0, Math.PI*2);
+    ctx.fillStyle = p.color.replace('1)',`${p.life})`);
+    ctx.fill();
+  }
+}
+
+function drawStar(cx, cy, outerR, innerR, points, alpha) {
+  ctx.beginPath();
+  for (let i=0; i<points*2; i++) {
+    const angle = -Math.PI/2 + (Math.PI*2*i)/(points*2);
+    const r = i%2===0 ? outerR : innerR;
+    const x = cx + Math.cos(angle)*r;
+    const y = cy + Math.sin(angle)*r;
+    if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = `rgba(255,110,199,${alpha})`;
+  ctx.fill();
+}
+
+/* ── Handle tap/click ── */
+function handleTap(ex, ey) {
+  if (!running || paused) return;
+
+  // Check bonus stars first
+  for (let i=bonuses.length-1; i>=0; i--) {
+    let b = bonuses[i];
+    const dist = Math.hypot(ex-b.x, ey-b.y);
+    if (dist < b.radius*1.5) {
+      bonuses.splice(i,1);
+      bonusStars++;
+      score += 3;
+      spawnParticles(b.x, b.y, 'rgba(255,110,199,1)', 12);
+      playSfx('sfxBonus');
+      showToast('💫 +3', 500);
+      updateHUD();
+      return;
+    }
+  }
+
+  // Check orb
+  const dist = Math.hypot(ex-orb.x, ey-orb.y);
+  const catchRadius = orb.canCatch ? cfg.radius*1.8 : cfg.radius*0.7;
+  if (dist < catchRadius && orb.canCatch) {
+    combo++;
+    if (combo > maxCombo) maxCombo = combo;
+    const bonus = combo>=10 ? 5 : combo>=5 ? 3 : combo>=3 ? 2 : 1;
+    score += bonus;
+    const color = orb.canCatch ? 'rgba(255,213,79,1)' : 'rgba(100,140,255,1)';
+    spawnParticles(orb.x, orb.y, color, 18);
+    playSfx(combo>=5?'sfxCombo':'sfxCatch');
+    if (combo>=5) showToast('🔥 连击x'+combo, 800);
+    else if (combo>=3) showToast('✨ +'+bonus, 500);
+
+    // Reset orb to new position
+    orb.canCatch = false;
+    orb.catchTimer = 0;
+    orb.catchableUntil = 0;
+    orb.trail = [];
+    orb.x = 50+Math.random()*(W-100);
+    orb.y = 50+Math.random()*(H-100);
+    newOrbTarget();
+    updateHUD();
+  } else if (dist < catchRadius && !orb.canCatch) {
+    // Tapped but not catchable yet - small feedback
+    spawnParticles(ex, ey, 'rgba(150,150,255,0.6)', 5);
+  }
+}
+
+canvas.addEventListener('pointerdown', e=>{
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  handleTap(e.clientX-rect.left, e.clientY-rect.top);
+});
+
+canvas.addEventListener('touchstart', e=>{
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  for (let t of e.changedTouches) {
+    handleTap(t.clientX-rect.left, t.clientY-rect.top);
+  }
+}, {passive:false});
+
+/* ── Game loop ── */
+let lastTick = 0;
+function gameLoop(ts) {
+  if (!running) return;
+  const dt = lastTick ? ts-lastTick : 16.67;
+  lastTick = ts;
+
+  update();
+  draw();
+  drawTimer();
+
+  gameLoopId = requestAnimationFrame(gameLoop);
+}
+
+/* ── Timer ── */
+let timerInterval = null;
+function startTimer() {
+  timerInterval = setInterval(()=>{
+    if (!running || paused) return;
+    timeLeft = Math.max(0, timeLeft-1);
+    drawTimer();
+    document.getElementById('roundInfo').textContent =
+      Math.floor((TOTAL_TIME-timeLeft)/60)+':'+String(Math.floor((TOTAL_TIME-timeLeft)%60)).padStart(2,'0');
+    if (timeLeft <= 0) endGame();
+  }, 1000);
+}
+
+/* ── HUD ── */
+function updateHUD() {
+  document.getElementById('hudScore').textContent = score;
+  document.getElementById('hudCombo').textContent = combo;
+  document.getElementById('hudBonus').textContent = bonusStars;
+}
+
+/* ── Start ── */
+function startGame() {
+  diff = document.querySelector('.diff-btn.active')?.dataset?.diff || 'easy';
+  cfg = DIFFICULTY[diff];
+  const badge = document.getElementById('diffBadge');
+  badge.textContent = cfg.label;
+  badge.className = 'diff-badge diff-'+diff;
+
+  score = 0; combo = 0; maxCombo = 0; bonusStars = 0;
+  timeLeft = TOTAL_TIME;
+  particles = []; bonuses = [];
+  updateHUD();
+  drawTimer();
+  document.getElementById('roundInfo').textContent = '0:00';
+
+  resize();
+  resetOrb();
+
+  document.getElementById('startOverlay').classList.add('hidden');
+  document.getElementById('coverOverlay').classList.add('hidden');
+  document.getElementById('endOverlay').classList.add('hidden');
+
+  running = true;
+  paused = false;
+  lastTick = 0;
+  gameLoopId = requestAnimationFrame(gameLoop);
+  startTimer();
+}
+
+/* ── End ── */
+function endGame() {
+  running = false;
+  if (gameLoopId) cancelAnimationFrame(gameLoopId);
+  if (timerInterval) clearInterval(timerInterval);
+
+  const hitRate = score > 0 ? Math.round((score/(score+Math.max(0,combo*0.3)))*100) : 0;
+  const accuracy = combo > 0 ? Math.min(100, Math.round((maxCombo/(maxCombo+3))*100)) : 0;
+  let grade = score >= 40 ? '🏆 太棒了！' : score >= 25 ? '🌟 非常优秀' : score >= 12 ? '👍 继续加油' : '💪 再来一次';
+
+  document.getElementById('endCard').innerHTML = `
+    <span style="font-size:3rem;display:block;margin-bottom:8px;">${score>=25?'🎉':'✨'}</span>
+    <h2>训练结束！</h2>
+    <div style="margin:16px 0;line-height:2;font-size:0.95rem;color:var(--white);">
+      <div>⭐ 捕获光点：<b style="color:var(--gold)">${score} 次</b></div>
+      <div>🔥 最高连击：<b style="color:var(--cyan)">${maxCombo} 次</b></div>
+      <div>💫 奖励星星：<b style="color:var(--pink)">${bonusStars} 颗</b></div>
+      <div>⏱ 训练时长：<b>2 分钟</b></div>
+    </div>
+    <div style="font-size:1.3rem;font-weight:700;color:var(--gold);margin:12px 0;">${grade}</div>
+    <p style="font-size:0.8rem;color:var(--text);margin:8px 0;">遮盖健眼休息 5 分钟后再继续</p>
+    <button class="btn-go" onclick="startGame()">再来一局</button>
+    <button style="display:block;margin:10px auto 0;padding:8px 20px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);background:transparent;color:var(--text);font-size:0.85rem;cursor:pointer;" onclick="backToMenu()">返回主菜单</button>
+  `;
+  document.getElementById('endOverlay').classList.remove('hidden');
+  saveGameResult('chase-the-light', {score, captures:score, combo:maxCombo, difficulty:diff, duration:120});
+}
+
+function backToMenu() {
+  document.getElementById('endOverlay').classList.add('hidden');
+  document.getElementById('startOverlay').classList.remove('hidden');
+  timeLeft = TOTAL_TIME;
+  score=0; combo=0; maxCombo=0; bonusStars=0;
+  updateHUD();
+  drawTimer();
+  document.getElementById('roundInfo').textContent = '0 / 0';
+}
+
+/* ── Event listeners ── */
+document.getElementById('btnStart').addEventListener('click', ()=>{
+  document.getElementById('startOverlay').classList.add('hidden');
+  document.getElementById('coverOverlay').classList.remove('hidden');
+});
+document.getElementById('btnReady').addEventListener('click', startGame);
+
+// Difficulty buttons
+document.querySelectorAll('.diff-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    diff = btn.dataset.diff;
+    cfg = DIFFICULTY[diff];
+  });
+});
+
+/* ── Init ── */
+resize();
+drawTimer();
+</script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}</script>
+</body>
+</html>

@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>芦荟探踪 · 弱视训练</title>
+<link rel="manifest" href="manifest.json">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:'PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif;
+  background:#FFF8E7;color:#4A3828;min-height:100vh;display:flex;
+  flex-direction:column;align-items:center;overflow-x:hidden;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+body{padding-bottom:30px}
+
+.top-bar{width:100%;max-width:600px;display:flex;align-items:center;
+  justify-content:space-between;padding:16px 20px;flex-shrink:0;
+  position:relative;z-index:101}
+.back-link{text-decoration:none;color:#7BC74D;font-weight:600;font-size:15px;
+  display:flex;align-items:center;gap:6px}
+.back-link:hover{opacity:0.8}
+
+.game-title{text-align:center;padding:2px 0 4px;flex-shrink:0}
+.game-title h1{font-size:22px;color:#2E7D32;margin:0;text-shadow:1px 1px 2px rgba(0,0,0,0.1)}
+
+.hud{display:flex;align-items:center;justify-content:space-between;
+  max-width:600px;width:100%;padding:6px 20px 8px;flex-shrink:0;gap:8px}
+.hud-item{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;
+  background:#fff;padding:7px 12px;border-radius:10px;color:#4A3828;
+  border:2px solid #E8E0D0;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.hud-icon{font-size:16px}
+.hud-value{color:#2E7D32;font-size:17px;font-weight:800;min-width:22px;text-align:center}
+.hud-label{color:#8D6E63;font-size:11px}
+.timer-warn{color:#EF5350 !important;animation:pulse 0.8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+
+.game-area{position:relative;width:560px;max-width:100vw;margin:0 auto;
+  display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+
+.canvas-wrap{position:relative;width:560px;height:400px;max-width:100vw;
+  background:#808080;border-radius:16px;overflow:hidden;
+  border:3px solid #C8E6C9;box-shadow:0 2px 12px rgba(0,0,0,0.1)}
+#gameCanvas{display:block;width:100%;height:100%;touch-action:manipulation;position:relative;z-index:2}
+
+/* 黄圈脉冲 & 红闪 — 改为 Canvas 渲染，不再创建 DOM 元素 */
+
+/* 芦荟侦探角色 */
+.aloe-wrap{display:flex;flex-direction:column;align-items:center;
+  margin-top:-20px;position:relative;z-index:3}
+.aloe-body{position:relative;width:90px;height:100px;
+  display:flex;flex-direction:column;align-items:center}
+/* 花盆 */
+.aloe-pot{width:70px;height:40px;background:linear-gradient(180deg,#8D6E63,#5D4037);
+  border-radius:6px 6px 14px 14px;position:absolute;bottom:0;
+  box-shadow:0 2px 4px rgba(0,0,0,0.2)}
+.aloe-pot::after{content:'';position:absolute;top:-4px;left:4px;right:4px;
+  height:6px;background:#A1887F;border-radius:2px}
+/* 剑叶簇 */
+.aloe-leaves{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);
+  width:0;height:0}
+.leaf{position:absolute;width:10px;border-radius:50% 50% 0 0;
+  transform-origin:bottom center;background:linear-gradient(180deg,#81C784,#388E3C)}
+.leaf.l1{height:48px;transform:rotate(-30deg);left:-6px;bottom:0}
+.leaf.l2{height:52px;transform:rotate(-12deg);left:-1px;bottom:0}
+.leaf.l3{height:54px;transform:rotate(0deg);left:4px;bottom:0}
+.leaf.l4{height:50px;transform:rotate(12deg);left:10px;bottom:0}
+.leaf.l5{height:44px;transform:rotate(30deg);left:12px;bottom:0}
+/* 叶片微晃 */
+.aloe-body.idle .leaf{animation:leaf-sway 3s ease-in-out infinite}
+.aloe-body.idle .leaf.l1{animation-delay:0s}
+.aloe-body.idle .leaf.l2{animation-delay:0.3s}
+.aloe-body.idle .leaf.l3{animation-delay:0.6s}
+.aloe-body.idle .leaf.l4{animation-delay:0.9s}
+.aloe-body.idle .leaf.l5{animation-delay:1.2s}
+@keyframes leaf-sway{0%,100%{transform:rotate(var(--r,0))}50%{transform:rotate(calc(var(--r,0) + 4deg))}}
+.leaf.l1{--r:-30deg}.leaf.l2{--r:-12deg}.leaf.l3{--r:0deg}.leaf.l4{--r:12deg}.leaf.l5{--r:30deg}
+
+/* 放大镜（在叶子前方） */
+.magnifier{position:absolute;bottom:42px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;z-index:5;transition:transform 0.3s}
+.glass-lens{width:36px;height:36px;border-radius:50%;
+  border:3px solid #5D4037;background:rgba(200,230,255,0.35);
+  box-shadow:0 0 4px rgba(0,0,0,0.15),inset 0 0 6px rgba(255,255,255,0.4)}
+.glass-handle{width:28px;height:6px;background:linear-gradient(180deg,#8D6E63,#5D4037);
+  border-radius:3px;margin-left:-3px}
+.magnifier.shake{animation:glass-shake 0.4s ease}
+@keyframes glass-shake{0%,100%{transform:translateX(-50%) rotate(0)}
+  25%{transform:translateX(-50%) rotate(-8deg)}75%{transform:translateX(-50%) rotate(8deg)}}
+
+/* 芦荟提示气泡 */
+.aloe-bubble{position:absolute;top:-24px;left:50%;transform:translateX(-50%);
+  background:#fff;border:2px solid #C8E6C9;border-radius:12px;
+  padding:4px 10px;font-size:11px;color:#4A3828;white-space:nowrap;
+  opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:6}
+.aloe-bubble.show{opacity:1}
+.aloe-bubble::after{content:'';position:absolute;bottom:-6px;left:50%;
+  transform:translateX(-50%);width:0;height:0;
+  border-left:6px solid transparent;border-right:6px solid transparent;
+  border-top:6px solid #C8E6C9}
+
+.bottom-hint{text-align:center;padding:4px 0;font-size:12px;color:#8D6E63;flex-shrink:0}
+
+/* overlay */
+.overlay{position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.6);display:flex;align-items:center;
+  justify-content:center;z-index:100;flex-direction:column;padding:20px}
+.overlay.hidden{display:none}
+.overlay-card{background:#FFFDF5;border-radius:20px;padding:28px 24px;
+  max-width:400px;width:100%;text-align:center;
+  border:2px solid #C8E6C9;box-shadow:0 8px 32px rgba(0,0,0,0.15)}
+.overlay-card h2{font-size:21px;margin-bottom:8px;color:#2E7D32}
+.overlay-card .subtitle{font-size:13px;color:#8D6E63;margin-bottom:12px;line-height:1.7}
+.overlay-icon{font-size:48px;margin-bottom:8px;display:block}
+.btn-go{background:linear-gradient(180deg,#81C784,#43A047);color:#fff;border:none;
+  padding:14px 40px;font-size:18px;font-weight:700;border-radius:30px;cursor:pointer;
+  margin-top:12px;box-shadow:0 3px 10px rgba(76,175,80,0.3);transition:all 0.15s}
+.btn-go:hover{transform:scale(1.05);box-shadow:0 5px 16px rgba(76,175,80,0.4)}
+.btn-go:active{transform:scale(0.95)}
+
+.end-icon{font-size:42px;margin-bottom:6px;display:block}
+.stars{font-size:28px;margin:4px 0;letter-spacing:4px}
+.result-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.result-stat{background:#F1F8E9;border-radius:10px;padding:10px 8px;border:1px solid #C8E6C9}
+.rs-label{font-size:11px;color:#8D6E63}.rs-value{font-size:20px;font-weight:800;color:#2E7D32}
+.tip{font-size:12px;color:#EF5350;margin:8px 0;line-height:1.6}
+.diff-select{display:flex;gap:8px;margin:10px 0 4px;justify-content:center;flex-wrap:wrap}
+.diff-btn{padding:10px 16px;border-radius:12px;border:2px solid #A5D6A7;
+  background:#fff;color:#4A3828;cursor:pointer;
+  font-size:14px;font-weight:600;transition:all 0.2s}
+.diff-btn:hover{background:#E8F5E9;border-color:#7BC74D}
+.diff-btn.active{background:#7BC74D;color:#fff;border-color:#66BB6A;
+  box-shadow:0 0 10px rgba(123,199,77,0.3)}
+
+@media(max-width:580px){
+  .game-area{width:100vw}
+  .canvas-wrap{width:100vw;height:70vw;border-radius:0;border-left:none;border-right:none}
+  .hud{padding:6px 12px 6px}
+  .hud-item{padding:5px 8px;font-size:11px}
+  .top-bar{padding:12px 16px}
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="index.html" class="back-link">&#8592; 返回科普站</a>
+  <a href="index.html#games" class="back-link">&#8592; 训练游戏</a>
+  <a href="progress.html" class="back-link">&#x1F4CA; 训练进度</a>
+</div>
+
+<div class="game-title">
+  <h1>&#x1F50D; 芦荟探踪</h1>
+</div>
+
+<div class="hud" id="hud">
+  <div class="hud-item"><span class="hud-icon">&#x2B50;</span><div><span class="hud-value" id="hudScore">0</span><span class="hud-label">得分</span></div></div>
+  <div class="hud-item"><span class="hud-icon">&#x1F3AF;</span><div><span class="hud-value" id="hudRound">0/0</span><span class="hud-label">正确/总轮</span></div></div>
+  <div class="hud-item"><span class="hud-icon">&#x23F1;</span><div><span class="hud-value" id="hudTime">120</span><span class="hud-label">秒</span></div></div>
+  <div class="hud-item" style="cursor:pointer" id="hudSound" onclick="toggleSound()"><span class="hud-icon">&#x1F50A;</span><span class="hud-label">音效</span></div>
+</div>
+
+<div class="game-area" id="gameArea">
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="gameCanvas"></canvas>
+  </div>
+
+  <!-- 芦荟侦探 -->
+  <div class="aloe-wrap" id="aloeWrap">
+    <div class="aloe-bubble" id="aloeBubble"></div>
+    <div class="aloe-body idle" id="aloeBody">
+      <div class="aloe-leaves">
+        <div class="leaf l1"></div><div class="leaf l2"></div>
+        <div class="leaf l3"></div><div class="leaf l4"></div><div class="leaf l5"></div>
+      </div>
+      <div class="magnifier" id="magnifier">
+        <div class="glass-lens"></div>
+        <div class="glass-handle"></div>
+      </div>
+      <div class="aloe-pot"></div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-hint">&#x1F50D; 找出与众不同的那个 Gabor 斑 — 朝向和其他不一样！</div>
+
+<div class="overlay" id="startOverlay">
+  <div class="overlay-card">
+    <span class="overlay-icon">&#x1F50D;</span>
+    <h2>芦荟探踪训练</h2>
+    <p class="subtitle">屏幕上有多个条纹斑<br>其中只有一个朝向与众不同<br>用你的火眼金睛把它找出来！</p>
+    <div class="diff-select" id="diffSelect">
+      <button class="diff-btn active" data-diff="seedling">&#x1F7E2; 简单 · 6斑</button>
+      <button class="diff-btn" data-diff="sprouting">&#x1F7E1; 中等 · 12斑</button>
+      <button class="diff-btn" data-diff="blooming">&#x1F534; 困难 · 24斑</button>
+    </div>
+    <button class="btn-go" onclick="showCover()">&#x1F3AE; 开始训练</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="coverOverlay">
+  <div class="overlay-card">
+    <span class="overlay-icon">&#x1F453;</span>
+    <h2>训练前准备</h2>
+    <p class="subtitle">
+      请佩戴矫正眼镜，按医嘱遮盖优势眼<br>
+      屏幕距离眼睛 30-40cm<br>
+      环境光线保持 400-600lux<br>
+      单局 2 分钟，全天不超过 15 分钟<br>
+      找出朝向与众不同的那个条纹斑
+    </p>
+    <button class="btn-go" onclick="startGame()">&#x2705; 准备好了！</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="endOverlay">
+  <div class="overlay-card" id="endCard"></div>
+</div>
+
+<script>
+// ========== 常量与配置 ==========
+var DEG_TO_PX = 75;
+// 四固定方向（与葵神辨向一致）：0°竖 / 45°左斜 / 90°横 / 135°右斜
+var FIXED_ANGLES = [0, 45, 90, 135];
+
+var DIFFICULTY = {
+  seedling: { numPatches: 6,  timeLimitSec: 10, glowAssist: false,
+              cpd: 2.0, contrast: 0.8, sigmaPx: 16, patchRadius: 48,
+              label: '简单' },
+  sprouting:{ numPatches: 12, timeLimitSec: 8,  glowAssist: false,
+              cpd: 2.5, contrast: 0.7, sigmaPx: 12, patchRadius: 36,
+              label: '中等' },
+  blooming: { numPatches: 24, timeLimitSec: 6,  glowAssist: false,
+              cpd: 3.0, contrast: 0.6, sigmaPx: 9,  patchRadius: 28,
+              label: '困难' }
+};
+var DIFF_ORDER = ['seedling', 'sprouting', 'blooming'];
+var currentDiff = 'seedling';
+
+// ========== DOM ==========
+var canvas = document.getElementById('gameCanvas');
+var ctx = canvas.getContext('2d');
+var canvasWrap = document.getElementById('canvasWrap');
+var aloeBody = document.getElementById('aloeBody');
+var aloeBubble = document.getElementById('aloeBubble');
+
+// ========== 游戏状态 ==========
+var score = 0, timeLeft = 120, timerId = null;
+var totalRounds = 0, correctRounds = 0;
+var consecutiveCorrect = 0, consecutiveWrong = 0;
+var running = false, gameOver = false;
+var currentRound = null; // { patches: [{x,y,theta,isTarget}], targetIdx, timeLimitMs, startTs }
+var roundAnswered = false;
+var roundTimerRaf = null;
+
+// Canvas 尺寸（固定逻辑分辨率，不可运行时更改）
+var cw = BASE_W, ch = BASE_H;
+
+// ========== 音频 ==========
+var audioCtx = null, soundOn = true;
+function initAudio(){ if(!audioCtx)try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){} }
+function playTone(f,d,t,v){
+  if(!audioCtx||!soundOn)return;t=t||'sine';v=v||0.08;
+  try{var o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type=t;o.frequency.setValueAtTime(f,audioCtx.currentTime);
+  g.gain.setValueAtTime(v,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+d);
+  o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+d);}catch(e){}
+}
+function sndCorrect(){ playTone(880,0.12,'sine',0.07);setTimeout(function(){playTone(1100,0.1,'sine',0.06)},60); }
+function sndWrong(){ playTone(180,0.25,'sawtooth',0.06); }
+function sndReveal(){ playTone(600,0.15,'triangle',0.04);setTimeout(function(){playTone(400,0.2,'triangle',0.04)},80); }
+function sndUp(){ playTone(523,0.08,'sine',0.06);setTimeout(function(){playTone(659,0.08,'sine',0.06)},70);setTimeout(function(){playTone(784,0.1,'sine',0.07)},140); }
+function sndDown(){ playTone(400,0.12,'triangle',0.07);setTimeout(function(){playTone(300,0.15,'triangle',0.06)},100); }
+function sndDone(){[523,659,784,1047].forEach(function(f,i){setTimeout(function(){playTone(f,0.12,'sine',0.07)},i*100);});}
+function toggleSound(){soundOn=!soundOn;document.getElementById('hudSound').querySelector('.hud-icon').textContent=soundOn?'\u{1F50A}':'\u{1F507}';if(soundOn)initAudio();}
+
+// ========== Canvas ==========
+// 固定逻辑分辨率，所有坐标计算均以此为基准
+var BASE_W = 560, BASE_H = 400;
+var cw = BASE_W, ch = BASE_H; // 写时始终为 BASE_W/H，不可在 resize 时修改
+
+function resizeCanvas(){
+  _gaborCache = {}; // 清空离屏 canvas 缓存
+  var rect=canvasWrap.getBoundingClientRect(),w=rect.width,h=rect.height;
+  var dpr=window.devicePixelRatio||1;
+  canvas.width=w*dpr;canvas.height=h*dpr;
+  canvas.style.width=w+'px';canvas.style.height=h+'px';
+  ctx.setTransform(1,0,0,1,0,0);
+  // 将 BASE_W×BASE_H 逻辑空间映射到实际 DOM 尺寸
+  ctx.scale(dpr*w/BASE_W,dpr*h/BASE_H);
+}
+resizeCanvas();
+window.addEventListener('resize',function(){
+  resizeCanvas();
+  if(!running) drawIdle();
+});
+
+// ========== Gabor 渲染 ==========
+// 使用离屏 Canvas 渲染 Gabor 斑，再用 drawImage 合成到主 Canvas。
+// drawImage 受 ctx 变换矩阵影响，确保斑位置与逻辑坐标一致。
+var _gaborCache = {}; // 缓存常用尺寸的离屏 canvas
+
+function drawGabor(ctx, cx, cy, thetaDeg, lambdaPx, sigmaPx, contrast, radius) {
+  var size = Math.ceil(radius * 2);
+  var cacheKey = size + '_' + lambdaPx.toFixed(1) + '_' + sigmaPx.toFixed(1) + '_' + contrast.toFixed(2);
+  // 对于同一轮的所有斑（参数相同），复用离屏 canvas 只改朝向
+  var offCanvas = _gaborCache[cacheKey];
+  if (!offCanvas) {
+    offCanvas = document.createElement('canvas');
+    offCanvas.width = size; offCanvas.height = size;
+    _gaborCache[cacheKey] = offCanvas;
+  }
+  var offCtx = offCanvas.getContext('2d');
+  var theta = thetaDeg * Math.PI / 180;
+  var cosT = Math.cos(theta), sinT = Math.sin(theta);
+  var twoS2 = 2 * sigmaPx * sigmaPx;
+  var half = size / 2;
+  var imgData = offCtx.createImageData(size, size);
+  var data = imgData.data;
+  for (var dy = 0; dy < size; dy++) {
+    for (var dx = 0; dx < size; dx++) {
+      var xp = (dx - half) * cosT + (dy - half) * sinT;
+      var yp = -(dx - half) * sinT + (dy - half) * cosT;
+      var dist2 = (dx - half) * (dx - half) + (dy - half) * (dy - half);
+      if (dist2 > radius * radius) {
+        var idx = (dy * size + dx) * 4;
+        data[idx] = 128; data[idx + 1] = 128; data[idx + 2] = 128; data[idx + 3] = 255;
+        continue;
+      }
+      var env = Math.exp(-(xp * xp + yp * yp) / twoS2);
+      var gray = 128 + 128 * contrast * env * Math.cos(2 * Math.PI * xp / lambdaPx);
+      gray = Math.max(0, Math.min(255, gray));
+      var idx = (dy * size + dx) * 4;
+      data[idx] = gray; data[idx + 1] = gray; data[idx + 2] = gray; data[idx + 3] = 255;
+    }
+  }
+  offCtx.putImageData(imgData, 0, 0);
+  // drawImage 受 ctx 变换矩阵影响，坐标正确映射
+  ctx.drawImage(offCanvas, cx - radius, cy - radius);
+}
+
+function drawIdle(){ctx.fillStyle='#808080';ctx.fillRect(0,0,BASE_W,BASE_H);}
+
+// ========== 回合生成 ==========
+/** 从四固定朝向中选一种作为噪声共向，另一种作为目标朝向。
+ *  所有噪声斑朝向完全一致，仅一个目标斑朝向不同。 */
+function generateRound(){
+  var cfg=DIFFICULTY[currentDiff],n=cfg.numPatches;
+  var lambdaPx=DEG_TO_PX/cfg.cpd,sigmaPx=cfg.sigmaPx,contrast=cfg.contrast;
+  var radius=cfg.patchRadius;
+
+  // 从四固定方向中随机选噪声朝向 + 目标朝向（必须不同）
+  var noiseDir=FIXED_ANGLES[Math.floor(Math.random()*4)];
+  var rem=[];
+  for(var i=0;i<4;i++)if(FIXED_ANGLES[i]!==noiseDir)rem.push(FIXED_ANGLES[i]);
+  var targetDir=rem[Math.floor(Math.random()*rem.length)];
+
+  // 随机分布（拒绝采样，避免重叠），无规律可循
+  var positions=[];
+  var margin=radius+6;
+  var minDist=radius*2.6; // 斑间距 ≥ 2.6 倍半径
+  for(var i=0;i<n;i++){
+    var placed=false;
+    for(var a=0;a<300;a++){
+      var cx=margin+Math.random()*(BASE_W-margin*2);
+      var cy=margin+Math.random()*(BASE_H-margin*2);
+      var ok=true;
+      for(var j=0;j<positions.length;j++){
+        var dx=cx-positions[j].x,dy=cy-positions[j].y;
+        if(Math.sqrt(dx*dx+dy*dy)<minDist){ok=false;break;}
+      }
+      if(ok){positions.push({x:cx,y:cy});placed=true;break;}
+    }
+    if(!placed){positions.push({x:margin+Math.random()*(BASE_W-margin*2),y:margin+Math.random()*(BASE_H-margin*2)});}
+  }
+  for(var i=positions.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=positions[i];positions[i]=positions[j];positions[j]=t;}
+
+  // 随机选一个作为目标
+  var targetIdx=Math.floor(Math.random()*n);
+  var patches=[];
+  for(var i=0;i<n;i++){
+    patches.push({
+      x:positions[i].x,y:positions[i].y,
+      theta:i===targetIdx?targetDir:noiseDir,
+      isTarget:i===targetIdx,
+      radius:radius,lambdaPx:lambdaPx,sigmaPx:sigmaPx,contrast:contrast
+    });
+  }
+
+  return {patches:patches,targetIdx:targetIdx,timeLimitMs:cfg.timeLimitSec*1000,startTs:performance.now(),answered:false,glowAssist:cfg.glowAssist};
+}
+
+function drawRound(){
+  ctx.fillStyle='#808080';ctx.fillRect(0,0,BASE_W,BASE_H);
+  if(!currentRound)return;
+  var ps=currentRound.patches;
+  for(var i=0;i<ps.length;i++){
+    var p=ps[i];
+    drawGabor(ctx,p.x,p.y,p.theta,p.lambdaPx,p.sigmaPx,p.contrast,p.radius);
+  }
+  // 叠加绘制反馈动画
+  drawFeedbackFrame();
+}
+
+// ========== 点击检测 ==========
+function getCanvasXY(e){
+  // 将屏幕坐标映射回 BASE_W×BASE_H 逻辑空间
+  var rect=canvas.getBoundingClientRect();
+  return {x:(e.clientX-rect.left)/rect.width*BASE_W,y:(e.clientY-rect.top)/rect.height*BASE_H};
+}
+function handleCanvasInput(e){
+  if(!running||gameOver||!currentRound||currentRound.answered)return;
+  e.preventDefault();
+  var pt=getCanvasXY(e.touches?e.touches[0]:e);
+  var ps=currentRound.patches;
+  for(var i=0;i<ps.length;i++){
+    var p=ps[i],dx=pt.x-p.x,dy=pt.y-p.y;
+    // 用完整 patchRadius 作为 hitbox
+    if(Math.sqrt(dx*dx+dy*dy)<=p.radius){
+      onPatchClick(p,i);
+      return;
+    }
+  }
+}
+// 同时监听 click 和 touchstart，确保移动端和桌面端都能响应
+canvas.addEventListener('click',handleCanvasInput);
+canvas.addEventListener('touchstart',handleCanvasInput,{passive:false});
+
+function onPatchClick(patch,idx){
+  if(currentRound.answered)return;
+  currentRound.answered=true;roundAnswered=true;
+  cancelAnimationFrame(roundTimerRaf);totalRounds++;
+
+  if(patch.isTarget){
+    correctRounds++;consecutiveCorrect++;consecutiveWrong=0;
+    score+=10;sndCorrect();
+    showPulseAt(patch.x,patch.y);
+    flyGlassTo(patch.x,patch.y);
+    showBubble('\u{1F50D} 找到了！',800);
+    if(consecutiveCorrect>=4)upgradeDifficulty();
+  }else{
+    consecutiveCorrect=0;consecutiveWrong++;
+    sndWrong();sndReveal();
+    // 放大镜抖动（DOM element）
+    var mag = document.getElementById('magnifier');
+    if (mag) { mag.classList.add('shake'); setTimeout(function(){ mag.classList.remove('shake'); }, 400); }
+    revealTarget();
+    showBubble('\u{1F4A7} 再看看~',800);
+    if(consecutiveWrong>=2)downgradeDifficulty();
+  }
+  updateHUD();
+
+  // 启动反馈动画循环（在 2s 揭示期内持续绘制 pulse/flash/glass）
+  var feedbackStart = performance.now();
+  function feedbackLoop(ts) {
+    if (ts - feedbackStart > 2000) return; // 2s 后停止
+    drawRound(); // 重新绘制斑+反馈
+    requestAnimationFrame(feedbackLoop);
+  }
+  requestAnimationFrame(feedbackLoop);
+
+  // 揭示后间隔进入下一轮
+  setTimeout(function(){
+    if(running&&!gameOver)startNewRound();
+  },2000);
+}
+
+// ========== 超时处理 ==========
+function trackRoundTimer(){
+  if(!currentRound||currentRound.answered||!running)return;
+  var elapsed=performance.now()-currentRound.startTs;
+  if(elapsed>=currentRound.timeLimitMs){
+    currentRound.answered=true;roundAnswered=true;totalRounds++;
+    consecutiveCorrect=0;consecutiveWrong++;
+    sndReveal();revealTarget();
+    showBubble('\u{23F0} 超时了~',800);
+    if(consecutiveWrong>=2)downgradeDifficulty();
+    updateHUD();
+    var feedbackStart = performance.now();
+    function feedbackLoop(ts) {
+      if (ts - feedbackStart > 2000) return;
+      drawRound();
+      requestAnimationFrame(feedbackLoop);
+    }
+    requestAnimationFrame(feedbackLoop);
+    setTimeout(function(){if(running&&!gameOver)startNewRound();},2000);
+    return;
+  }
+  roundTimerRaf=requestAnimationFrame(trackRoundTimer);
+}
+
+// ========== 反馈动画（全部 Canvas 渲染，零 DOM 元件） ==========
+var feedbackAnims = []; // {type:'pulse'|'flash', x, y, radius, startTs, dur}
+
+function showPulseAt(x, y) {
+  feedbackAnims.push({ type: 'pulse', x: x, y: y, radius: DIFFICULTY[currentDiff].patchRadius, startTs: performance.now(), dur: 600 });
+  if (!running && !gameOver) requestAnimationFrame(drawFeedbackFrame);
+}
+
+function revealTarget() {
+  if (!currentRound) return;
+  var tp = currentRound.patches[currentRound.targetIdx];
+  feedbackAnims.push({ type: 'flash', x: tp.x, y: tp.y, radius: tp.radius, startTs: performance.now(), dur: 500 });
+}
+
+function flyGlassTo(tx, ty) {
+  // 在 Canvas 上绘制一个飞行放大镜图标
+  feedbackAnims.push({ type: 'glass', x: tx, y: ty, startTs: performance.now(), dur: 350 });
+}
+
+// 每帧绘制反馈动画（由游戏循环或 drawRound 触发）
+function drawFeedbackFrame() {
+  var now = performance.now();
+  feedbackAnims = feedbackAnims.filter(function (a) { return now - a.startTs < a.dur; });
+  for (var i = 0; i < feedbackAnims.length; i++) {
+    var a = feedbackAnims[i], t = (now - a.startTs) / a.dur;
+    if (a.type === 'pulse') {
+      var s = 0.8 + t * 1.2, alpha = 1 - t;
+      ctx.save(); ctx.beginPath(); ctx.arc(a.x, a.y, a.radius * s, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,213,79,' + Math.max(0, alpha) + ')';
+      ctx.lineWidth = 3; ctx.stroke(); ctx.restore();
+    } else if (a.type === 'flash') {
+      var alpha = t < 0.5 ? t * 2 : 2 - t * 2;
+      ctx.save(); ctx.beginPath(); ctx.arc(a.x, a.y, a.radius * (1 + t * 0.4), 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(239,83,80,' + Math.max(0, alpha) + ')';
+      ctx.lineWidth = 4; ctx.stroke(); ctx.restore();
+    } else if (a.type === 'glass') {
+      // 贝塞尔飞行：从底部中点飞到目标，使用二阶贝塞尔
+      var u = 1 - t, startY = BASE_H, startX = BASE_W / 2;
+      var cpX = (startX + a.x) / 2, cpY = startY - 60;
+      var bx = u * u * startX + 2 * u * t * cpX + t * t * a.x;
+      var by = u * u * startY + 2 * u * t * cpY + t * t * a.y;
+      ctx.save(); ctx.font = '28px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('\u{1F50D}', bx, by); ctx.restore();
+    }
+  }
+}
+
+function showBubble(msg,dur){
+  aloeBubble.textContent=msg;aloeBubble.classList.add('show');
+  clearTimeout(aloeBubble._timeout);
+  aloeBubble._timeout=setTimeout(function(){aloeBubble.classList.remove('show');},dur||800);
+}
+
+// ========== 自适应难度 ==========
+function upgradeDifficulty(){
+  var idx=DIFF_ORDER.indexOf(currentDiff);
+  if(idx<DIFF_ORDER.length-1){
+    currentDiff=DIFF_ORDER[idx+1];consecutiveCorrect=0;consecutiveWrong=0;
+    sndUp();showBubble('\u{1F50D} 眼光更毒了！',1200);
+  }
+}
+function downgradeDifficulty(){
+  var idx=DIFF_ORDER.indexOf(currentDiff);
+  if(idx>0){
+    currentDiff=DIFF_ORDER[idx-1];consecutiveCorrect=0;consecutiveWrong=0;
+    sndDown();showBubble('\u{1F4A7} 雾有点浓，靠近点看~',1200);
+  }
+}
+
+// ========== 回合流程 ==========
+function startNewRound(){
+  currentRound=generateRound();roundAnswered=false;
+  drawRound();
+  roundTimerRaf=requestAnimationFrame(trackRoundTimer);
+}
+
+// ========== HUD 与计时 ==========
+function updateHUD(){
+  document.getElementById('hudScore').textContent=score;
+  document.getElementById('hudRound').textContent=correctRounds+'/'+totalRounds;
+  var te=document.getElementById('hudTime');
+  te.textContent=timeLeft;te.className='hud-value'+(timeLeft<=15?' timer-warn':'');
+}
+function tick(){timeLeft--;updateHUD();if(timeLeft<=0)endGame();}
+
+// ========== Overlay ==========
+function showCover(){
+  initAudio();var ab=document.querySelector('.diff-btn.active');
+  if(ab)currentDiff=ab.dataset.diff;
+  document.getElementById('startOverlay').classList.add('hidden');
+  document.getElementById('coverOverlay').classList.remove('hidden');
+}
+function startGame(){
+  document.getElementById('coverOverlay').classList.add('hidden');
+  document.getElementById('endOverlay').classList.add('hidden');
+  score=0;timeLeft=120;totalRounds=0;correctRounds=0;
+  consecutiveCorrect=0;consecutiveWrong=0;running=true;gameOver=false;
+  currentRound=null;roundAnswered=false;
+  aloeBody.classList.add('idle');updateHUD();
+  clearInterval(timerId);timerId=setInterval(tick,1000);
+  startNewRound();
+}
+function endGame(){
+  running=false;gameOver=true;clearInterval(timerId);
+  cancelAnimationFrame(roundTimerRaf);aloeBody.classList.remove('idle');
+  currentRound=null;drawIdle();
+
+  var acc=totalRounds>0?Math.round(correctRounds/totalRounds*100):0;
+  var sc=acc>=80?3:acc>=50?2:1,stars='';
+  for(var i=0;i<3;i++)stars+=i<sc?'\u{2B50}':'\u{2606}';
+  var rating=sc===3?'优秀':sc===2?'良好':'继续加油';
+
+  document.getElementById('endCard').innerHTML=
+    '<span class="end-icon">\u{1F50D}</span>'+
+    '<h2>训练结束</h2><div class="stars">'+stars+'</div>'+
+    '<p style="color:#8D6E63;font-size:13px">评级：'+rating+'</p>'+
+    '<div class="result-stats">'+
+      '<div class="result-stat"><div class="rs-label">总得分</div><div class="rs-value">'+score+'</div></div>'+
+      '<div class="result-stat"><div class="rs-label">命中率</div><div class="rs-value">'+acc+'%</div></div>'+
+      '<div class="result-stat"><div class="rs-label">找到</div><div class="rs-value">'+correctRounds+'</div></div>'+
+      '<div class="result-stat"><div class="rs-label">总轮次</div><div class="rs-value">'+totalRounds+'</div></div>'+
+    '</div>'+
+    '<p class="tip">\u{1F453} 记得远眺 5 分钟，让眼睛放松</p>'+
+    '<button class="btn-go" onclick="restartGame()">\u{1F504} 再玩一次</button>'+
+    '<button class="btn-go" style="background:linear-gradient(180deg,#A5D6A7,#66BB6A);margin-top:8px;font-size:15px" onclick="backToSelect()">\u{1F3E0} 返回选择</button>';
+  document.getElementById('endOverlay').classList.remove('hidden');sndDone();
+}
+function restartGame(){
+  document.getElementById('endOverlay').classList.add('hidden');
+  document.getElementById('coverOverlay').classList.remove('hidden');
+}
+function backToSelect(){
+  document.getElementById('endOverlay').classList.add('hidden');
+  document.getElementById('startOverlay').classList.remove('hidden');
+  running=false;gameOver=true;aloeBody.classList.remove('idle');
+  document.querySelectorAll('.diff-btn').forEach(function(b){b.classList.toggle('active',b.dataset.diff===currentDiff);});
+  drawIdle();
+}
+document.querySelectorAll('.diff-btn').forEach(function(b){
+  b.addEventListener('click',function(){
+    if(running)return;
+    document.querySelectorAll('.diff-btn').forEach(function(x){x.classList.remove('active');});
+    b.classList.add('active');currentDiff=b.dataset.diff;
+  });
+});
+drawIdle();
+</script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}</script>
+</body>
+</html>

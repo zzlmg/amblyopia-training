@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>寻找萤火虫 · 弱视训练</title>
+<link rel="manifest" href="manifest.json">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:'PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif;
+  background:linear-gradient(180deg,#1a1a2e 0%,#16213e 40%,#1a3a2a 70%,#0f1a0f 100%);
+  color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  overflow-x:hidden;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+body{padding-bottom:40px}
+
+/* 背景萤火虫光斑 */
+body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(circle at 15% 20%,rgba(255,240,160,0.04) 0%,transparent 40%),
+    radial-gradient(circle at 75% 60%,rgba(255,220,120,0.03) 0%,transparent 35%),
+    radial-gradient(circle at 50% 85%,rgba(255,200,100,0.05) 0%,transparent 30%),
+    radial-gradient(circle at 30% 45%,rgba(255,240,180,0.03) 0%,transparent 25%),
+    radial-gradient(circle at 85% 15%,rgba(255,210,130,0.04) 0%,transparent 28%)}
+
+.top-bar{width:100%;max-width:560px;display:flex;align-items:center;
+  justify-content:space-between;padding:16px 20px;flex-shrink:0;position:relative;z-index:101}
+.back-link{text-decoration:none;color:#aab;font-weight:600;font-size:15px;display:flex;align-items:center;gap:6px;transition:color 0.2s}
+.back-link:hover{color:#FFD54F}
+
+.game-title{text-align:center;padding:8px 0 4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:10px}
+.game-title h1{font-size:24px;color:#FFE082;margin:0;
+  text-shadow:0 0 20px rgba(255,224,130,0.3),0 2px 4px rgba(0,0,0,0.5)}
+
+/* ====== 萤火虫 CSS 角色 ====== */
+.firefly-icon{position:relative;width:36px;height:44px;flex-shrink:0;
+  animation:firefly-hover 2.5s ease-in-out infinite}
+.firefly-icon .glow{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);
+  width:28px;height:28px;border-radius:50%;
+  background:radial-gradient(circle,#FFD54F 0%,#FFB300 30%,rgba(255,179,0,0.3) 60%,transparent 100%);
+  animation:firefly-glow 1.5s ease-in-out infinite alternate}
+.firefly-icon .body{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+  width:14px;height:22px;border-radius:50% 50% 40% 40%;
+  background:linear-gradient(180deg,#FF9800 0%,#E65100 100%);z-index:3}
+.firefly-icon .body::after{content:'';position:absolute;top:4px;left:2px;right:2px;
+  height:2px;background:rgba(0,0,0,0.15);border-radius:1px}
+.firefly-icon .head{position:absolute;top:2px;left:50%;transform:translateX(-50%);
+  width:12px;height:10px;border-radius:50%;background:#5D4037;z-index:4}
+.firefly-icon .head::before,.firefly-icon .head::after{content:'';position:absolute;
+  top:-7px;width:1px;height:8px;background:#5D4037;border-radius:1px}
+.firefly-icon .head::before{left:3px;transform:rotate(-15deg)}
+.firefly-icon .head::after{right:3px;transform:rotate(15deg)}
+.firefly-icon .wing-l,.firefly-icon .wing-r{position:absolute;top:6px;width:14px;height:18px;
+  background:rgba(100,180,220,0.55);border-radius:60% 60% 20% 20%;
+  border:1px solid rgba(120,200,240,0.3);z-index:2}
+.firefly-icon .wing-l{left:3px;transform:rotate(-15deg)}
+.firefly-icon .wing-r{right:3px;transform:rotate(15deg)}
+
+/* 装饰萤火虫 */
+.firefly-deco{position:absolute;pointer-events:none;z-index:1;
+  animation:deco-drift 4s ease-in-out infinite}
+.firefly-deco .glow{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);
+  width:18px;height:18px;border-radius:50%;
+  background:radial-gradient(circle,#FFD54F 0%,rgba(255,179,0,0.35) 55%,transparent 100%);
+  animation:deco-pulse 2s ease-in-out infinite alternate}
+.firefly-deco .body{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);
+  width:9px;height:14px;border-radius:50% 50% 35% 35%;
+  background:linear-gradient(180deg,#FF9800,#E65100);z-index:3}
+
+@keyframes firefly-hover{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes firefly-glow{0%{transform:translateX(-50%) scale(0.85);opacity:0.5}100%{transform:translateX(-50%) scale(1.35);opacity:1}}
+@keyframes deco-drift{0%,100%{transform:translate(0,0)}25%{transform:translate(6px,-8px)}50%{transform:translate(-4px,-3px)}75%{transform:translate(-6px,-5px)}}
+@keyframes deco-pulse{0%{opacity:0.3;transform:translateX(-50%) scale(0.8)}100%{opacity:0.9;transform:translateX(-50%) scale(1.3)}}
+
+/* ====== HUD ====== */
+.hud{display:flex;align-items:center;justify-content:space-between;
+  max-width:560px;width:100%;padding:6px 20px 8px;flex-shrink:0;gap:8px}
+.hud-item{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;
+  background:rgba(255,255,255,0.06);padding:7px 12px;border-radius:10px;color:#ccd;
+  border:1px solid rgba(255,255,255,0.08);backdrop-filter:blur(4px)}
+.hud-icon{font-size:15px}.hud-value{color:#FFE082;font-size:17px;font-weight:800;min-width:22px;text-align:center}
+.hud-label{color:#889;font-size:11px}
+.timer-warn{color:#FF8A65!important;animation:pulse 0.8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+
+/* ====== 游戏区域 ====== */
+.game-area{position:relative;width:560px;max-width:100vw;margin:0 auto;display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.canvas-wrap{position:relative;width:560px;height:420px;max-width:100vw;background:#808080;
+  border-radius:18px;overflow:hidden;
+  border:2px solid rgba(255,224,130,0.12);box-shadow:0 0 30px rgba(255,180,60,0.06),0 4px 16px rgba(0,0,0,0.4)}
+#gameCanvas{display:block;width:100%;height:100%;touch-action:manipulation;position:relative;z-index:2}
+
+.bottom-hint{text-align:center;padding:4px 0;font-size:12px;color:#889;flex-shrink:0}
+
+.contrast-bar-wrap{max-width:560px;width:100%;padding:0 20px;display:flex;align-items:center;gap:8px;margin-top:4px}
+.contrast-bar-label{font-size:11px;color:#889;white-space:nowrap}
+.contrast-bar{flex:1;height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden}
+.contrast-bar-fill{height:100%;background:linear-gradient(90deg,#FFB74D,#FFD54F);border-radius:3px;transition:width 0.3s;box-shadow:0 0 8px rgba(255,200,80,0.3)}
+
+/* ====== Overlay 弹窗 ====== */
+.overlay{position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.75);display:flex;align-items:center;
+  justify-content:center;z-index:100;flex-direction:column;padding:20px}
+.overlay.hidden{display:none}
+.overlay-card{background:linear-gradient(160deg,#252540 0%,#1a1a2e 100%);
+  border-radius:22px;padding:32px 26px;max-width:420px;width:100%;text-align:center;
+  border:1px solid rgba(255,224,130,0.15);box-shadow:0 0 40px rgba(255,180,60,0.08),0 8px 32px rgba(0,0,0,0.5)}
+.overlay-card h2{font-size:22px;margin-bottom:8px;color:#FFE082;
+  text-shadow:0 0 16px rgba(255,224,130,0.2)}
+.overlay-card .subtitle{font-size:13px;color:#99a;margin-bottom:14px;line-height:1.8}
+
+.btn-go{background:linear-gradient(135deg,#3a3040,#2a2030);color:#FFE082;
+  border:1px solid rgba(255,224,130,0.3);padding:14px 40px;font-size:18px;
+  font-weight:700;border-radius:30px;cursor:pointer;margin-top:14px;
+  transition:all 0.2s;box-shadow:0 0 12px rgba(255,180,50,0.1)}
+.btn-go:hover{background:linear-gradient(135deg,#4a3a50,#3a2a40);
+  border-color:rgba(255,224,130,0.5);box-shadow:0 0 20px rgba(255,180,50,0.2);transform:translateY(-1px)}
+.btn-go:active{transform:scale(0.96)}
+
+.end-icon{font-size:42px;margin-bottom:6px;display:block}
+.result-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.result-stat{background:rgba(255,255,255,0.04);border-radius:12px;padding:12px 8px;
+  border:1px solid rgba(255,224,130,0.1)}
+.rs-label{font-size:11px;color:#889}.rs-value{font-size:20px;font-weight:800;color:#FFE082}
+.tip{font-size:12px;color:#FF8A65;margin:8px 0;line-height:1.6}
+
+.diff-select{display:flex;gap:8px;margin:10px 0 4px;justify-content:center;flex-wrap:wrap}
+.diff-btn{padding:10px 16px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);
+  background:rgba(255,255,255,0.04);color:#aab;cursor:pointer;font-size:14px;font-weight:600;transition:all 0.2s}
+.diff-btn:hover{background:rgba(255,224,130,0.08);border-color:rgba(255,224,130,0.3);color:#FFE082}
+.diff-btn.active{background:rgba(255,224,130,0.12);color:#FFE082;
+  border-color:rgba(255,224,130,0.4);box-shadow:0 0 12px rgba(255,200,80,0.15)}
+
+@media(max-width:580px){
+  .game-area{width:100vw}
+  .canvas-wrap{width:100vw;height:74vw;border-radius:0;border-left:none;border-right:none}
+  .hud{padding:6px 12px 6px}.top-bar{padding:12px 16px}
+  .game-title h1{font-size:20px}
+}
+</style>
+</head>
+<body>
+<div class="top-bar"><a href="index.html" class="back-link">&#8592; 返回科普站</a><a href="index.html#games" class="back-link">&#8592; 训练游戏</a><a href="progress.html" class="back-link">&#x1F4CA; 训练进度</a></div>
+
+<div class="game-title">
+  <div class="firefly-icon"><div class="glow"></div><div class="wing-l"></div><div class="wing-r"></div><div class="head"></div><div class="body"></div></div>
+  <h1>寻找萤火虫</h1>
+</div>
+
+<div class="hud" id="hud">
+  <div class="hud-item"><span class="hud-icon">&#x2B50;</span><div><span class="hud-value" id="hudScore">0</span><span class="hud-label">得分</span></div></div>
+  <div class="hud-item"><span class="hud-icon">&#x1F3AF;</span><div><span class="hud-value" id="hudAccuracy">-</span><span class="hud-label">命中率</span></div></div>
+  <div class="hud-item"><span class="hud-icon">&#x23F1;</span><div><span class="hud-value" id="hudTime">120</span><span class="hud-label">秒</span></div></div>
+  <div class="hud-item" style="cursor:pointer" id="hudSound" onclick="toggleSound()"><span class="hud-icon">&#x1F50A;</span><span class="hud-label">音效</span></div>
+</div>
+
+<div class="contrast-bar-wrap"><span class="contrast-bar-label" id="contrastLabel">Cb 60%</span><div class="contrast-bar"><div class="contrast-bar-fill" id="contrastFill" style="width:60%"></div></div></div>
+
+<div class="game-area" id="gameArea"><div class="canvas-wrap" id="canvasWrap">
+    <canvas id="gameCanvas"></canvas>
+    <div class="firefly-deco" style="bottom:12px;right:20px;width:26px;height:30px;animation-delay:0s"><div class="glow"></div><div class="body"></div></div>
+    <div class="firefly-deco" style="bottom:32px;left:16px;width:20px;height:24px;animation-delay:1.3s"><div class="glow"></div><div class="body"></div></div>
+    <div class="firefly-deco" style="top:18px;right:30px;width:18px;height:22px;animation-delay:2.7s"><div class="glow"></div><div class="body"></div></div>
+    <div class="firefly-deco" style="top:40px;left:28px;width:22px;height:26px;animation-delay:3.9s"><div class="glow"></div><div class="body"></div></div>
+  </div></div>
+
+<div class="bottom-hint">夜雾中有萤火虫在发光 — 仔细看，把它们找出来！</div>
+
+<div class="overlay" id="startOverlay">
+  <div class="overlay-card">
+    <div class="firefly-icon" style="width:72px;height:86px;margin:0 auto 12px"><div class="glow" style="width:54px;height:54px;bottom:3px"></div><div class="wing-l" style="width:28px;height:34px;top:11px"></div><div class="wing-r" style="width:28px;height:34px;top:11px"></div><div class="head" style="width:22px;height:18px;top:1px"></div><div class="body" style="width:28px;height:40px;bottom:14px"></div></div>
+    <h2>寻找萤火虫</h2>
+    <p class="subtitle">夜雾里有几只萤火虫<br>它们的光很淡很淡<br>睁大眼睛，一只只找出来！</p>
+    <div class="diff-select" id="diffSelect">
+      <button class="diff-btn active" data-diff="easy">&#x1F7E2; 简单 · 3只虫</button>
+      <button class="diff-btn" data-diff="medium">&#x1F7E1; 中等 · 4只虫</button>
+      <button class="diff-btn" data-diff="hard">&#x1F534; 困难 · 5只虫</button>
+    </div>
+    <button class="btn-go" onclick="showCover()">开始训练</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="coverOverlay">
+  <div class="overlay-card">
+    <div class="firefly-icon" style="width:56px;height:66px;margin:0 auto 10px"><div class="glow" style="width:42px;height:42px;bottom:3px"></div><div class="wing-l" style="width:22px;height:28px;top:9px"></div><div class="wing-r" style="width:22px;height:28px;top:9px"></div><div class="head" style="width:18px;height:14px"></div><div class="body" style="width:22px;height:32px;bottom:11px"></div></div>
+    <h2>训练前准备</h2>
+    <p class="subtitle">请佩戴矫正眼镜，按医嘱遮盖优势眼<br>屏幕距离眼睛 30-40cm<br>环境光线保持 400-600lux（稍暗环境更好）<br>单局 2 分钟，全天不超过 15 分钟<br>夜雾里藏着萤火虫，找出它们微弱的光！</p>
+    <button class="btn-go" onclick="startGame()">开始找萤火虫</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="endOverlay"><div class="overlay-card" id="endCard"></div></div>
+
+<script>
+// ===== 视觉心理物理学参数 =====
+var DEG_TO_PX = 75;
+var DIFFICULTY = {
+  easy:   {numFireflies:3, fireflyDiaDeg:1.0,cStart:0.60,cEnd:0.30,cn:0.15,noiseSF:0.5,noiseType:'grating',roundSec:6, label:'简单'},
+  medium: {numFireflies:4, fireflyDiaDeg:0.7,cStart:0.35,cEnd:0.15,cn:0.25,noiseSF:1.0,noiseType:'perlin', roundSec:5, label:'中等'},
+  hard:   {numFireflies:5, fireflyDiaDeg:0.5,cStart:0.18,cEnd:0.07,cn:0.35,noiseSF:2.0,noiseType:'highfreq',roundSec:4, label:'困难'}
+};
+var currentDiff = 'easy', BASE_W = 560, BASE_H = 420;
+function fireflyGray(c) { return Math.round(128 + 128 * c); }
+
+var canvas = document.getElementById('gameCanvas'), ctx = canvas.getContext('2d'), canvasWrap = document.getElementById('canvasWrap');
+var score = 0, timeLeft = 120, timerId = null, totalClicks = 0, hitClicks = 0, missClicks = 0, minContrast = 1;
+var running = false, gameOver = false;
+var fireflies = [], roundTimeLeft = 0, roundTimerId = null, noiseCanvas = null;
+var flyAnims = [], revealRings = [], burstParticles = [], animRaf = null;
+
+// ===== 音频 =====
+var audioCtx = null, soundOn = true;
+function initAudio() { if (!audioCtx) try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+function playTone(f, d, t, v) { if (!audioCtx || !soundOn) return; t = t || 'sine'; v = v || 0.04; try { var o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime); g.gain.setValueAtTime(v, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + d); } catch (e) {} }
+function sndHit() { playTone(880, 0.08); setTimeout(function () { playTone(1100, 0.06); }, 40); }
+function sndFly() { playTone(600, 0.12, 'triangle', 0.03); }
+function sndMiss() { playTone(150, 0.15, 'sawtooth', 0.04); }
+function sndReveal() { playTone(300, 0.2, 'square', 0.04); }
+function sndStart() { playTone(400, 0.2); setTimeout(function () { playTone(500, 0.15); }, 150); }
+function sndDone() { [523, 659, 784].forEach(function (f, i) { setTimeout(function () { playTone(f, 0.12); }, i * 100); }); }
+function toggleSound() { soundOn = !soundOn; document.getElementById('hudSound').querySelector('.hud-icon').textContent = soundOn ? '\u{1F50A}' : '\u{1F507}'; if (soundOn) initAudio(); }
+
+// ===== Canvas =====
+function resizeCanvas() { var r = canvasWrap.getBoundingClientRect(), w = r.width, h = r.height, dpr = window.devicePixelRatio || 1; canvas.width = w * dpr; canvas.height = h * dpr; canvas.style.width = w + 'px'; canvas.style.height = h + 'px'; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.scale(dpr * w / BASE_W, dpr * h / BASE_H); }
+resizeCanvas(); window.addEventListener('resize', function () { resizeCanvas(); if (!running) drawIdle(); });
+function drawIdle() { ctx.fillStyle = '#808080'; ctx.fillRect(0, 0, BASE_W, BASE_H); }
+
+// ===== 噪声纹理 =====
+function generateNoise() {
+  var c = DIFFICULTY[currentDiff], cn = c.cn, sf = c.noiseSF, lambda = DEG_TO_PX / sf, type = c.noiseType;
+  var oc = document.createElement('canvas'); oc.width = BASE_W; oc.height = BASE_H; var octx = oc.getContext('2d');
+  var img = octx.createImageData(BASE_W, BASE_H), d = img.data;
+  for (var y = 0; y < BASE_H; y++) for (var x = 0; x < BASE_W; x++) {
+    var val = 0;
+    if (type === 'grating') { val = 128 * cn * Math.sin(6.283 * x / lambda) + 128 * cn * 0.5 * Math.sin(6.283 * (x * 0.7 + y * 0.7) / (lambda * 0.6)) + (Math.random() * 2 - 1) * 128 * cn * 0.6; }
+    else if (type === 'perlin') { var ly = [{ f: 1, a: 1, px: 0.3, py: 0.9 }, { f: 2, a: 0.5, px: 0.9, py: 0.2 }, { f: 3.5, a: 0.25, px: 0.5, py: 0.5 }]; for (var l = 0; l < 3; l++) { var lay = ly[l]; val += 128 * cn * lay.a * Math.sin(6.283 * (x * lay.px + y * lay.py) / (lambda / lay.f)); } val += (Math.random() * 2 - 1) * 128 * cn * 0.4; }
+    else { val = 128 * cn * Math.sin(6.283 * x / lambda) + 128 * cn * 0.7 * Math.sin(6.283 * (x * 0.5 + y * 0.85) / (lambda * 0.4)) + (Math.random() * 2 - 1) * 128 * cn * 0.8; }
+    var g = Math.round(128 + val); g = Math.max(0, Math.min(255, g)); var idx = (y * BASE_W + x) * 4; d[idx] = g; d[idx + 1] = g; d[idx + 2] = g; d[idx + 3] = 255;
+  }
+  octx.putImageData(img, 0, 0); return oc;
+}
+
+// ===== 绘制 =====
+function drawFrame() {
+  if (noiseCanvas) ctx.drawImage(noiseCanvas, 0, 0); else { ctx.fillStyle = '#808080'; ctx.fillRect(0, 0, BASE_W, BASE_H); }
+  var now = performance.now(), LIT_DUR = 350;
+  if (fireflies) for (var i = 0; i < fireflies.length; i++) { var f = fireflies[i];
+    if (!f.alive) { if (f.litTs && now - f.litTs < LIT_DUR) { var litT = (now - f.litTs) / LIT_DUR, L = Math.min(255, f.gray + 51); var grad = ctx.createRadialGradient(f.x, f.y, f.radius * 0.3, f.x, f.y, f.radius * (1.2 + litT * 0.6)); grad.addColorStop(0, 'rgb(' + L + ',' + Math.round(L * 0.9) + ',' + Math.round(L * 0.5) + ')'); grad.addColorStop(0.5, 'rgba(' + L + ',' + Math.round(L * 0.85) + ',' + Math.round(L * 0.4) + ',0.5)'); grad.addColorStop(1, 'rgba(' + L + ',' + Math.round(L * 0.6) + ',' + Math.round(L * 0.2) + ',0)'); ctx.beginPath(); ctx.arc(f.x, f.y, f.radius * (1.2 + litT * 0.6), 0, 6.283); ctx.fillStyle = grad; ctx.fill(); } continue; }
+    ctx.beginPath(); ctx.arc(f.x, f.y, f.radius, 0, 6.283); ctx.fillStyle = 'rgb(' + f.gray + ',' + f.gray + ',' + f.gray + ')'; ctx.fill();
+  }
+  for (var i = 0; i < flyAnims.length; i++) { var a = flyAnims[i], t = (now - a.startTs) / 600; if (t > 1) continue; var u = 1 - t, endY = a.y - BASE_H * 0.7, cpX = a.x, cpY = endY - 60, by = u * u * a.y + 2 * u * t * cpY + t * t * endY; var fg = ctx.createRadialGradient(a.x, by, 0, a.x, by, a.radius * (1 + t)); fg.addColorStop(0, 'rgba(255,240,180,' + (0.3 * (1 - t)) + ')'); fg.addColorStop(1, 'rgba(255,240,180,0)'); ctx.beginPath(); ctx.arc(a.x, by, a.radius * (1 + t * 0.6), 0, 6.283); ctx.fillStyle = fg; ctx.fill(); }
+  for (var i = 0; i < revealRings.length; i++) { var r = revealRings[i], t2 = (now - r.startTs) / 500; if (t2 > 1) continue; ctx.beginPath(); ctx.arc(r.x, r.y, r.radius * 4 * (0.7 + t2 * 0.6), 0, 6.283); ctx.strokeStyle = 'rgba(255,240,180,' + (1 - t2) * 0.6 + ')'; ctx.lineWidth = 2; ctx.stroke(); }
+  for (var i = 0; i < burstParticles.length; i++) { var bp = burstParticles[i], bt = (now - bp.startTs) / bp.life; if (bt > 1) continue; var dist = bt * bp.speed, bx = bp.x + Math.cos(bp.angle) * dist + Math.sin(bt * 3.142) * bp.cpDist * Math.cos(bp.cpAngle), by = bp.y + Math.sin(bp.angle) * dist + Math.sin(bt * 3.142) * bp.cpDist * Math.sin(bp.cpAngle), alpha = 1 - bt, sz = bp.sz * (1 - bt * 0.4), pg = ctx.createRadialGradient(bx, by, 0, bx, by, sz); pg.addColorStop(0, 'rgba(255,240,180,' + (0.7 * alpha) + ')'); pg.addColorStop(0.4, 'rgba(255,200,100,' + (0.35 * alpha) + ')'); pg.addColorStop(1, 'rgba(255,160,50,0)'); ctx.beginPath(); ctx.arc(bx, by, sz, 0, 6.283); ctx.fillStyle = pg; ctx.fill(); }
+}
+function spawnBurst(x, y, br) { var n = 6 + Math.floor(Math.random() * 4); for (var i = 0; i < n; i++) { burstParticles.push({ x: x, y: y, sz: br * (0.25 + Math.random() * 0.5), angle: Math.random() * 6.283, speed: 60 + Math.random() * 160, startTs: performance.now(), life: 400 + Math.random() * 500, cpDist: 15 + Math.random() * 45, cpAngle: Math.random() * 6.283 }); } burstParticles = burstParticles.filter(function (p) { return performance.now() - p.startTs < p.life; }); }
+
+// ===== 回合 =====
+function generateFireflies() { var c = DIFFICULTY[currentDiff], n = c.numFireflies, rad = Math.round(c.fireflyDiaDeg * DEG_TO_PX / 2), m = rad + 10, md = rad * 3.5, ps = []; for (var i = 0; i < n; i++) { var pl = false; for (var a = 0; a < 200; a++) { var cx = m + Math.random() * (BASE_W - m * 2), cy = m + Math.random() * (BASE_H - m * 2), ok = true; for (var j = 0; j < ps.length; j++) { var dx = cx - ps[j].x, dy = cy - ps[j].y; if (Math.sqrt(dx * dx + dy * dy) < md) { ok = false; break; } } if (ok) { ps.push({ x: cx, y: cy }); pl = true; break; } } if (!pl) ps.push({ x: m + Math.random() * (BASE_W - m * 2), y: m + Math.random() * (BASE_H - m * 2) }); } var step = n > 1 ? (c.cStart - c.cEnd) / (n - 1) : 0; fireflies = ps.map(function (p, i) { var cc = Math.round((c.cStart - i * step) * 1000) / 1000; return { x: p.x, y: p.y, alive: true, contrast: cc, gray: fireflyGray(cc), radius: rad, litTs: 0 }; }); roundTimeLeft = c.roundSec; clearInterval(roundTimerId); roundTimerId = setInterval(roundTick, 1000); }
+function roundTick() { roundTimeLeft--; if (roundTimeLeft <= 0) handleTimeout(); }
+function handleTimeout() { clearInterval(roundTimerId); for (var i = 0; i < fireflies.length; i++) if (fireflies[i].alive) revealRings.push({ x: fireflies[i].x, y: fireflies[i].y, radius: fireflies[i].radius, startTs: performance.now() }); sndReveal(); startAnimLoop(); setTimeout(function () { nextRound(); }, 600); }
+function nextRound() { fireflies = null; flyAnims = []; revealRings = []; burstParticles = []; clearInterval(roundTimerId); generateFireflies(); noiseCanvas = generateNoise(); drawFrame(); if (!running) return; startAnimLoop(); var mc = 0; for (var i = 0; i < fireflies.length; i++) if (fireflies[i].contrast > mc) mc = fireflies[i].contrast; updateContrastBar(mc); }
+function allCleared() { for (var i = 0; i < fireflies.length; i++) if (fireflies[i].alive) return false; return true; }
+
+// ===== 点击 =====
+function getCanvasXY(e) { var r = canvas.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * BASE_W, y: (e.clientY - r.top) / r.height * BASE_H }; }
+function handleInput(e) { if (!running || gameOver || !fireflies) return; e.preventDefault(); var pt = getCanvasXY(e.touches ? e.touches[0] : e); totalClicks++; var hit = false; for (var i = 0; i < fireflies.length; i++) { var f = fireflies[i]; if (!f.alive) continue; if (Math.sqrt((pt.x - f.x) * (pt.x - f.x) + (pt.y - f.y) * (pt.y - f.y)) <= f.radius * 1.8) { hit = true; f.alive = false; f.litTs = performance.now(); hitClicks++; sndHit(); spawnBurst(f.x, f.y, f.radius); var fx = f.x, fy = f.y, fr = f.radius; setTimeout(function () { sndFly(); flyAnims.push({ x: fx, y: fy, radius: fr, startTs: performance.now() }); }, 300); score += 10; if (f.contrast < minContrast) minContrast = f.contrast; break; } } if (!hit) { missClicks++; sndMiss(); } updateHUD(); drawFrame(); if (allCleared()) { clearInterval(roundTimerId); setTimeout(function () { nextRound(); }, 400); } }
+canvas.addEventListener('click', handleInput); canvas.addEventListener('touchstart', handleInput, { passive: false });
+
+// ===== 动画循环 =====
+function startAnimLoop() { cancelAnimationFrame(animRaf); function loop(ts) { var ha = false; for (var i = 0; i < flyAnims.length; i++) if (ts - flyAnims[i].startTs < 600) ha = true; for (var i = 0; i < revealRings.length; i++) if (ts - revealRings[i].startTs < 500) ha = true; for (var i = 0; i < burstParticles.length; i++) if (ts - burstParticles[i].startTs < burstParticles[i].life) ha = true; if (!running && !ha) return; drawFrame(); if (ha) animRaf = requestAnimationFrame(loop); } animRaf = requestAnimationFrame(loop); }
+
+// ===== HUD =====
+function updateContrastBar(c) { document.getElementById('contrastLabel').textContent = 'Cb ' + (c * 100).toFixed(1) + '%'; document.getElementById('contrastFill').style.width = (c * 100).toFixed(0) + '%'; }
+function updateHUD() { document.getElementById('hudScore').textContent = score; document.getElementById('hudAccuracy').textContent = totalClicks > 0 ? Math.round(hitClicks / totalClicks * 100) + '%' : '-'; var te = document.getElementById('hudTime'); te.textContent = timeLeft; te.className = 'hud-value' + (timeLeft <= 15 ? ' timer-warn' : ''); }
+function tick() { timeLeft--; updateHUD(); if (timeLeft <= 0) endGame(); }
+
+// ===== Overlay =====
+function showCover() { initAudio(); sndStart(); var ab = document.querySelector('.diff-btn.active'); if (ab) currentDiff = ab.dataset.diff; minContrast = DIFFICULTY[currentDiff].cStart; document.getElementById('startOverlay').classList.add('hidden'); document.getElementById('coverOverlay').classList.remove('hidden'); }
+function startGame() { document.getElementById('coverOverlay').classList.add('hidden'); document.getElementById('endOverlay').classList.add('hidden'); var c = DIFFICULTY[currentDiff]; score = 0; timeLeft = 120; totalClicks = 0; hitClicks = 0; missClicks = 0; minContrast = c.cStart; running = true; gameOver = false; updateHUD(); clearInterval(timerId); timerId = setInterval(tick, 1000); nextRound(); }
+function endGame() { running = false; gameOver = true; clearInterval(timerId); clearInterval(roundTimerId); cancelAnimationFrame(animRaf); fireflies = null; flyAnims = []; revealRings = []; burstParticles = []; drawIdle(); var acc = totalClicks > 0 ? Math.round(hitClicks / totalClicks * 100) : 0; document.getElementById('endCard').innerHTML = '<div class="firefly-icon" style="width:56px;height:66px;margin:0 auto 10px"><div class="glow" style="width:42px;height:42px;bottom:3px"></div><div class="wing-l" style="width:22px;height:28px;top:9px"></div><div class="wing-r" style="width:22px;height:28px;top:9px"></div><div class="head" style="width:18px;height:14px"></div><div class="body" style="width:22px;height:32px;bottom:11px"></div></div><h2>训练结束</h2><p style="color:#aab;font-size:14px;margin:6px 0">最低可辨 Cb：<b style="color:#FFE082;font-size:18px">' + (minContrast * 100).toFixed(1) + '%</b></p><div class="result-stats"><div class="result-stat"><div class="rs-label">总得分</div><div class="rs-value">' + score + '</div></div><div class="result-stat"><div class="rs-label">命中率</div><div class="rs-value">' + acc + '%</div></div><div class="result-stat"><div class="rs-label">找到萤火虫</div><div class="rs-value">' + hitClicks + '</div></div><div class="result-stat"><div class="rs-label">近距搜索</div><div class="rs-value">' + totalClicks + '</div></div></div><p class="tip">记得远眺 5 分钟，让眼睛放松</p><button class="btn-go" onclick="restartGame()">再玩一次</button><button class="btn-go" style="margin-top:8px;font-size:15px" onclick="backToSelect()">返回选择</button>'; document.getElementById('endOverlay').classList.remove('hidden'); sndDone(); }
+function restartGame() { document.getElementById('endOverlay').classList.add('hidden'); document.getElementById('coverOverlay').classList.remove('hidden'); }
+function backToSelect() { document.getElementById('endOverlay').classList.add('hidden'); document.getElementById('startOverlay').classList.remove('hidden'); running = false; gameOver = true; clearInterval(roundTimerId); document.querySelectorAll('.diff-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.diff === currentDiff); }); drawIdle(); }
+document.querySelectorAll('.diff-btn').forEach(function (b) { b.addEventListener('click', function () { if (running) return; document.querySelectorAll('.diff-btn').forEach(function (x) { x.classList.remove('active'); }); b.classList.add('active'); currentDiff = b.dataset.diff; }); });
+drawIdle();
+</script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}</script>
+</body>
+</html>

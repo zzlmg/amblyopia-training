@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>训练进度 · 弱视训练公益站</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root {
+  --blue: #4da6ff;    --blue-light: #e6f2ff;
+  --pink: #ff6b9d;    --pink-light: #fff0f5;
+  --green: #45c4a0;   --green-light: #e6faf5;
+  --orange: #ffa940;  --orange-light: #fff7e6;
+  --purple: #9b7ef0;  --purple-light: #f3efff;
+  --text: #3a3a4a;    --text-muted: #7a7a8a;
+  --bg: #fefdf8;      --card-bg: #ffffff;
+  --radius: 24px;     --radius-sm: 16px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; overflow-x: hidden;
+}
+
+/* Top nav */
+.top-bar {
+  width: 100%; max-width: 760px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+}
+.back-link {
+  text-decoration: none; color: var(--purple); font-weight: 600;
+  font-size: 15px; display: flex; align-items: center; gap: 6px;
+}
+.back-link:hover { opacity: 0.8; }
+
+/* Container */
+.container { max-width: 760px; margin: 0 auto; padding: 0 20px 60px; }
+
+/* Hero */
+.hero {
+  text-align: center; padding: 20px 0 32px;
+}
+.hero h1 { font-size: 1.8rem; color: var(--text); margin-bottom: 6px; }
+.hero h1 span { font-size: 2rem; }
+.hero p { color: var(--text-muted); font-size: 0.95rem; }
+
+/* Stats row */
+.stats-row {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--card-bg); border-radius: var(--radius-sm);
+  padding: 16px 12px; text-align: center;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  border: 1.5px solid transparent;
+}
+.stat-card.blue   { border-color: var(--blue); }
+.stat-card.orange { border-color: var(--orange); }
+.stat-card.pink   { border-color: var(--pink); }
+.stat-icon { font-size: 1.6rem; margin-bottom: 4px; }
+.stat-value { font-size: 1.6rem; font-weight: 800; }
+.stat-value.blue   { color: var(--blue); }
+.stat-value.orange { color: var(--orange); }
+.stat-value.pink   { color: var(--pink); }
+.stat-label { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+
+/* Section title */
+.section-title {
+  font-size: 1.15rem; font-weight: 700; color: var(--text);
+  margin: 28px 0 12px; display: flex; align-items: center; gap: 8px;
+}
+.section-title::before {
+  content: ''; width: 4px; height: 18px; border-radius: 2px;
+  background: var(--purple); display: inline-block;
+}
+
+/* Calendar heatmap */
+.calendar { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.day-cell {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: #eee; transition: transform 0.15s;
+}
+.day-cell:hover { transform: scale(1.15); }
+.day-cell.level-0 { background: #f0f0f0; }
+.day-cell.level-1 { background: #e0d4f5; }
+.day-cell.level-2 { background: #c4a8f0; }
+.day-cell.level-3 { background: #9b7ef0; }
+.day-cell.level-4 { background: #7c5cbf; }
+.day-empty { background: #f0f0f0; cursor: default; }
+.day-label {
+  font-size: 0.7rem; color: var(--text-muted); text-align: center;
+  margin-top: 4px;
+}
+.calendar-legend {
+  display: flex; align-items: center; gap: 6px; font-size: 0.72rem;
+  color: var(--text-muted); margin-bottom: 20px; justify-content: flex-end;
+}
+.legend-dot {
+  width: 12px; height: 12px; border-radius: 3px;
+}
+
+/* Game cards */
+.games-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px;
+}
+.game-card {
+  background: var(--card-bg); border-radius: var(--radius-sm);
+  padding: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  border-left: 4px solid transparent;
+}
+.game-card:nth-child(1) { border-color: var(--blue); }
+.game-card:nth-child(2) { border-color: var(--pink); }
+.game-card:nth-child(3) { border-color: var(--green); }
+.game-card:nth-child(4) { border-color: var(--orange); }
+.game-card:nth-child(5) { border-color: var(--purple); }
+.game-card:nth-child(6) { border-color: #FF6B35; }
+.game-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.game-card-icon { font-size: 1.5rem; }
+.game-card-name { font-weight: 700; font-size: 0.95rem; }
+.game-card-stats { font-size: 0.78rem; color: var(--text-muted); line-height: 1.6; }
+.game-card-stats b { color: var(--text); }
+.never-played { opacity: 0.5; }
+
+/* Achievements */
+.ach-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 24px; }
+.ach-card {
+  background: var(--card-bg); border-radius: var(--radius-sm);
+  padding: 14px 10px; text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.ach-card.locked { opacity: 0.35; filter: grayscale(1); }
+.ach-icon { font-size: 2rem; margin-bottom: 4px; }
+.ach-name { font-weight: 700; font-size: 0.82rem; margin-bottom: 2px; }
+.ach-desc { font-size: 0.7rem; color: var(--text-muted); }
+.ach-date { font-size: 0.65rem; color: var(--green); margin-top: 2px; }
+
+/* Responsive */
+@media (max-width: 500px) {
+  .stats-row { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat-value { font-size: 1.3rem; }
+  .games-grid { grid-template-columns: 1fr; }
+  .ach-grid { grid-template-columns: repeat(2, 1fr); }
+  .day-cell { width: 26px; height: 26px; border-radius: 6px; }
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center; padding: 40px 20px; color: var(--text-muted);
+}
+.empty-state .big-icon { font-size: 4rem; display: block; margin-bottom: 12px; }
+.empty-state p { font-size: 0.95rem; line-height: 1.6; }
+.empty-state a { color: var(--purple); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="index.html" class="back-link">&#8592; 返回科普站</a>
+  <a href="index.html#games" class="back-link">&#8592; 训练游戏</a>
+</div>
+
+<div class="container">
+  <div class="hero">
+    <h1><span>📊</span> 训练进度</h1>
+    <p id="heroSub">让每一次努力都看得见</p>
+  </div>
+
+  <!-- Stats row -->
+  <div class="stats-row">
+    <div class="stat-card blue">
+      <div class="stat-icon">⭐</div>
+      <div class="stat-value blue" id="totalPoints">0</div>
+      <div class="stat-label">总积分</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-icon">🔥</div>
+      <div class="stat-value orange" id="currentStreak">0</div>
+      <div class="stat-label">连续训练</div>
+    </div>
+    <div class="stat-card pink">
+      <div class="stat-icon">🎮</div>
+      <div class="stat-value pink" id="totalPlays">0</div>
+      <div class="stat-label">训练次数</div>
+    </div>
+  </div>
+
+  <!-- Calendar -->
+  <div class="section-title">📅 训练日历</div>
+  <div class="calendar" id="calendar"></div>
+  <div class="calendar-legend">
+    少 <span class="legend-dot" style="background:#f0f0f0;"></span>
+    <span class="legend-dot" style="background:#e0d4f5;"></span>
+    <span class="legend-dot" style="background:#c4a8f0;"></span>
+    <span class="legend-dot" style="background:#9b7ef0;"></span>
+    <span class="legend-dot" style="background:#7c5cbf;"></span> 多
+  </div>
+
+  <!-- Per-game stats -->
+  <div class="section-title">🎯 各游戏统计</div>
+  <div class="games-grid" id="gamesGrid"></div>
+
+  <!-- Achievements -->
+  <div class="section-title">🏅 成就徽章</div>
+  <div class="ach-grid" id="achGrid"></div>
+
+  <!-- Empty state -->
+  <div class="empty-state" id="emptyState">
+    <span class="big-icon">🌟</span>
+    <p>还没有训练记录呢！</p>
+    <p>去<a href="index.html#games">训练游戏</a>开始第一次训练吧~</p>
+  </div>
+</div>
+
+<script>
+// ===== Data & Config =====
+const PROGRESS_KEY = 'amblyopia_progress';
+
+const GAME_INFO = {
+  'whack-a-mole':     { name:'打地鼠',   icon:'🔨', color:'var(--blue)',   stats:['最佳得分','击中','漏掉','最高连击'], keys:['bestScore','totalHits','totalMisses','bestCombo'] },
+  'spot-difference':  { name:'找不同',   icon:'🔍', color:'var(--pink)',   stats:['最佳得分','找对','找错'],           keys:['bestScore','totalCorrect','totalWrong'] },
+  'matching-game':    { name:'连连看',   icon:'🔗', color:'var(--green)',  stats:['最佳得分','消除对','最高连消'],     keys:['bestScore','totalPairs','bestCombo'] },
+  'maze-game':        { name:'走迷宫',   icon:'🌀', color:'var(--orange)', stats:['最佳得分','通过迷宫','最快单次'],   keys:['bestScore','totalMazes','fastestTime'] },
+  'chase-the-light':  { name:'追光点',   icon:'✨', color:'var(--purple)', stats:['最佳得分','捕获','最高连击'],       keys:['bestScore','totalCaptures','bestCombo'] },
+  'fly-swatter':      { name:'打苍蝇',   icon:'🪰', color:'#FF6B35',       stats:['最佳得分','击杀','逃脱'],           keys:['bestScore','totalKills','totalEscapes'] },
+  'zombie-whacker':   { name:'打僵尸',   icon:'🧟', color:'#76FF03',       stats:['最佳得分','击退','溜走'],           keys:['bestScore','totalKills','totalEscapes'] },
+  'schulte-grid':     { name:'舒尔特方格', icon:'🔢', color:'#5C6BC0',       stats:['最佳得分','正确','用时(s)'],        keys:['bestScore','totalHits','fastestTime'] },
+  'zombie-schulte-grid':{name:'僵尸舒尔特', icon:'🧟', color:'#C62828',       stats:['最佳得分','准确率','用时(s)'],      keys:['bestScore','bestAcc','bestTime'] }
+};
+
+const ACHIEVEMENTS = [
+  { id:'first_game',    name:'初次训练',   desc:'完成第一次训练',             icon:'🎯' },
+  { id:'five_games',    name:'广撒网',     desc:'玩过全部6个游戏',            icon:'🎪' },
+  { id:'high_score_200',name:'高分选手',   desc:'任意游戏单次≥200分',         icon:'🏆' },
+  { id:'streak_3',      name:'坚持三天',   desc:'连续训练3天',               icon:'🔥' },
+  { id:'streak_7',      name:'一周达人',   desc:'连续训练7天',               icon:'💪' },
+  { id:'total_1000',    name:'千分俱乐部', desc:'累计积分≥1000',              icon:'💰' },
+  { id:'no_escape',     name:'完美守卫',   desc:'打苍蝇0逃脱',               icon:'🛡️' },
+  { id:'ten_plays',     name:'熟能生巧',   desc:'累计训练10次',              icon:'🔄' },
+  { id:'perfect_whack', name:'百发百中',   desc:'打地鼠命中率≥90%',          icon:'🎯' },
+];
+
+function getProgress() {
+  let raw = localStorage.getItem(PROGRESS_KEY);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch(e) { return null; }
+}
+
+function formatTime(sec) {
+  if (!sec && sec !== 0) return '--';
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return m + '分' + s + '秒';
+}
+
+// ===== Render =====
+function render() {
+  const p = getProgress();
+  if (!p) {
+    document.getElementById('emptyState').style.display = 'block';
+    return;
+  }
+  document.getElementById('emptyState').style.display = 'none';
+
+  const totalPlays = Object.values(p.games).reduce((s,g) => s + (g.plays||0), 0);
+  document.getElementById('totalPoints').textContent = p.totalPoints || 0;
+  document.getElementById('currentStreak').textContent = (p.streak && p.streak.current || 0) + ' 天';
+  document.getElementById('totalPlays').textContent = totalPlays;
+  document.getElementById('heroSub').textContent = '已坚持训练 ' + totalPlays + ' 次，继续加油！';
+
+  renderCalendar(p);
+  renderGames(p);
+  renderAchievements(p);
+}
+
+function renderCalendar(p) {
+  const cal = document.getElementById('calendar');
+  const today = new Date();
+  const days = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    const entry = p.calendar && p.calendar[key];
+    let level = 0;
+    if (entry) {
+      const pts = entry.points || 0;
+      if (pts >= 200) level = 4;
+      else if (pts >= 120) level = 3;
+      else if (pts >= 60) level = 2;
+      else level = 1;
+    }
+    days.push({ key, level, date: d.getDate(), entry });
+  }
+
+  let html = '';
+  for (const day of days) {
+    const title = day.entry ? day.key + '\n' + day.entry.points + '分 · ' + day.entry.gamesPlayed + '局' : day.key;
+    html += '<div class="day-cell level-' + day.level + '" title="' + title + '"></div>';
+  }
+  cal.innerHTML = html;
+}
+
+function renderGames(p) {
+  const grid = document.getElementById('gamesGrid');
+  let html = '';
+  for (const [id, info] of Object.entries(GAME_INFO)) {
+    const g = p.games[id];
+    const played = g && g.plays > 0;
+    html += '<div class="game-card' + (played ? '' : ' never-played') + '">';
+    html += '<div class="game-card-top"><span class="game-card-icon">' + info.icon + '</span><span class="game-card-name">' + info.name + '</span></div>';
+    html += '<div class="game-card-stats">';
+    if (played) {
+      html += '<div>🎮 已玩 <b>' + g.plays + '</b> 次</div>';
+      for (let i = 0; i < info.stats.length; i++) {
+        let val = g[info.keys[i]];
+        if (info.keys[i] === 'fastestTime') val = formatTime(val);
+        else if (val === undefined || val === null) val = '--';
+        html += '<div>' + info.stats[i] + '：<b>' + val + '</b></div>';
+      }
+    } else {
+      html += '还没有玩过~';
+    }
+    html += '</div></div>';
+  }
+  grid.innerHTML = html;
+}
+
+function renderAchievements(p) {
+  const grid = document.getElementById('achGrid');
+  const unlocked = {};
+  if (p.achievements) {
+    for (const a of p.achievements) unlocked[a.id] = a;
+  }
+  let html = '';
+  for (const ach of ACHIEVEMENTS) {
+    const u = unlocked[ach.id];
+    html += '<div class="ach-card' + (u ? '' : ' locked') + '">';
+    html += '<div class="ach-icon">' + ach.icon + '</div>';
+    html += '<div class="ach-name">' + ach.name + '</div>';
+    html += '<div class="ach-desc">' + ach.desc + '</div>';
+    if (u) html += '<div class="ach-date">' + u.unlockedAt + '</div>';
+    html += '</div>';
+  }
+  grid.innerHTML = html;
+}
+
+render();
+</script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}</script>
+</body>
+</html>
