@@ -1,4 +1,4 @@
-const CACHE = 'amblyopia-v3';
+const CACHE = 'amblyopia-v4';
 const FILES = [
   './',
   'index.html',
@@ -26,7 +26,15 @@ const FILES = [
 
 self.addEventListener('install', e => {
   self.skipWaiting();
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));
+  e.waitUntil(
+    caches.open(CACHE).then(cache =>
+      Promise.allSettled(FILES.map(url =>
+        fetch(url, { cache: 'no-cache' }).then(r => {
+          if (r.ok) cache.put(url, r);
+        })
+      ))
+    )
+  );
 });
 
 self.addEventListener('activate', e => {
