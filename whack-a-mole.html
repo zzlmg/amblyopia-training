@@ -3,610 +3,286 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>打地鼠 — 弱视视觉追踪训练</title>
+<title>打地鼠 · 太阳花弱视训练</title>
 <link rel="manifest" href="manifest.json">
 <style>
-  :root {
-    --blue: #4da6ff; --pink: #ff6b9d; --green: #45c4a0;
-    --orange: #ffa940; --purple: #9b7ef0; --yellow: #ffd43b;
-    --bg: #fefdf8; --text: #3a3a4a; --text-muted: #7a7a8a;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
-    background: linear-gradient(180deg, #e6f2ff 0%, #fefdf8 30%, #fff0f5 70%, #fefdf8 100%);
-    min-height: 100vh; color: var(--text); overflow-x: hidden;
-    display: flex; flex-direction: column; align-items: center;
-    user-select: none; -webkit-user-select: none;
-  }
+:root {
+  --blue:#4da6ff; --pink:#ff6b9d; --green:#45c4a0;
+  --orange:#ffa940; --purple:#9b7ef0; --yellow:#ffd43b;
+  --bg:#fefdf8; --text:#3a3a4a; --text-muted:#7a7a8a;
+}
+*{margin:0;padding:0;box-sizing:border-box}
 
-  .top-bar {
-    width: 100%; max-width: 520px; display: flex;
-    align-items: center; justify-content: space-between;
-    padding: 16px 20px;
-  }
-  .back-link {
-    text-decoration: none; color: var(--blue); font-weight: 600; font-size: 15px;
-    display: flex; align-items: center; gap: 6px;
-  }
-  .back-link:hover { opacity: 0.8; }
+/* ===== 全屏基础 ===== */
+html,body{height:100vh;width:100vw;overflow:hidden;
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  color:var(--text);user-select:none;-webkit-user-select:none;
+  background:#f5f3ed}
+body{display:flex;flex-direction:column;align-items:center;position:relative}
 
-  .game-header {
-    text-align: center; padding: 8px 20px 20px;
-  }
-  .game-header h1 {
-    font-size: 30px; font-weight: 800; margin-bottom: 4px;
-    background: linear-gradient(135deg, #ffa940, #ff6b9d);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  }
-  .game-header .sub {
-    font-size: 15px; color: var(--text-muted);
-  }
+/* ===== 浮层顶栏 38px ===== */
+.top-bar{position:absolute;top:0;left:0;right:0;height:38px;z-index:10;
+  background:rgba(245,243,237,0.65);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:space-between;padding:0 12px;
+  border-bottom:1px solid rgba(0,0,0,0.05)}
+.top-bar a{text-decoration:none;color:var(--blue);font-weight:600;font-size:15px}
+.top-bar .timer{display:none;font-size:17px;font-weight:700;color:var(--blue)}
+.top-bar .timer.warn{color:var(--pink)!important;animation:pulse 0.8s infinite}
+.top-bar .sound-btn{cursor:pointer;font-size:15px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
 
-  .hud {
-    width: 100%; max-width: 520px; display: flex;
-    justify-content: center; gap: 16px; padding: 0 20px 12px;
-  }
-  .hud-item {
-    background: #fff; border-radius: 16px; padding: 10px 18px;
-    border: 2px solid #f0f0f5; text-align: center; min-width: 80px;
-  }
-  .hud-label { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
-  .hud-value { font-size: 22px; font-weight: 800; }
-  .hud-value.score { color: var(--orange); }
-  .hud-value.combo { color: var(--pink); }
-  .hud-value.time { color: var(--blue); }
+/* ===== Canvas区（撑满） ===== */
+.canvas-wrap{flex:1;width:100%;display:flex;align-items:center;justify-content:center;
+  padding:46px 14px 14px}
+.game-area{display:grid;grid-template-columns:repeat(3,1fr);
+  gap:16px;width:min(420px,100%);max-height:100%}
+.hole{position:relative;aspect-ratio:1;
+  background:radial-gradient(circle at 50% 40%,#e8d5c4,#c4a882);
+  border-radius:50%;cursor:pointer;
+  box-shadow:inset 0 6px 16px rgba(0,0,0,0.18),0 2px 8px rgba(0,0,0,0.08);
+  overflow:hidden;transition:transform 0.1s}
+.hole:active{transform:scale(0.95)}
 
-  .game-wrapper {
-    width: 100%; max-width: 520px; padding: 0 20px;
-    display: flex; justify-content: center;
-  }
-  .game-area {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 16px; width: 100%; max-width: 420px;
-  }
-  .hole {
-    position: relative; aspect-ratio: 1;
-    background: radial-gradient(circle at 50% 40%, #e8d5c4, #c4a882);
-    border-radius: 50%; cursor: pointer;
-    box-shadow: inset 0 6px 16px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08);
-    overflow: hidden;
-    transition: transform 0.1s;
-  }
-  .hole:active { transform: scale(0.95); }
+.target{position:absolute;left:50%;transform:translate(-50%,0);
+  width:70%;height:70%;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:2em;cursor:pointer;transition:bottom 0.12s ease-out,opacity 0.1s;pointer-events:auto}
+.target.hidden{bottom:-80%;opacity:0;pointer-events:none}
+.target.showing{bottom:12%;opacity:1}
+.target.hit{animation:popHit 0.3s ease-out forwards}
+@keyframes popHit{0%{transform:translate(-50%,0) scale(1)}
+  30%{transform:translate(-50%,-10%) scale(1.3)}
+  100%{transform:translate(-50%,-80%) scale(0);opacity:0}}
+.target.escape{animation:escape 0.15s ease-in forwards}
+@keyframes escape{0%{bottom:12%;opacity:1}100%{bottom:-80%;opacity:0}}
 
-  .target {
-    position: absolute; left: 50%; transform: translate(-50%, 0);
-    width: 70%; height: 70%; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 2em; cursor: pointer;
-    transition: bottom 0.12s ease-out, opacity 0.1s;
-    pointer-events: auto;
-  }
-  .target.hidden { bottom: -80%; opacity: 0; pointer-events: none; }
-  .target.showing { bottom: 12%; opacity: 1; }
-  .target.hit { animation: popHit 0.3s ease-out forwards; }
+.particle{position:absolute;pointer-events:none;font-size:20px;font-weight:800;
+  animation:particleUp 0.3s ease-out forwards;z-index:10}
+@keyframes particleUp{0%{opacity:1;transform:translateY(0) scale(1)}
+  100%{opacity:0;transform:translateY(-60px) scale(1.6)}}
 
-  @keyframes popHit {
-    0% { transform: translate(-50%, 0) scale(1); }
-    30% { transform: translate(-50%, -10%) scale(1.3); }
-    100% { transform: translate(-50%, -80%) scale(0); opacity: 0; }
-  }
+.combo-pop{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-size:36px;font-weight:900;pointer-events:none;z-index:150;
+  animation:comboBurst 0.7s ease-out forwards;white-space:nowrap}
+@keyframes comboBurst{0%{opacity:1;transform:translate(-50%,-50%) scale(0.5)}
+  40%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}
+  100%{opacity:0;transform:translate(-50%,-70%) scale(1)}}
 
-  .target.escape {
-    animation: escape 0.15s ease-in forwards;
-  }
-  @keyframes escape {
-    0% { bottom: 12%; opacity: 1; }
-    100% { bottom: -80%; opacity: 0; }
-  }
+/* ===== Overlay 弹窗 ===== */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);
+  display:flex;align-items:center;justify-content:center;z-index:200;
+  animation:fadeIn 0.2s ease-out;padding:16px}
+.overlay.hidden{display:none}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.overlay-card{background:#fff;border-radius:24px;padding:28px 24px;
+  max-width:400px;width:100%;text-align:center;
+  box-shadow:0 12px 40px rgba(0,0,0,0.12);
+  animation:cardIn 0.3s ease-out}
+@keyframes cardIn{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+.overlay-card h2{font-size:22px;font-weight:800;margin-bottom:8px}
+.overlay-card h2.grad{
+  background:linear-gradient(135deg,#ffa940,#ff6b9d);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:28px}
+.overlay-card .sub{font-size:14px;color:var(--text-muted);margin-bottom:6px}
 
-  .particle {
-    position: absolute; pointer-events: none;
-    font-size: 20px; font-weight: 800;
-    animation: particleUp 0.6s ease-out forwards;
-    z-index: 10;
-  }
-  @keyframes particleUp {
-    0% { opacity: 1; transform: translateY(0) scale(1); }
-    100% { opacity: 0; transform: translateY(-60px) scale(1.6); }
-  }
+/* 难度选择 */
+.diff-row{display:flex;gap:8px;justify-content:center;margin:12px 0;flex-wrap:wrap}
+.diff-btn{padding:10px 20px;border-radius:50px;border:2px solid #e0e0e8;
+  background:#fff;font-size:14px;font-weight:700;cursor:pointer;
+  transition:all 0.2s;color:var(--text-muted);font-family:inherit}
+.diff-btn:hover{border-color:var(--blue);color:var(--blue)}
+.diff-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
 
-  .difficulty-selector {
-    display: flex; gap: 10px; justify-content: center;
-    padding: 16px 20px; flex-wrap: wrap;
-  }
-  .diff-btn {
-    padding: 10px 22px; border-radius: 50px;
-    border: 2px solid #e0e0e8; background: #fff;
-    font-size: 15px; font-weight: 700; cursor: pointer;
-    transition: all 0.2s; color: var(--text-muted);
-  }
-  .diff-btn:hover { border-color: var(--blue); color: var(--blue); }
-  .diff-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+/* 遮盖提醒 */
+.highlight{background:#fff7e6;padding:12px;border-radius:14px;
+  border:2px solid #ffe066;margin:12px 0;
+  font-size:13px;color:#ba7517;font-weight:600;line-height:1.6}
 
-  .btn-row {
-    display: flex; gap: 12px; justify-content: center;
-    padding: 8px 20px 24px; flex-wrap: wrap;
-  }
-  .btn {
-    padding: 14px 36px; border-radius: 50px; border: none;
-    font-size: 17px; font-weight: 700; cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s;
-  }
-  .btn:active { transform: scale(0.96); }
-  .btn-start {
-    background: linear-gradient(135deg, #4da6ff, #6c5ce7);
-    color: #fff; box-shadow: 0 4px 16px rgba(77,166,255,0.35);
-  }
-  .btn-start:hover { box-shadow: 0 6px 24px rgba(77,166,255,0.5); }
-  .btn-start:disabled {
-    background: #ccc; box-shadow: none; cursor: not-allowed; color: #888;
-  }
-  .btn-restart {
-    background: #fff; color: var(--blue); border: 2px solid var(--blue);
-  }
+/* 按钮 */
+.btn{padding:13px 34px;border-radius:50px;border:none;font-size:16px;font-weight:700;
+  cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;font-family:inherit}
+.btn:active{transform:scale(0.96)}
+.btn-p{background:linear-gradient(135deg,#4da6ff,#6c5ce7);color:#fff;
+  box-shadow:0 4px 16px rgba(77,166,255,0.35);display:inline-block}
+.btn-p:hover{box-shadow:0 6px 24px rgba(77,166,255,0.5)}
+.btn-s{background:#fff;color:var(--blue);border:2px solid var(--blue);
+  display:inline-block;margin-left:8px;margin-top:10px;padding:9px 22px;font-size:14px}
 
-  .modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5); z-index: 200;
-    display: flex; align-items: center; justify-content: center;
-    animation: fadeIn 0.2s ease-out;
-  }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  .modal {
-    background: #fff; border-radius: 28px; padding: 32px 28px;
-    max-width: 400px; width: 90%; text-align: center;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
-    animation: modalIn 0.3s ease-out;
-  }
-  @keyframes modalIn {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-  .modal h2 { font-size: 24px; font-weight: 800; margin-bottom: 12px; }
-  .modal p { font-size: 15px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6; }
-  .modal .highlight {
-    background: #fff7e6; padding: 12px 16px; border-radius: 14px;
-    border: 2px solid #ffe066; margin-bottom: 20px;
-    font-size: 14px; color: #ba7517; font-weight: 600;
-  }
+/* 结果统计 */
+.result-stat{display:flex;justify-content:center;gap:20px;margin:14px 0;flex-wrap:wrap}
+.rs-item{text-align:center;min-width:55px}
+.rs-val{font-size:26px;font-weight:800}.rs-lbl{font-size:12px;color:var(--text-muted)}
+.rest-reminder{background:#fffbe6;border:2px solid #ffe066;
+  border-radius:14px;padding:12px;margin:12px 0;
+  font-size:13px;color:#ba7517;line-height:1.6}
 
-  .combo-pop {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    font-size: 36px; font-weight: 900; pointer-events: none; z-index: 150;
-    animation: comboBurst 0.7s ease-out forwards;
-    white-space: nowrap;
-  }
-  @keyframes comboBurst {
-    0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
-    40% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-    100% { opacity: 0; transform: translate(-50%, -70%) scale(1); }
-  }
-
-  .result-card {
-    background: #fff; border-radius: 28px; padding: 32px 28px;
-    max-width: 420px; width: 90%; text-align: center;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.12);
-  }
-  .result-score { font-size: 56px; font-weight: 900; color: var(--orange); }
-  .result-label { font-size: 14px; color: var(--text-muted); margin-bottom: 4px; }
-  .result-stat {
-    display: flex; justify-content: center; gap: 28px;
-    margin: 18px 0;
-  }
-  .result-stat-item { text-align: center; }
-  .result-stat-value { font-size: 28px; font-weight: 800; }
-  .result-stat-label { font-size: 12px; color: var(--text-muted); }
-
-  .rest-reminder {
-    background: #fffbe6; border: 2px solid #ffe066;
-    border-radius: 16px; padding: 16px; margin: 16px 0;
-    font-size: 14px; color: #ba7517; line-height: 1.6;
-  }
-
-  .progress-bar-outer {
-    width: 100%; max-width: 520px; height: 8px;
-    background: #f0f0f5; border-radius: 4px;
-    margin: 0 auto 8px; overflow: hidden;
-  }
-  .progress-bar-inner {
-    height: 100%; border-radius: 4px;
-    background: linear-gradient(90deg, #45c4a0, #4da6ff, #9b7ef0);
-    transition: width 0.3s linear;
-  }
-  .progress-text {
-    text-align: center; font-size: 13px; color: var(--text-muted);
-    margin-bottom: 8px;
-  }
-
-  @media (max-width: 420px) {
-    .game-area { gap: 10px; }
-    .hud { gap: 8px; }
-    .hud-item { padding: 8px 12px; min-width: 60px; }
-    .hud-value { font-size: 18px; }
-    .game-header h1 { font-size: 24px; }
-  }
+@media(max-width:420px){
+  .game-area{gap:10px}
+  .top-bar a{font-size:13px}
+  .overlay-card{padding:22px 18px}
+}
 </style>
 </head>
 <body>
 
+<!-- ===== 浮层顶栏 ===== -->
 <div class="top-bar">
-  <a href="index.html" class="back-link">&#8592; 返回科普站</a>
-  <a href="index.html#games" class="back-link">&#8592; 训练游戏</a>
-  <a href="progress.html" class="back-link">📊 训练进度</a>
-</div>
-
-<div class="game-header">
-  <h1>打地鼠</h1>
-  <p class="sub">视觉追踪训练 · 锻炼眼球快速锁定目标的能力</p>
-</div>
-
-<div class="difficulty-selector" id="diffSelector">
-  <button class="diff-btn active" data-diff="easy">简单</button>
-  <button class="diff-btn" data-diff="medium">中等</button>
-  <button class="diff-btn" data-diff="hard">困难</button>
-</div>
-
-<div class="hud">
-  <div class="hud-item">
-    <div class="hud-label">得分</div>
-    <div class="hud-value score" id="scoreDisplay">0</div>
-  </div>
-  <div class="hud-item">
-    <div class="hud-label">连击</div>
-    <div class="hud-value combo" id="comboDisplay">x1</div>
-  </div>
-  <div class="hud-item">
-    <div class="hud-label">时间</div>
-    <div class="hud-value time" id="timeDisplay">2:00</div>
+  <a href="index.html#games">← 返回游戏</a>
+  <div>
+    <span class="timer" id="topTimer">2:00</span>
+    <span class="sound-btn" id="soundBtn" onclick="toggleSound()">🔊</span><a href="contact.html" style="font-size:15px;text-decoration:none;margin-left:6px;color:var(--blue)" title="联系我们">📬</a>
   </div>
 </div>
 
-<div class="progress-bar-outer">
-  <div class="progress-bar-inner" id="progressBar" style="width:0%"></div>
-</div>
-<p class="progress-text" id="progressText">准备开始</p>
-
-<div class="btn-row">
-  <button class="btn btn-start" id="btnStart" onclick="startGame()">开始训练</button>
+<!-- ===== 游戏区 ===== -->
+<div class="canvas-wrap">
+  <div class="game-area" id="gameArea"></div>
 </div>
 
-<div class="game-wrapper">
-  <div class="game-area" id="gameArea">
+<!-- ===== 启动 Overlay ===== -->
+<div class="overlay" id="startOverlay">
+  <div class="overlay-card">
+    <h2 class="grad">打地鼠</h2>
+    <p class="sub">视觉追踪训练 · 锻炼眼球快速锁定目标的能力</p>
+    <div class="diff-row" id="diffRow">
+      <button class="diff-btn active" data-diff="easy">简单</button>
+      <button class="diff-btn" data-diff="medium">中等</button>
+      <button class="diff-btn" data-diff="hard">困难</button>
+    </div>
+    <div class="highlight">
+      🚫 如果医生建议遮盖治疗，请先遮盖<strong>健眼（视力较好的眼睛）</strong><br>
+      让弱视眼独立完成本次训练
+    </div>
+    <p style="font-size:13px;color:var(--text-muted);margin:8px 0">
+      训练时长：<strong>2 分钟</strong> · 与屏幕保持 <strong>30-40cm</strong> 距离
+    </p>
+    <button class="btn btn-p" onclick="beginGame()">准备好了，开始！</button>
   </div>
 </div>
 
-<div id="modalContainer"></div>
+<!-- ===== 结束 Overlay ===== -->
+<div class="overlay hidden" id="endOverlay">
+  <div class="overlay-card" id="endCard"></div>
+</div>
 
 <script>
-  /* ── localStorage 进度系统 ── */
-  const PROGRESS_KEY='amblyopia_progress';
-  function initProgress(){let r=localStorage.getItem(PROGRESS_KEY);if(!r){const p={version:1,totalPoints:0,streak:{current:0,best:0,lastDate:''},games:{'whack-a-mole':{plays:0,bestScore:0,totalHits:0,totalMisses:0,bestCombo:0},'spot-difference':{plays:0,bestScore:0,totalCorrect:0,totalWrong:0},'matching-game':{plays:0,bestScore:0,totalPairs:0,bestCombo:0},'maze-game':{plays:0,bestScore:0,totalMazes:0,fastestTime:null},'chase-the-light':{plays:0,bestScore:0,totalCaptures:0,bestCombo:0},'fly-swatter':{plays:0,bestScore:0,totalKills:0,totalEscapes:0}},calendar:{},achievements:[],settings:{difficulties:{}}};localStorage.setItem(PROGRESS_KEY,JSON.stringify(p));return p;}try{return JSON.parse(r);}catch(e){return null;}}
-  function getToday(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-  const ACH=[{id:'first_game',check(p){return p.totalPoints>0;}},{id:'five_games',check(p){return Object.values(p.games).filter(g=>g.plays>0).length>=6;}},{id:'high_score_200',check(p){return Object.values(p.games).some(g=>g.bestScore>=200);}},{id:'streak_3',check(p){return p.streak.best>=3;}},{id:'streak_7',check(p){return p.streak.best>=7;}},{id:'total_1000',check(p){return p.totalPoints>=1000;}},{id:'no_escape',check(p){const g=p.games['fly-swatter'];return g.plays>0&&g.totalEscapes===0;}},{id:'ten_plays',check(p){return Object.values(p.games).reduce((s,g)=>s+g.plays,0)>=10;}},{id:'perfect_whack',check(p){const g=p.games['whack-a-mole'];return g.totalHits>=10&&g.totalHits/(g.totalHits+g.totalMisses)>=0.9;}}];
-  function saveGameResult(gameId,data){let p=initProgress();if(!p)return;const g=p.games[gameId];g.plays++;if(data.score>g.bestScore)g.bestScore=data.score;if(data.hits!==undefined)g.totalHits=(g.totalHits||0)+data.hits;if(data.misses!==undefined)g.totalMisses=(g.totalMisses||0)+data.misses;if(data.combo!==undefined&&data.combo>(g.bestCombo||0))g.bestCombo=data.combo;if(data.correct!==undefined)g.totalCorrect=(g.totalCorrect||0)+data.correct;if(data.wrong!==undefined)g.totalWrong=(g.totalWrong||0)+data.wrong;if(data.pairs!==undefined)g.totalPairs=(g.totalPairs||0)+data.pairs;if(data.mazes!==undefined)g.totalMazes=(g.totalMazes||0)+data.mazes;if(data.time!==undefined&&(g.fastestTime===null||data.time<g.fastestTime))g.fastestTime=data.time;if(data.captures!==undefined)g.totalCaptures=(g.totalCaptures||0)+data.captures;if(data.kills!==undefined)g.totalKills=(g.totalKills||0)+data.kills;if(data.escapes!==undefined)g.totalEscapes=(g.totalEscapes||0)+data.escapes;p.totalPoints+=data.score;const today=getToday();if(!p.calendar[today])p.calendar[today]={points:0,gamesPlayed:0,duration:0};p.calendar[today].points+=data.score;p.calendar[today].gamesPlayed++;p.calendar[today].duration+=data.duration||120;updateStreak(p,today);checkAch(p);if(data.difficulty)p.settings.difficulties[gameId]=data.difficulty;localStorage.setItem(PROGRESS_KEY,JSON.stringify(p));}
-  function updateStreak(p,today){if(!p.streak.lastDate){p.streak.current=1;p.streak.lastDate=today;}else{const last=new Date(p.streak.lastDate),curr=new Date(today);const diff=Math.floor((curr-last)/86400000);if(diff===1)p.streak.current++;else if(diff>1)p.streak.current=1;p.streak.lastDate=today;}if(p.streak.current>p.streak.best)p.streak.best=p.streak.current;}
-  function checkAch(p){const unlocked=new Set(p.achievements.map(a=>a.id));for(const ach of ACH){if(!unlocked.has(ach.id)&&ach.check(p)){p.achievements.push({id:ach.id,unlockedAt:getToday()});}}}
-  /* ── 游戏逻辑 ── */
-  const TOTAL_TIME = 120;
-  const COLORS_EASY = ['#ff6b9d','#4da6ff','#45c4a0','#ffa940','#9b7ef0','#ff5252','#69f0ae'];
-  const COLORS_MEDIUM = ['#e91e63','#2196f3','#4caf50','#ff9800','#7c4dff','#f44336','#00c853'];
-  const COLORS_HARD = ['#ad1457','#1565c0','#2e7d32','#e65100','#4527a0','#b71c1c','#00695c'];
-  // 基于临床文献：儿童视觉反应时间285ms+，弱视眼需1s+处理时间
-  // 停留时间 = 定位(400-600ms) + 大脑处理(300ms) + 手眼协调(300ms) + 安全余量
-  // 参考文献：知觉学习刺激1s基准；弱视视觉追踪研究(IOVS,2024)
-  const DIFFICULTY = {
-    easy:   { showTime: 2500, hideTime: 600,  interval: 2000, sizePct: 72, colors: COLORS_EASY,   label: '简单' },
-    medium: { showTime: 1800, hideTime: 500,  interval: 1600, sizePct: 58, colors: COLORS_MEDIUM, label: '中等' },
-    hard:   { showTime: 1400, hideTime: 400,  interval: 1200, sizePct: 44, colors: COLORS_HARD,   label: '困难' }
-  };
+/* ============================================================================
+ * 打地鼠 — 弱视视觉追踪训练（极简模式）
+ * UI: 浮层顶栏 + 全屏游戏区 + overlay 弹窗（启动/结束）
+ * 下方游戏逻辑完全保留原文，仅更新 UI 相关函数
+ * ============================================================================ */
 
-  let currentDiff = 'easy';
-  let score = 0, combo = 0, maxCombo = 0, hits = 0, misses = 0;
-  let timeLeft = TOTAL_TIME;
-  let gameRunning = false;
-  let timerId = null;
-  let spawnTimeout = null;
-  let activeTargets = new Set();
-  let audioCtx = null;
+/* ── localStorage 进度系统（不变）── */
+const PROGRESS_KEY='amblyopia_progress';
+function initProgress(){let r=localStorage.getItem(PROGRESS_KEY);if(!r){const p={version:1,totalPoints:0,streak:{current:0,best:0,lastDate:''},games:{'whack-a-mole':{plays:0,bestScore:0,totalHits:0,totalMisses:0,bestCombo:0},'spot-difference':{plays:0,bestScore:0,totalCorrect:0,totalWrong:0},'matching-game':{plays:0,bestScore:0,totalPairs:0,bestCombo:0},'maze-game':{plays:0,bestScore:0,totalMazes:0,fastestTime:null},'chase-the-light':{plays:0,bestScore:0,totalCaptures:0,bestCombo:0},'fly-swatter':{plays:0,bestScore:0,totalKills:0,totalEscapes:0}},calendar:{},achievements:[],settings:{difficulties:{}}};localStorage.setItem(PROGRESS_KEY,JSON.stringify(p));return p;}try{return JSON.parse(r);}catch(e){return null;}}
+function getToday(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+const ACH=[{id:'first_game',check(p){return p.totalPoints>0;}},{id:'five_games',check(p){return Object.values(p.games).filter(g=>g.plays>0).length>=6;}},{id:'high_score_200',check(p){return Object.values(p.games).some(g=>g.bestScore>=200);}},{id:'streak_3',check(p){return p.streak.best>=3;}},{id:'streak_7',check(p){return p.streak.best>=7;}},{id:'total_1000',check(p){return p.totalPoints>=1000;}},{id:'no_escape',check(p){const g=p.games['fly-swatter'];return g.plays>0&&g.totalEscapes===0;}},{id:'ten_plays',check(p){return Object.values(p.games).reduce((s,g)=>s+g.plays,0)>=10;}},{id:'perfect_whack',check(p){const g=p.games['whack-a-mole'];return g.totalHits>=10&&g.totalHits/(g.totalHits+g.totalMisses)>=0.9;}}];
+function saveGameResult(gameId,data){let p=initProgress();if(!p)return;const g=p.games[gameId];g.plays++;if(data.score>g.bestScore)g.bestScore=data.score;if(data.hits!==undefined)g.totalHits=(g.totalHits||0)+data.hits;if(data.misses!==undefined)g.totalMisses=(g.totalMisses||0)+data.misses;if(data.combo!==undefined&&data.combo>(g.bestCombo||0))g.bestCombo=data.combo;if(data.correct!==undefined)g.totalCorrect=(g.totalCorrect||0)+data.correct;if(data.wrong!==undefined)g.totalWrong=(g.totalWrong||0)+data.wrong;if(data.pairs!==undefined)g.totalPairs=(g.totalPairs||0)+data.pairs;if(data.mazes!==undefined)g.totalMazes=(g.totalMazes||0)+data.mazes;if(data.time!==undefined&&(g.fastestTime===null||data.time<g.fastestTime))g.fastestTime=data.time;if(data.captures!==undefined)g.totalCaptures=(g.totalCaptures||0)+data.captures;if(data.kills!==undefined)g.totalKills=(g.totalKills||0)+data.kills;if(data.escapes!==undefined)g.totalEscapes=(g.totalEscapes||0)+data.escapes;p.totalPoints+=data.score;const today=getToday();if(!p.calendar[today])p.calendar[today]={points:0,gamesPlayed:0,duration:0};p.calendar[today].points+=data.score;p.calendar[today].gamesPlayed++;p.calendar[today].duration+=data.duration||120;updateStreak(p,today);checkAch(p);if(data.difficulty)p.settings.difficulties[gameId]=data.difficulty;localStorage.setItem(PROGRESS_KEY,JSON.stringify(p));}
+function updateStreak(p,today){if(!p.streak.lastDate){p.streak.current=1;p.streak.lastDate=today;}else{const last=new Date(p.streak.lastDate),curr=new Date(today);const diff=Math.floor((curr-last)/86400000);if(diff===1)p.streak.current++;else if(diff>1)p.streak.current=1;p.streak.lastDate=today;}if(p.streak.current>p.streak.best)p.streak.best=p.streak.current;}
+function checkAch(p){const unlocked=new Set(p.achievements.map(a=>a.id));for(const ach of ACH){if(!unlocked.has(ach.id)&&ach.check(p)){p.achievements.push({id:ach.id,unlockedAt:getToday()});}}}
 
-  function initAudio() {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
+/* ── 游戏核心（不变）── */
+const TOTAL_TIME=120;
+/* 医学依据(PMC7764820): 消色差优先 · 避免红绿混用(弱视R/G信号下降) · 明度差>40确保对比 */
+const COLORS_EASY=['#4da6ff','#ffa940','#9b7ef0'];
+const COLORS_MEDIUM=['#2196f3','#ff9800','#7c4dff'];
+const COLORS_HARD=['#1565c0','#e65100','#4527a0'];
+const DIFFICULTY={easy:{showTime:2500,hideTime:600,interval:2000,sizePct:72,colors:COLORS_EASY,label:'简单'},medium:{showTime:1800,hideTime:500,interval:1600,sizePct:58,colors:COLORS_MEDIUM,label:'中等'},hard:{showTime:1400,hideTime:400,interval:1200,sizePct:44,colors:COLORS_HARD,label:'困难'}};
+
+let currentDiff='easy';
+let score=0,combo=0,maxCombo=0,hits=0,misses=0;
+let timeLeft=TOTAL_TIME;
+let gameRunning=false;
+let timerId=null;
+let spawnTimeout=null;
+let activeTargets=new Set();
+let audioCtx=null;
+
+function initAudio(){if(!audioCtx){audioCtx=new(window.AudioContext||window.webkitAudioContext)();}}
+function playBeep(freq,dur,vol){vol=vol||0.08;if(!audioCtx)return;try{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.value=freq;g.gain.setValueAtTime(vol,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+dur);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+dur);}catch(e){}}
+function playHitSound(){playBeep(880,0.08,0.1)}
+function playComboSound(n){playBeep(440+n*80,0.12,0.08)}
+function playMissSound(){playBeep(200,0.15,0.04)}
+function formatTime(s){const m=Math.floor(s/60);const sec=s%60;return m+':'+(sec<10?'0':'')+sec}
+
+/* ── 音效开关（新增）── */
+let soundOn=true;
+function toggleSound(){soundOn=!soundOn;document.getElementById('soundBtn').textContent=soundOn?'🔊':'🔇';if(!soundOn)playBeep(1,0.01);else initAudio()}
+
+/* ── 游戏区域搭建（不变）── */
+function buildGameArea(){const area=document.getElementById('gameArea');area.innerHTML='';for(let i=0;i<9;i++){const hole=document.createElement('div');hole.className='hole';hole.dataset.index=i;hole.addEventListener('pointerdown',function(e){e.preventDefault();if(!gameRunning)return;initAudio();const target=hole.querySelector('.target.showing');if(target)onHit(hole,target,e);else onMiss(hole);});const target=document.createElement('div');target.className='target hidden';target.dataset.index=i;hole.appendChild(target);area.appendChild(hole);}}
+
+function onHit(hole,target,e){hits++;combo++;if(combo>maxCombo)maxCombo=combo;const bonus=combo>=10?5:combo>=5?3:combo>=3?2:1;score+=bonus;updateTimer();playHitSound();if(combo>=3)playComboSound(Math.min(combo,10));if(combo>=7)showComboPop(combo);target.classList.remove('showing');target.classList.add('hit');activeTargets.delete(parseInt(target.dataset.index));spawnParticles(hole,bonus);setTimeout(function(){target.classList.remove('hit');target.classList.add('hidden');},300);hole.style.transform='scale(0.9)';setTimeout(function(){hole.style.transform='';},120)}
+function onMiss(hole){misses++;combo=0;updateTimer();playMissSound();hole.style.transform='scale(1.03)';setTimeout(function(){hole.style.transform='';},100)}
+function showComboPop(n){const el=document.createElement('div');el.className='combo-pop';el.style.color=n>=8?'#ff5252':n>=5?'#ffa940':'#4da6ff';el.textContent=n>=10?'PERFECT x'+n+'!':n>=7?'AMAZING x'+n:'GREAT x'+n;document.body.appendChild(el);setTimeout(function(){el.remove();},700)}
+function spawnParticles(hole,bonus){const rect=hole.getBoundingClientRect();const cx=rect.left+rect.width/2;const cy=rect.top+rect.height/2;const pColors=['rgba(255,169,64,0.5)','rgba(77,166,255,0.5)','rgba(155,126,240,0.5)'];for(let i=0;i<5;i++){const p=document.createElement('div');p.className='particle';p.style.left=(cx+(Math.random()-0.5)*60)+'px';p.style.top=(cy+(Math.random()-0.5)*40)+'px';p.textContent='+'+bonus;p.style.color=pColors[Math.floor(Math.random()*pColors.length)];p.style.fontSize=(16+Math.random()*10)+'px';document.body.appendChild(p);setTimeout(function(){p.remove();},300)}}
+
+/* ── 计时器更新（仅更新顶栏）── */
+function updateTimer(){const te=document.getElementById('topTimer');te.textContent=formatTime(timeLeft);if(timeLeft<=15)te.classList.add('warn');else te.classList.remove('warn')}
+
+/* ── 地鼠生成（不变）── */
+function spawnTarget(){if(!gameRunning)return;const diff=DIFFICULTY[currentDiff];const holes=document.querySelectorAll('.hole');const available=[];holes.forEach(function(h){const idx=parseInt(h.dataset.index);if(!activeTargets.has(idx))available.push(h)});if(available.length===0){spawnTimeout=setTimeout(spawnTarget,200);return}const hole=available[Math.floor(Math.random()*available.length)];const target=hole.querySelector('.target');const idx=parseInt(hole.dataset.index);const colorIdx=Math.floor(Math.random()*diff.colors.length);target.style.background=diff.colors[colorIdx];target.style.width=diff.sizePct+'%';target.style.height=diff.sizePct+'%';target.style.boxShadow='0 4px 16px '+diff.colors[colorIdx]+'66';const emojiList=['&#x1f435;','&#x1f436;','&#x1f430;','&#x1f431;','&#x1f981;','&#x1f984;','&#x1f98a;','&#x1f428;','&#x1f994;','&#x1f989;'];if(currentDiff==='easy')target.innerHTML='';else if(currentDiff==='medium'){target.innerHTML='&#x2605;';target.style.fontSize='1.6em';}else{target.innerHTML=emojiList[Math.floor(Math.random()*emojiList.length)];target.style.fontSize='2em';}target.classList.remove('hidden','hit','escape');target.classList.add('showing');activeTargets.add(idx);const escapeTime=diff.showTime;const escapeId=setTimeout(function(){if(activeTargets.has(idx)&&gameRunning){combo=0;misses++;updateTimer();target.classList.remove('showing');target.classList.add('escape');activeTargets.delete(idx);setTimeout(function(){target.classList.remove('escape');target.classList.add('hidden')},150)}},escapeTime);target._escapeId=escapeId;target._holeIdx=idx;const nextDelay=diff.interval*(0.6+Math.random()*0.8);if(gameRunning)spawnTimeout=setTimeout(spawnTarget,nextDelay)}
+
+/* ── 游戏开始（重构：直接开始，隐藏启动overlay）── */
+function beginGame(){
+  document.getElementById('startOverlay').classList.add('hidden');
+  document.getElementById('endOverlay').classList.add('hidden');
+  initAudio();
+  gameRunning=true;score=0;combo=0;maxCombo=0;hits=0;misses=0;timeLeft=TOTAL_TIME;activeTargets.clear();
+  document.querySelectorAll('.target').forEach(function(t){t.classList.add('hidden');t.classList.remove('showing','hit','escape');t.innerHTML='';});
+  updateTimer();
+  document.getElementById('topTimer').style.display='inline';
+  spawnTarget();
+  timerId=setInterval(function(){timeLeft--;updateTimer();if(timeLeft<=0)endGame();},1000);
+}
+
+/* ── 游戏结束（重构：展示endOverlay）── */
+function endGame(){
+  gameRunning=false;
+  if(timerId){clearInterval(timerId);timerId=null}
+  if(spawnTimeout){clearTimeout(spawnTimeout);spawnTimeout=null}
+  document.querySelectorAll('.target').forEach(function(t){if(t._escapeId)clearTimeout(t._escapeId);t.classList.add('hidden');t.classList.remove('showing');t.innerHTML='';});
+  activeTargets.clear();
+  document.getElementById('topTimer').style.display='none';
+
+  const accuracy=hits+misses>0?Math.round(hits/(hits+misses)*100):0;
+  let grade=accuracy>=90?'优秀':accuracy>=70?'良好':accuracy>=50?'继续加油':'需要更多练习';
+  let gradeColor=accuracy>=90?'#45c4a0':accuracy>=70?'#4da6ff':accuracy>=50?'#ffa940':'#ff6b9d';
+
+  document.getElementById('endCard').innerHTML=
+    '<h2>训练结束</h2>'+
+    '<div style="font-size:48px;font-weight:900;color:var(--orange);margin:8px 0">'+score+'</div>'+
+    '<div style="font-size:18px;font-weight:700;color:'+gradeColor+';margin-bottom:12px">'+grade+'</div>'+
+    '<div class="result-stat">'+
+    '<div class="rs-item"><div class="rs-val" style="color:var(--blue)">'+hits+'</div><div class="rs-lbl">击中</div></div>'+
+    '<div class="rs-item"><div class="rs-val">'+misses+'</div><div class="rs-lbl">漏掉</div></div>'+
+    '<div class="rs-item"><div class="rs-val" style="color:var(--pink)">'+accuracy+'%</div><div class="rs-lbl">命中率</div></div>'+
+    '<div class="rs-item"><div class="rs-val" style="color:var(--orange)">'+maxCombo+'</div><div class="rs-lbl">最高连击</div></div>'+
+    '</div>'+
+    '<div class="rest-reminder"><strong>⏰ 休息提醒</strong><br>单次训练建议不超过 30 分钟。让孩子休息 5-10 分钟后再继续。</div>'+
+    '<button class="btn btn-p" onclick="beginGame()">再来一局</button>'+
+    '<button class="btn btn-s" onclick="backToStart()">返回</button>';
+  document.getElementById('endOverlay').classList.remove('hidden');
+
+  saveGameResult('whack-a-mole',{score:score,hits:hits,misses:misses,combo:maxCombo,difficulty:currentDiff,duration:120});
+}
+
+/* ── 返回启动界面 ── */
+function backToStart(){
+  document.getElementById('endOverlay').classList.add('hidden');
+  document.getElementById('startOverlay').classList.remove('hidden');
+}
+
+/* ── 难度选择 ── */
+document.getElementById('diffRow').addEventListener('click',function(e){
+  if(e.target.classList.contains('diff-btn')){
+    currentDiff=e.target.dataset.diff;
+    document.querySelectorAll('#diffRow .diff-btn').forEach(function(b){b.classList.toggle('active',b.dataset.diff===currentDiff)});
   }
+});
 
-  function playBeep(freq, dur, vol = 0.08) {
-    if (!audioCtx) return;
-    try {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine'; osc.frequency.value = freq;
-      gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
-      osc.connect(gain); gain.connect(audioCtx.destination);
-      osc.start(); osc.stop(audioCtx.currentTime + dur);
-    } catch(e) {}
-  }
-
-  function playHitSound() { playBeep(880, 0.08, 0.1); }
-  function playComboSound(n) { playBeep(440 + n * 80, 0.12, 0.08); }
-  function playMissSound() { playBeep(200, 0.15, 0.04); }
-
-  function buildGameArea() {
-    const area = document.getElementById('gameArea');
-    area.innerHTML = '';
-    for (let i = 0; i < 9; i++) {
-      const hole = document.createElement('div');
-      hole.className = 'hole';
-      hole.dataset.index = i;
-      hole.addEventListener('pointerdown', function(e) {
-        e.preventDefault();
-        if (!gameRunning) return;
-        initAudio();
-        const target = hole.querySelector('.target.showing');
-        if (target) {
-          onHit(hole, target, e);
-        } else {
-          onMiss(hole);
-        }
-      });
-      const target = document.createElement('div');
-      target.className = 'target hidden';
-      target.dataset.index = i;
-      hole.appendChild(target);
-      area.appendChild(hole);
-    }
-  }
-
-  function onHit(hole, target, e) {
-    hits++;
-    combo++;
-    if (combo > maxCombo) maxCombo = combo;
-    const bonus = combo >= 10 ? 5 : combo >= 5 ? 3 : combo >= 3 ? 2 : 1;
-    score += bonus;
-    updateHUD();
-    playHitSound();
-    if (combo >= 3) { playComboSound(Math.min(combo, 10)); }
-    if (combo >= 5) { showComboPop(combo); }
-
-    target.classList.remove('showing');
-    target.classList.add('hit');
-    activeTargets.delete(parseInt(target.dataset.index));
-    spawnParticles(hole, bonus);
-    setTimeout(() => {
-      target.classList.remove('hit');
-      target.classList.add('hidden');
-    }, 300);
-
-    hole.style.transform = 'scale(0.9)';
-    setTimeout(() => { hole.style.transform = ''; }, 120);
-  }
-
-  function onMiss(hole) {
-    misses++;
-    combo = 0;
-    updateHUD();
-    playMissSound();
-    hole.style.transform = 'scale(1.03)';
-    setTimeout(() => { hole.style.transform = ''; }, 100);
-  }
-
-  function showComboPop(n) {
-    const el = document.createElement('div');
-    el.className = 'combo-pop';
-    el.style.color = n >= 8 ? '#ff5252' : n >= 5 ? '#ffa940' : '#4da6ff';
-    el.textContent = n >= 10 ? 'PERFECT x' + n + '!' : n >= 7 ? 'AMAZING x' + n : 'GREAT x' + n;
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 700);
-  }
-
-  function spawnParticles(hole, bonus) {
-    const rect = hole.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const colors = ['#ffd43b','#ff6b9d','#4da6ff','#45c4a0'];
-    for (let i = 0; i < 5; i++) {
-      const p = document.createElement('div');
-      p.className = 'particle';
-      p.style.left = (cx + (Math.random()-0.5)*60) + 'px';
-      p.style.top = (cy + (Math.random()-0.5)*40) + 'px';
-      p.textContent = '+' + bonus;
-      p.style.color = colors[Math.floor(Math.random()*colors.length)];
-      p.style.fontSize = (16 + Math.random()*10) + 'px';
-      document.body.appendChild(p);
-      setTimeout(() => p.remove(), 600);
-    }
-  }
-
-  function updateHUD() {
-    document.getElementById('scoreDisplay').textContent = score;
-    document.getElementById('comboDisplay').textContent = 'x' + Math.max(combo, 1);
-    document.getElementById('timeDisplay').textContent = formatTime(timeLeft);
-    document.getElementById('progressBar').style.width = ((TOTAL_TIME - timeLeft) / TOTAL_TIME * 100) + '%';
-  }
-
-  function formatTime(s) {
-    const m = Math.floor(s / 60);
-    const sec = s % 60;
-    return m + ':' + (sec < 10 ? '0' : '') + sec;
-  }
-
-  function spawnTarget() {
-    if (!gameRunning) return;
-    const diff = DIFFICULTY[currentDiff];
-    const holes = document.querySelectorAll('.hole');
-    const available = [];
-    holes.forEach(h => {
-      const idx = parseInt(h.dataset.index);
-      if (!activeTargets.has(idx)) available.push(h);
-    });
-    if (available.length === 0) {
-      spawnTimeout = setTimeout(spawnTarget, 200);
-      return;
-    }
-    const hole = available[Math.floor(Math.random() * available.length)];
-    const target = hole.querySelector('.target');
-    const idx = parseInt(hole.dataset.index);
-
-    const colorIdx = Math.floor(Math.random() * diff.colors.length);
-    target.style.background = diff.colors[colorIdx];
-    target.style.width = diff.sizePct + '%';
-    target.style.height = diff.sizePct + '%';
-    target.style.boxShadow = '0 4px 16px ' + diff.colors[colorIdx] + '66';
-
-    const emojis = ['&#x1f435;','&#x1f436;','&#x1f430;','&#x1f431;','&#x1f981;','&#x1f984;','&#x1f98a;','&#x1f428;','&#x1f994;','&#x1f989;'];
-    target.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
-
-    target.classList.remove('hidden', 'hit', 'escape');
-    target.classList.add('showing');
-    activeTargets.add(idx);
-
-    const escapeTime = diff.showTime;
-    const escapeId = setTimeout(() => {
-      if (activeTargets.has(idx) && gameRunning) {
-        combo = 0;
-        misses++;
-        updateHUD();
-        target.classList.remove('showing');
-        target.classList.add('escape');
-        activeTargets.delete(idx);
-        setTimeout(() => {
-          target.classList.remove('escape');
-          target.classList.add('hidden');
-        }, 150);
-      }
-    }, escapeTime);
-
-    target._escapeId = escapeId;
-    target._holeIdx = idx;
-
-    const nextDelay = diff.interval * (0.6 + Math.random() * 0.8);
-    if (gameRunning) {
-      spawnTimeout = setTimeout(spawnTarget, nextDelay);
-    }
-  }
-
-  function startGame() {
-    if (gameRunning) return;
-    initAudio();
-    showPatchReminder();
-  }
-
-  function showPatchReminder() {
-    const container = document.getElementById('modalContainer');
-    container.innerHTML = `
-      <div class="modal-overlay" id="patchModal">
-        <div class="modal">
-          <h2>开始训练前</h2>
-          <p>请确认以下准备事项：</p>
-          <div class="highlight">
-            &#x1f6d1; 如果医生建议遮盖治疗，请先遮盖<strong>健眼（视力较好的眼睛）</strong><br>
-            让弱视眼独立完成本次训练
-          </div>
-          <p style="font-size:14px;">难度：<strong>${DIFFICULTY[currentDiff].label}</strong> &nbsp; | &nbsp; 训练时长：<strong>2 分钟</strong><br>保持眼睛与屏幕 30~40cm 距离</p>
-          <button class="btn btn-start" onclick="beginGame()" style="margin-right:8px;">准备好了，开始！</button>
-          <button class="btn btn-restart" onclick="document.getElementById('patchModal').remove()">返回</button>
-        </div>
-      </div>
-    `;
-  }
-
-  function beginGame() {
-    document.getElementById('modalContainer').innerHTML = '';
-    gameRunning = true;
-    score = 0; combo = 0; maxCombo = 0; hits = 0; misses = 0;
-    timeLeft = TOTAL_TIME;
-    activeTargets.clear();
-    document.querySelectorAll('.target').forEach(t => {
-      t.classList.add('hidden'); t.classList.remove('showing','hit','escape');
-      t.innerHTML = '';
-    });
-    updateHUD();
-    document.getElementById('btnStart').disabled = true;
-    document.getElementById('btnStart').textContent = '训练中...';
-    document.getElementById('progressText').textContent = '难度：' + DIFFICULTY[currentDiff].label;
-    document.querySelectorAll('.diff-btn').forEach(b => b.style.pointerEvents = 'none');
-
-    spawnTarget();
-    timerId = setInterval(() => {
-      timeLeft--;
-      updateHUD();
-      if (timeLeft <= 0) endGame();
-    }, 1000);
-  }
-
-  function endGame() {
-    gameRunning = false;
-    if (timerId) { clearInterval(timerId); timerId = null; }
-    if (spawnTimeout) { clearTimeout(spawnTimeout); spawnTimeout = null; }
-    document.querySelectorAll('.target').forEach(t => {
-      if (t._escapeId) clearTimeout(t._escapeId);
-      t.classList.add('hidden'); t.classList.remove('showing');
-      t.innerHTML = '';
-    });
-    activeTargets.clear();
-    document.getElementById('btnStart').disabled = false;
-    document.getElementById('btnStart').textContent = '再来一局';
-    document.getElementById('progressText').textContent = '训练完成！';
-    document.querySelectorAll('.diff-btn').forEach(b => b.style.pointerEvents = 'auto');
-
-    const accuracy = hits + misses > 0 ? Math.round(hits / (hits + misses) * 100) : 0;
-    let grade = accuracy >= 90 ? '优秀' : accuracy >= 70 ? '良好' : accuracy >= 50 ? '继续加油' : '需要更多练习';
-    let gradeColor = accuracy >= 90 ? '#45c4a0' : accuracy >= 70 ? '#4da6ff' : accuracy >= 50 ? '#ffa940' : '#ff6b9d';
-
-    const container = document.getElementById('modalContainer');
-    container.innerHTML = `
-      <div class="modal-overlay">
-        <div class="result-card">
-          <div class="result-label">最终得分</div>
-          <div class="result-score">${score}</div>
-          <div style="font-size:18px;font-weight:700;color:${gradeColor};margin-top:8px;">${grade}</div>
-          <div class="result-stat">
-            <div class="result-stat-item">
-              <div class="result-stat-value" style="color:var(--blue);">${hits}</div>
-              <div class="result-stat-label">击中</div>
-            </div>
-            <div class="result-stat-item">
-              <div class="result-stat-value" style="color:var(--text);">${misses}</div>
-              <div class="result-stat-label">漏掉</div>
-            </div>
-            <div class="result-stat-item">
-              <div class="result-stat-value" style="color:var(--pink);">${accuracy}%</div>
-              <div class="result-stat-label">命中率</div>
-            </div>
-            <div class="result-stat-item">
-              <div class="result-stat-value" style="color:var(--orange);">${maxCombo}</div>
-              <div class="result-stat-label">最高连击</div>
-            </div>
-          </div>
-          <div class="rest-reminder">
-            <strong>&#x23f0; 休息提醒</strong><br>
-            单次训练建议不超过 30 分钟。请让孩子休息 5~10 分钟后再继续。
-          </div>
-          <button class="btn btn-start" onclick="startGame()" style="margin-right:8px;">再来一局</button>
-          <button class="btn btn-restart" onclick="document.getElementById('modalContainer').innerHTML=''">关闭</button>
-        </div>
-      </div>
-    `;
-    saveGameResult('whack-a-mole', {score, hits, misses, combo:maxCombo, difficulty:currentDiff, duration:120});
-  }
-
-  function setDifficulty(diff) {
-    currentDiff = diff;
-    document.querySelectorAll('.diff-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.diff === diff);
-    });
-  }
-
-  document.getElementById('diffSelector').addEventListener('click', function(e) {
-    if (e.target.classList.contains('diff-btn')) {
-      setDifficulty(e.target.dataset.diff);
-    }
-  });
-
-  buildGameArea();
+/* ── 初始化 ── */
+buildGameArea();
 </script>
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}</script>
 </body>

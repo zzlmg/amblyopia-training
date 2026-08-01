@@ -14,72 +14,56 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
-    background: linear-gradient(180deg, #e6f2ff 0%, #fefdf8 30%, #fff0f5 70%, #fefdf8 100%);
-    min-height: 100vh; color: var(--text); overflow-x: hidden;
-    display: flex; flex-direction: column; align-items: center;
-    user-select: none; -webkit-user-select: none;
+    background: #f5f3ed;
+    height: 100vh; width: 100vw; overflow: hidden;
+    display: flex; flex-direction: column;
+    color: var(--text); user-select: none; -webkit-user-select: none;
   }
 
-  .top-bar {
-    width: 100%; max-width: 560px; display: flex;
-    align-items: center; justify-content: space-between;
-    padding: 16px 20px;
+  /* ── 浮动顶栏 ── */
+  .floating-bar {
+    position: absolute; top: 0; left: 0; right: 0; height: 38px; z-index: 10;
+    background: rgba(0,0,0,0.18); backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 12px;
   }
-  .back-link {
-    text-decoration: none; color: var(--blue); font-weight: 600; font-size: 15px;
-    display: flex; align-items: center; gap: 6px;
+  .floating-bar .back-link {
+    text-decoration: none; color: #fff; font-weight: 600; font-size: 14px;
+    opacity: 0.9; display: flex; align-items: center; gap: 4px;
   }
-  .back-link:hover { opacity: 0.8; }
+  .floating-bar .bar-right {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .floating-bar .bar-timer {
+    color: #fff; font-size: 15px; font-weight: 700;
+    background: rgba(255,255,255,0.2); padding: 2px 10px;
+    border-radius: 10px; display: none;
+  }
+  .floating-bar .bar-sound {
+    background: none; border: none; color: #fff; font-size: 16px;
+    cursor: pointer; padding: 2px 4px; line-height: 1; opacity: 0.9;
+  }
+  .floating-bar .bar-sound.muted { opacity: 0.4; }
+  .floating-bar .bar-hint {
+    background: rgba(255,169,64,0.4); border: none; color: #fff;
+    font-size: 14px; cursor: pointer; padding: 2px 8px;
+    border-radius: 8px; font-weight: 700; display: none;
+    line-height: 1; opacity: 0.9;
+  }
+  .floating-bar .bar-hint:active { opacity: 0.6; }
 
-  .game-header {
-    text-align: center; padding: 8px 20px 16px;
-  }
-  .game-header h1 {
-    font-size: 30px; font-weight: 800; margin-bottom: 4px;
-    background: linear-gradient(135deg, #9b7ef0, #4da6ff);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  }
-  .game-header .sub {
-    font-size: 15px; color: var(--text-muted);
-  }
-
-  .hud {
-    width: 100%; max-width: 560px; display: flex;
-    justify-content: center; gap: 16px; padding: 0 20px 12px;
-  }
-  .hud-item {
-    background: #fff; border-radius: 16px; padding: 10px 18px;
-    border: 2px solid #f0f0f5; text-align: center; min-width: 80px;
-  }
-  .hud-label { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
-  .hud-value { font-size: 22px; font-weight: 800; }
-  .hud-value.score { color: var(--orange); }
-  .hud-value.combo { color: var(--purple); }
-  .hud-value.time { color: var(--blue); }
-
-  .difficulty-selector {
-    display: flex; gap: 10px; justify-content: center;
-    padding: 8px 20px 16px; flex-wrap: wrap;
-  }
-  .diff-btn {
-    padding: 10px 22px; border-radius: 50px;
-    border: 2px solid #e0e0e8; background: #fff;
-    font-size: 15px; font-weight: 700; cursor: pointer;
-    transition: all 0.2s; color: var(--text-muted);
-  }
-  .diff-btn:hover { border-color: var(--purple); color: var(--purple); }
-  .diff-btn.active { background: var(--purple); color: #fff; border-color: var(--purple); }
-
+  /* ── 游戏区域 ── */
   .game-wrapper {
-    width: 100%; max-width: 560px; padding: 0 20px;
-    display: flex; justify-content: center; flex-direction: column; align-items: center;
+    flex: 1; width: 100%; display: flex; align-items: center;
+    justify-content: center; padding: 50px 20px 20px;
   }
   .game-area {
     display: grid; width: 100%; max-width: 520px;
     justify-items: center; align-items: center;
     gap: 6px; padding: 8px;
-    background: #fff; border-radius: 24px;
+    background: #fff; border-radius: 24px; border: 2px solid #d0ccc4;
     box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    position: relative;
   }
   .cell {
     position: relative; cursor: pointer;
@@ -98,7 +82,7 @@
   .cell.selected {
     border-color: var(--purple) !important;
     box-shadow: 0 0 0 4px rgba(155,126,240,0.25) !important;
-    background: #f4f0ff !important;
+    background: #e8e0f8 !important;
     transform: scale(1.06);
   }
   .cell.hinted {
@@ -116,7 +100,7 @@
   }
   @keyframes matchPop {
     0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.25); opacity: 0.7; }
+    50% { transform: scale(1.15); opacity: 0.7; }
     100% { transform: scale(0); opacity: 0; }
   }
   .cell.wrong-flash {
@@ -146,70 +130,6 @@
     100% { opacity: 0; transform: translate(-50%, -70%) scale(1); }
   }
 
-  .btn-row {
-    display: flex; gap: 12px; justify-content: center;
-    padding: 16px 20px 24px; flex-wrap: wrap;
-  }
-  .btn {
-    padding: 14px 36px; border-radius: 50px; border: none;
-    font-size: 17px; font-weight: 700; cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s;
-  }
-  .btn:active { transform: scale(0.96); }
-  .btn-start {
-    background: linear-gradient(135deg, #9b7ef0, #4da6ff);
-    color: #fff; box-shadow: 0 4px 16px rgba(155,126,240,0.35);
-  }
-  .btn-start:hover { box-shadow: 0 6px 24px rgba(155,126,240,0.5); }
-  .btn-start:disabled {
-    background: #ccc; box-shadow: none; cursor: not-allowed; color: #888;
-  }
-  .btn-hint {
-    background: #fff; color: var(--orange); border: 2px solid var(--orange);
-  }
-  .btn-hint:disabled {
-    background: #f5f5f5; color: #ccc; border-color: #e0e0e0; cursor: not-allowed;
-  }
-
-  .modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5); z-index: 200;
-    display: flex; align-items: center; justify-content: center;
-    animation: fadeIn 0.2s ease-out;
-  }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  .modal {
-    background: #fff; border-radius: 28px; padding: 32px 28px;
-    max-width: 400px; width: 90%; text-align: center;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
-    animation: modalIn 0.3s ease-out;
-  }
-  @keyframes modalIn {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-  .modal h2 { font-size: 24px; font-weight: 800; margin-bottom: 12px; }
-  .modal p { font-size: 15px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6; }
-  .modal .highlight {
-    background: #fff7e6; padding: 12px 16px; border-radius: 14px;
-    border: 2px solid #ffe066; margin-bottom: 20px;
-    font-size: 14px; color: #ba7517; font-weight: 600;
-  }
-
-  .progress-bar-outer {
-    width: 100%; max-width: 560px; height: 8px;
-    background: #f0f0f5; border-radius: 4px; margin: 0 auto 8px; overflow: hidden;
-  }
-  .progress-bar-inner {
-    height: 100%; border-radius: 4px;
-    background: linear-gradient(90deg, #45c4a0, #9b7ef0, #4da6ff);
-    transition: width 0.3s linear;
-  }
-  .progress-text {
-    text-align: center; font-size: 13px; color: var(--text-muted);
-    margin-bottom: 8px;
-  }
-
   .round-msg {
     position: fixed; top: 18%; left: 50%; transform: translateX(-50%);
     font-size: 20px; font-weight: 800; pointer-events: none;
@@ -224,6 +144,58 @@
     from { opacity: 1; } to { opacity: 0; }
   }
 
+  /* ── 遮罩层 ── */
+  .overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    animation: fadeIn 0.2s ease-out;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .overlay-card {
+    background: #fff; border-radius: 28px; padding: 32px 28px;
+    max-width: 400px; width: 90%; text-align: center;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+    animation: modalIn 0.3s ease-out;
+  }
+  @keyframes modalIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .overlay-card h2 { font-size: 24px; font-weight: 800; margin-bottom: 12px; }
+  .overlay-card p { font-size: 15px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6; }
+  .overlay-card .highlight {
+    background: #fff7e6; padding: 12px 16px; border-radius: 14px;
+    border: 2px solid #ffe066; margin-bottom: 20px;
+    font-size: 14px; color: #ba7517; font-weight: 600;
+  }
+
+  .btn {
+    padding: 14px 36px; border-radius: 50px; border: none;
+    font-size: 17px; font-weight: 700; cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-start {
+    background: linear-gradient(135deg, #9b7ef0, #4da6ff);
+    color: #fff; box-shadow: 0 4px 16px rgba(155,126,240,0.35);
+  }
+  .btn-start:hover { box-shadow: 0 6px 24px rgba(155,126,240,0.5); }
+
+  /* 难度选择器（在 startOverlay 内） */
+  .diff-selector-inline {
+    display: flex; gap: 8px; justify-content: center;
+    margin-bottom: 16px; flex-wrap: wrap;
+  }
+  .diff-btn {
+    padding: 8px 18px; border-radius: 50px;
+    border: 2px solid #e0e0e8; background: #fff;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    transition: all 0.2s; color: var(--text-muted);
+  }
+  .diff-btn.active { background: var(--purple); color: #fff; border-color: var(--purple); }
+
+  /* ── 结果弹窗 ── */
   .result-card {
     background: #fff; border-radius: 28px; padding: 32px 28px;
     max-width: 420px; width: 90%; text-align: center;
@@ -245,64 +217,62 @@
 
   @media (max-width: 420px) {
     .game-area { gap: 4px; padding: 4px; }
-    .hud { gap: 8px; flex-wrap: wrap; }
-    .hud-item { padding: 8px 12px; min-width: 60px; }
-    .hud-value { font-size: 18px; }
-    .game-header h1 { font-size: 24px; }
   }
 </style>
 </head>
 <body>
 
-<div class="top-bar">
-  <a href="index.html" class="back-link">&#8592; 返回科普站</a>
-  <a href="index.html#games" class="back-link">&#8592; 训练游戏</a>
-  <a href="progress.html" class="back-link">📊 训练进度</a>
-</div>
-
-<div class="game-header">
-  <h1>连连看</h1>
-  <p class="sub">精细目力训练 · 锻炼图案辨别与空间定位能力</p>
-</div>
-
-<div class="difficulty-selector" id="diffSelector">
-  <button class="diff-btn active" data-diff="easy">简单</button>
-  <button class="diff-btn" data-diff="medium">中等</button>
-  <button class="diff-btn" data-diff="hard">困难</button>
-</div>
-
-<div class="hud">
-  <div class="hud-item">
-    <div class="hud-label">得分</div>
-    <div class="hud-value score" id="scoreDisplay">0</div>
-  </div>
-  <div class="hud-item">
-    <div class="hud-label">剩余</div>
-    <div class="hud-value combo" id="remainDisplay">0</div>
-  </div>
-  <div class="hud-item">
-    <div class="hud-label">时间</div>
-    <div class="hud-value time" id="timeDisplay">2:00</div>
+<!-- 浮动顶栏 -->
+<div class="floating-bar">
+  <a href="index.html#games" class="back-link">&#8592; 返回游戏</a>
+  <div class="bar-right">
+    <button class="bar-hint" id="barHint" onclick="showHint()">&#x1f4a1; 提示</button>
+    <span class="bar-timer" id="barTimer">2:00</span>
+    <button class="bar-sound" id="barSound" onclick="toggleSound()" title="音效">&#x1f50a;</button>
+    <a href="contact.html" style="font-size:14px;text-decoration:none;color:var(--blue);margin-left:4px" title="联系我们">📬</a>
   </div>
 </div>
 
-<div class="progress-bar-outer">
-  <div class="progress-bar-inner" id="progressBar" style="width:0%"></div>
-</div>
-<p class="progress-text" id="progressText">准备开始 &mdash; 点击两个相同图案匹配消除，路径转弯 ≤2 次</p>
-
-<div class="btn-row">
-  <button class="btn btn-start" id="btnStart" onclick="startGame()">开始训练</button>
-  <button class="btn btn-hint" id="btnHint" onclick="showHint()" disabled>💡 提示</button>
-</div>
-
+<!-- 游戏区域 -->
 <div class="game-wrapper">
   <div class="game-area" id="gameArea" style="position:relative;"></div>
 </div>
 
-<div id="modalContainer"></div>
+<!-- 开始遮罩（包含难度选择+遮盖提醒） -->
+<div class="overlay" id="startOverlay">
+  <div class="overlay-card">
+    <h2 style="font-size:28px;background:linear-gradient(135deg,#9b7ef0,#4da6ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">连连看</h2>
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:14px;">精细目力训练 · 图案识别 · 找到相同的一对消除</p>
+    <div class="diff-selector-inline" id="diffSelector">
+      <button class="diff-btn active" data-diff="easy">简单</button>
+      <button class="diff-btn" data-diff="medium">中等</button>
+      <button class="diff-btn" data-diff="hard">困难</button>
+    </div>
+    <div class="highlight">
+      &#x1f6d1; 如果医生建议遮盖治疗，请先遮盖<strong>健眼（视力较好的眼睛）</strong><br>
+      让弱视眼独立完成本次训练
+    </div>
+    <p style="font-size:14px;" id="startDiffInfo">
+      难度：<strong>简单</strong> &nbsp; | &nbsp;
+      网格：<strong>4×3</strong> &nbsp; | &nbsp;
+      训练时长：<strong>2 分钟</strong><br>
+      保持眼睛与屏幕 30~40cm 距离
+    </p>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">
+      &#x1f4a1; 找到相同图案，点击消除。路径转弯 ≤ <strong>2 次</strong><br>
+      卡住时使用 <strong>提示</strong> 按钮
+    </p>
+    <button class="btn btn-start" onclick="beginGame()" style="margin-right:8px;">准备好了，开始！</button>
+  </div>
+</div>
+
+<!-- 结束遮罩 -->
+<div class="overlay" id="endOverlay" style="display:none;">
+  <div class="result-card" id="endCard"></div>
+</div>
 
 <script>
+  /* ── localStorage 进度系统 ── */
   const PROGRESS_KEY='amblyopia_progress';
   function initProgress(){let r=localStorage.getItem(PROGRESS_KEY);if(!r){const p={version:1,totalPoints:0,streak:{current:0,best:0,lastDate:''},games:{'whack-a-mole':{plays:0,bestScore:0,totalHits:0,totalMisses:0,bestCombo:0},'spot-difference':{plays:0,bestScore:0,totalCorrect:0,totalWrong:0},'matching-game':{plays:0,bestScore:0,totalPairs:0,bestCombo:0},'maze-game':{plays:0,bestScore:0,totalMazes:0,fastestTime:null},'chase-the-light':{plays:0,bestScore:0,totalCaptures:0,bestCombo:0},'fly-swatter':{plays:0,bestScore:0,totalKills:0,totalEscapes:0}},calendar:{},achievements:[],settings:{difficulties:{}}};localStorage.setItem(PROGRESS_KEY,JSON.stringify(p));return p;}try{return JSON.parse(r);}catch(e){return null;}}
   function getToday(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
@@ -312,22 +282,22 @@
   function checkAch(p){const unlocked=new Set(p.achievements.map(a=>a.id));for(const ach of ACH){if(!unlocked.has(ach.id)&&ach.check(p)){p.achievements.push({id:ach.id,unlockedAt:getToday()});}}}
   const TOTAL_TIME = 120;
 
-  // ---- 图标库 ----
+  /* ── 游戏逻辑 ── */
+  /* 医学修正(PMC7764820): 移除红/绿emoji(R/G信号下降)，按难度逐级灰化 */
   const ICON_POOL_EASY = [
-    '🍎','🍊','🍋','🍇','🍓','🍒','🐶','🐱','🐸','🦁','🐵','🐰','⭐','🌈','🎈','🚗','🌺','🎵'
+    '🍊','🍋','🍇','🐶','🐱','🐸','🦁','🐵','🐰','⭐','🌈','🎈','🚗','🌺','🎵','🌸','🌙','💎'
   ];
   const ICON_POOL_MEDIUM = [
-    '🍎','🍒','🍑','🍓','🐶','🐱','🐻','🐼','🐸','🐢','🐍','🦎','🐦','🦅','🦉','🐧','⭐','🌟','✨','💫'
+    '🍑','🍇','🐶','🐱','🐻','🐼','🦁','🐵','🐢','🐍','🐦','🦉','🐧','⭐','✨','💫','🌙','💎'
   ];
   const ICON_POOL_HARD = [
-    '🍎','🍒','🍓','🍉','🍊','🍋','🍑','🍌','🐶','🐱','🐻','🐼','🐦','🦅','🦉','🦜',
-    '🐸','🐢','🐊','🦎','⭐','🌟','✨','⚡','❤️','💜','💙','💚'
+    '🍊','🍋','🍑','🍌','🐶','🐱','🐻','🐼','🐦','🦉','🦜','🐸','🐢','🐊','⭐','✨','⚡','💙','💎','🌙'
   ];
 
   const DIFFICULTY = {
-    easy:   { label: '简单', cols: 4, rows: 3, iconSize: 48, pool: ICON_POOL_EASY,  gap: 8,  emptyCells: 2 },
-    medium: { label: '中等', cols: 5, rows: 4, iconSize: 36, pool: ICON_POOL_MEDIUM, gap: 6, emptyCells: 4 },
-    hard:   { label: '困难', cols: 6, rows: 5, iconSize: 28, pool: ICON_POOL_HARD,   gap: 5, emptyCells: 6 }
+    easy:   { label: '简单', cols: 4, rows: 3, iconSize: 48, pool: ICON_POOL_EASY,  gap: 10, emptyCells: 2 },
+    medium: { label: '中等', cols: 5, rows: 4, iconSize: 40, pool: ICON_POOL_MEDIUM, gap: 8,  emptyCells: 4 },
+    hard:   { label: '困难', cols: 6, rows: 5, iconSize: 32, pool: ICON_POOL_HARD,   gap: 7,  emptyCells: 6 }
   };
 
   let currentDiff = 'easy';
@@ -336,17 +306,15 @@
   let timeLeft = TOTAL_TIME;
   let gameRunning = false;
   let timerId = null;
-  let selectedCell = null;          // {r, c} logical grid coords
-  let grid = [];                    // 2D: (rows+2) × (cols+2), border always null
+  let selectedCell = null;
+  let grid = [];
   let audioCtx = null;
   let hintCount = 0;
+  let soundEnabled = true;
 
-  // ---- Audio ----
-  function initAudio() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
+  function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
   function playBeep(freq, dur, vol = 0.08) {
-    if (!audioCtx) return;
+    if (!audioCtx || !soundEnabled) return;
     try {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
@@ -360,11 +328,11 @@
   function playMatchSound()  { playBeep(523,0.06,0.06); playBeep(659,0.06,0.06); playBeep(784,0.10,0.07); }
   function playSelectSound() { playBeep(440,0.06,0.05); }
   function playWrongSound()  { playBeep(180,0.18,0.04); }
-
-  // ====== 路径算法（基于带 border 的 grid）======
-  // grid 尺寸 = (playRows+2) × (playCols+2)
-  // 行 0 和 R-1、列 0 和 C-1 是空边界，始终为 null
-  // 可玩区域：行 1..playRows, 列 1..playCols
+  function toggleSound() {
+    soundEnabled = !soundEnabled;
+    document.getElementById('barSound').classList.toggle('muted', !soundEnabled);
+    document.getElementById('barSound').innerHTML = soundEnabled ? '&#x1f50a;' : '&#x1f507;';
+  }
 
   function isLineClear(r1, c1, r2, c2) {
     const R = grid.length, C = grid[0].length;
@@ -372,7 +340,7 @@
       const minC = Math.min(c1, c2), maxC = Math.max(c1, c2);
       for (let c = minC; c <= maxC; c++) {
         if (c === c1 || c === c2) continue;
-        if (r1 < 0 || r1 >= R || c < 0 || c >= C) continue; // 虚拟边界
+        if (r1 < 0 || r1 >= R || c < 0 || c >= C) continue;
         if (grid[r1][c] !== null) return false;
       }
       return true;
@@ -396,13 +364,11 @@
 
     const R = grid.length, C = grid[0].length;
 
-    // 0 转：直线
     if (isLineClear(r1, c1, r2, c2)) {
       animatePath([{r:r1,c:c1},{r:r2,c:c2}]);
       return true;
     }
 
-    // 1 转：(r1,c2) 或 (r2,c1)
     if (grid[r1] && grid[r1][c2] === null && isLineClear(r1,c1,r1,c2) && isLineClear(r1,c2,r2,c2)) {
       animatePath([{r:r1,c:c1},{r:r1,c:c2},{r:r2,c:c2}]);
       return true;
@@ -412,7 +378,6 @@
       return true;
     }
 
-    // 2 转：扫描行
     for (let r = 0; r < R; r++) {
       if (r === r1 || r === r2) continue;
       if (grid[r][c1] === null && grid[r][c2] === null &&
@@ -421,7 +386,6 @@
         return true;
       }
     }
-    // 扫描列
     for (let c = 0; c < C; c++) {
       if (c === c1 || c === c2) continue;
       if (grid[r1][c] === null && grid[r2][c] === null &&
@@ -434,7 +398,6 @@
     return false;
   }
 
-  // ---- 连线动画 ----
   function animatePath(points) {
     if (points.length < 2) return;
     const area = document.getElementById('gameArea');
@@ -447,22 +410,20 @@
     area.appendChild(svg);
 
     function toXY(pr, pc) {
-      // 将 grid 坐标映射到 area 内的像素（内层 1..playRows/cols 映射到可见单元格中心）
       const diff = DIFFICULTY[currentDiff];
-      const innerR = pr - 1, innerC = pc - 1; // 转为可视坐标
       const cell = document.querySelector(`.cell[data-r="${pr}"][data-c="${pc}"]`);
       if (cell) {
         const cr = cell.getBoundingClientRect();
         const ar = area.getBoundingClientRect();
         return {x: cr.left - ar.left + cr.width/2, y: cr.top - ar.top + cr.height/2};
       }
-      // 估算（边界外）
       const allCells = area.querySelectorAll('.cell');
       if (allCells.length === 0) return {x:0, y:0};
       const firstRect = allCells[0].getBoundingClientRect();
       const ar = area.getBoundingClientRect();
       const cw = firstRect.width + diff.gap;
       const ch = firstRect.height + diff.gap;
+      const innerC = pc - 1, innerR = pr - 1;
       let cx = innerC * cw + firstRect.width/2;
       let cy = innerR * ch + firstRect.height/2;
       if (pr <= 0) cy -= ch;
@@ -490,7 +451,6 @@
     setTimeout(() => svg.remove(), 500);
   }
 
-  // ====== 网格生成 ======
   function shuffle(arr) {
     const a = [...arr];
     for (let i = a.length - 1; i > 0; i--) {
@@ -505,19 +465,15 @@
     const {cols, rows, pool, emptyCells} = diff;
     const totalPlayable = cols * rows;
 
-    // 预留 emptyCells 个空位作为路径节点
     const filledCount = totalPlayable - emptyCells;
-    // 必须偶数（成对出现）
     const adjustFilled = filledCount % 2 === 0 ? filledCount : filledCount - 1;
     const pairCount = adjustFilled / 2;
     totalPairs = pairCount;
 
-    // 构建带 border 的 grid：(rows+2) × (cols+2)
     const totalRows = rows + 2;
     const totalCols = cols + 2;
     grid = Array.from({length: totalRows}, () => Array(totalCols).fill(null));
 
-    // 从图标池选 pairCount 个唯一图标，每个出现 2 次
     const shuffledPool = shuffle(pool);
     const chosenIcons = shuffledPool.slice(0, pairCount);
     let iconsFlat = [];
@@ -526,7 +482,6 @@
     }
     iconsFlat = shuffle(iconsFlat);
 
-    // 决定哪些可玩格子留空
     const allPlayablePositions = [];
     for (let r = 1; r <= rows; r++) {
       for (let c = 1; c <= cols; c++) {
@@ -538,7 +493,6 @@
       shuffledPositions.slice(0, emptyCells).map(p => p.r + ',' + p.c)
     );
 
-    // 填充图标到非空可玩格
     let iconIdx = 0;
     for (const pos of shuffledPositions) {
       if (emptyPositions.has(pos.r + ',' + pos.c)) continue;
@@ -546,9 +500,7 @@
       grid[pos.r][pos.c] = iconsFlat[iconIdx++];
     }
 
-    // 可解性保证：至少存在一对可连接的
     if (!hasAnyValidPair()) {
-      // 重试
       generateGrid();
       return;
     }
@@ -560,7 +512,6 @@
     updateHUD();
   }
 
-  // 检查是否存在至少一对可连接的图标
   function hasAnyValidPair() {
     const diff = DIFFICULTY[currentDiff];
     const {rows, cols} = diff;
@@ -580,7 +531,6 @@
     return false;
   }
 
-  // canConnect 的静默版本（不画线、不改状态）
   function canConnectSilent(r1, c1, r2, c2) {
     if (r1 === r2 && c1 === c2) return false;
     if (grid[r1][c1] === null || grid[r2][c2] === null) return false;
@@ -603,7 +553,6 @@
     return false;
   }
 
-  // 寻找一个可连接对（用于提示）
   function findHintPair() {
     const diff = DIFFICULTY[currentDiff];
     const {rows, cols} = diff;
@@ -631,17 +580,19 @@
     area.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
     area.style.gap = gap + 'px';
 
-    // 只渲染内层可玩格（grid row 1..rows, col 1..cols）
     for (let vr = 0; vr < rows; vr++) {
       for (let vc = 0; vc < cols; vc++) {
-        const gr = vr + 1;  // grid 行号
-        const gc = vc + 1;  // grid 列号
+        const gr = vr + 1;
+        const gc = vc + 1;
         const cell = document.createElement('div');
         cell.className = 'cell';
         cell.dataset.r = gr;
         cell.dataset.c = gc;
         cell.style.fontSize = iconSize + 'px';
         cell.style.lineHeight = '1';
+        // 医学修正: 中等档轻微灰化(0.85), 困难档全灰度(shape-only)
+        if (currentDiff === 'medium') cell.style.filter = 'grayscale(0.35)';
+        if (currentDiff === 'hard') cell.style.filter = 'grayscale(0.85) contrast(0.8)';
 
         if (grid[gr][gc] === null) {
           cell.classList.add('empty');
@@ -663,7 +614,6 @@
     updateHUD();
   }
 
-  // ====== 交互 ======
   function getCellDOM(r, c) {
     return document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
   }
@@ -722,7 +672,6 @@
       cell2.classList.add('empty');
     }, 400);
 
-    // 全部消除 → 新局
     setTimeout(() => {
       if (matchesFound >= totalPairs && gameRunning) {
         showRoundComplete();
@@ -749,7 +698,6 @@
     if (!gameRunning) return;
     const pair = findHintPair();
     if (!pair) {
-      // 无可连接对，自动刷新
       alert('当前无可连接对，自动换一局～');
       combo = 0;
       generateGrid();
@@ -773,26 +721,21 @@
     msg.className = 'round-msg';
     msg.style.background = '#45c4a0';
     msg.style.color = '#fff';
-    msg.textContent = '🎉 全部消除！新一局开始';
+    msg.textContent = '全部消除！新一局开始';
     document.body.appendChild(msg);
     setTimeout(() => msg.remove(), 2000);
   }
 
   function showComboPop(n) {
+    // 医学修正: combo弹窗改为右上角小toast，不遮挡游戏区
     const el = document.createElement('div');
-    el.className = 'combo-pop';
-    const colors = ['#4da6ff','#9b7ef0','#ff6b9d','#ffa940','#45c4a0'];
-    el.style.color = colors[Math.min(n-5, colors.length-1)];
-    el.textContent = n >= 10 ? '🔥 连消 x' + n : '⚡ 连消 x' + n;
+    el.style.cssText = 'position:fixed;top:52px;right:16px;z-index:150;'+
+      'background:'+(n>=10?'#9b7ef0':n>=7?'#ffa940':'#4da6ff')+';color:#fff;'+
+      'padding:6px 14px;border-radius:20px;font-size:13px;font-weight:700;pointer-events:none';
+    el.textContent = '🎯 连消 x'+n;
     document.body.appendChild(el);
-    setTimeout(() => el.remove(), 700);
-  }
-
-  function updateHUD() {
-    document.getElementById('scoreDisplay').textContent = score;
-    document.getElementById('remainDisplay').textContent = Math.max(0, totalPairs - matchesFound);
-    document.getElementById('timeDisplay').textContent = formatTime(timeLeft);
-    document.getElementById('progressBar').style.width = ((TOTAL_TIME - timeLeft) / TOTAL_TIME * 100) + '%';
+    setTimeout(function(){el.style.opacity='0';el.style.transition='opacity 0.5s';},2500);
+    setTimeout(function(){el.remove();},3000);
   }
 
   function formatTime(s) {
@@ -801,7 +744,11 @@
     return m + ':' + (sec < 10 ? '0' : '') + sec;
   }
 
-  // ====== 游戏控制 ======
+  function updateHUD() {
+    document.getElementById('barTimer').textContent = formatTime(timeLeft);
+  }
+
+  /* ── 游戏控制 ── */
   function startGame() {
     if (gameRunning) return;
     initAudio();
@@ -810,46 +757,31 @@
 
   function showPatchReminder() {
     const diff = DIFFICULTY[currentDiff];
-    const container = document.getElementById('modalContainer');
-    container.innerHTML = `
-      <div class="modal-overlay" id="patchModal">
-        <div class="modal">
-          <h2>开始训练前</h2>
-          <p>请确认以下准备事项：</p>
-          <div class="highlight">
-            &#x1f6d1; 如果医生建议遮盖治疗，请先遮盖<strong>健眼（视力较好的眼睛）</strong><br>
-            让弱视眼独立完成本次训练
-          </div>
-          <p style="font-size:14px;">
-            难度：<strong>${diff.label}</strong> &nbsp; | &nbsp;
-            网格：<strong>${diff.cols}×${diff.rows}</strong> &nbsp; | &nbsp;
-            训练时长：<strong>2 分钟</strong><br>
-            保持眼睛与屏幕 30~40cm 距离
-          </p>
-          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">
-            &#x1f4a1; 找到相同图案，点击消除。路径转弯 ≤ <strong>2 次</strong><br>
-            卡住时使用 <strong>💡 提示</strong> 按钮
-          </p>
-          <button class="btn btn-start" onclick="beginGame()" style="margin-right:8px;">准备好了，开始！</button>
-          <button class="btn" style="background:#fff;color:var(--purple);border:2px solid var(--purple);" onclick="document.getElementById('patchModal').remove()">返回</button>
-        </div>
-      </div>
+    document.getElementById('startDiffInfo').innerHTML = `
+      难度：<strong>${diff.label}</strong> &nbsp; | &nbsp;
+      网格：<strong>${diff.cols}×${diff.rows}</strong> &nbsp; | &nbsp;
+      训练时长：<strong>2 分钟</strong><br>
+      保持眼睛与屏幕 30~40cm 距离
     `;
+    document.getElementById('startOverlay').style.display = 'flex';
+  }
+
+  function hideStartOverlay() {
+    document.getElementById('startOverlay').style.display = 'none';
   }
 
   function beginGame() {
-    document.getElementById('modalContainer').innerHTML = '';
+    document.getElementById('startOverlay').style.display = 'none';
+    document.getElementById('endOverlay').style.display = 'none';
     gameRunning = true;
     score = 0; combo = 0; maxCombo = 0;
     matchesFound = 0; wrongAttempts = 0;
     timeLeft = TOTAL_TIME;
     selectedCell = null;
     updateHUD();
-    document.getElementById('btnStart').disabled = true;
-    document.getElementById('btnStart').textContent = '训练中...';
-    document.getElementById('btnHint').disabled = false;
-    document.getElementById('progressText').textContent = '难度：' + DIFFICULTY[currentDiff].label + ' | 可用提示：💡';
-    document.querySelectorAll('.diff-btn').forEach(b => b.style.pointerEvents = 'none');
+    document.getElementById('barTimer').style.display = 'inline-block';
+    document.getElementById('barHint').style.display = 'inline-block';
+    document.querySelectorAll('#startOverlay .diff-btn').forEach(b => b.style.pointerEvents = 'auto');
 
     generateGrid();
     buildGridDOM();
@@ -865,11 +797,8 @@
     gameRunning = false;
     if (timerId) { clearInterval(timerId); timerId = null; }
     document.getElementById('gameArea').innerHTML = '';
-    document.getElementById('btnStart').disabled = false;
-    document.getElementById('btnStart').textContent = '再来一局';
-    document.getElementById('btnHint').disabled = true;
-    document.getElementById('progressText').textContent = '训练完成！';
-    document.querySelectorAll('.diff-btn').forEach(b => b.style.pointerEvents = 'auto');
+    document.getElementById('barTimer').style.display = 'none';
+    document.getElementById('barHint').style.display = 'none';
     selectedCell = null;
     grid = [];
 
@@ -878,48 +807,60 @@
     let grade = accuracy >= 90 ? '优秀' : accuracy >= 70 ? '良好' : accuracy >= 50 ? '继续加油' : '需要更多练习';
     let gradeColor = accuracy >= 90 ? '#45c4a0' : accuracy >= 70 ? '#4da6ff' : accuracy >= 50 ? '#ffa940' : '#ff6b9d';
 
-    const container = document.getElementById('modalContainer');
-    container.innerHTML = `
-      <div class="modal-overlay">
-        <div class="result-card">
-          <div class="result-label">最终得分</div>
-          <div class="result-score">${score}</div>
-          <div style="font-size:18px;font-weight:700;color:${gradeColor};margin-top:8px;">${grade}</div>
-          <div class="result-stat">
-            <div class="result-stat-item">
-              <div class="result-stat-value" style="color:var(--green);">${matchesFound}</div>
-              <div class="result-stat-label">消除对</div>
-            </div>
-            <div class="result-stat-item">
-              <div class="result-stat-value" style="color:var(--text);">${wrongAttempts}</div>
-              <div class="result-stat-label">误尝试</div>
-            </div>
-            <div class="result-stat-item">
-              <div class="result-stat-value" style="color:var(--pink);">${accuracy}%</div>
-              <div class="result-stat-label">匹配率</div>
-            </div>
-            <div class="result-stat-item">
-              <div class="result-stat-value" style="color:var(--purple);">${maxCombo}</div>
-              <div class="result-stat-label">最高连消</div>
-            </div>
-          </div>
-          <div class="rest-reminder">
-            <strong>&#x23f0; 休息提醒</strong><br>
-            单次训练建议不超过 30 分钟。请让孩子休息 5~10 分钟后再继续。
-          </div>
-          <button class="btn btn-start" onclick="startGame()" style="margin-right:8px;">再来一局</button>
-          <button class="btn" style="background:#fff;color:var(--purple);border:2px solid var(--purple);" onclick="document.getElementById('modalContainer').innerHTML=''">关闭</button>
+    document.getElementById('endCard').innerHTML = `
+      <div class="result-label">最终得分</div>
+      <div class="result-score">${score}</div>
+      <div style="font-size:18px;font-weight:700;color:${gradeColor};margin-top:8px;">${grade}</div>
+      <div class="result-stat">
+        <div class="result-stat-item">
+          <div class="result-stat-value" style="color:var(--green);">${matchesFound}</div>
+          <div class="result-stat-label">消除对</div>
+        </div>
+        <div class="result-stat-item">
+          <div class="result-stat-value" style="color:var(--text);">${wrongAttempts}</div>
+          <div class="result-stat-label">误尝试</div>
+        </div>
+        <div class="result-stat-item">
+          <div class="result-stat-value" style="color:var(--pink);">${accuracy}%</div>
+          <div class="result-stat-label">匹配率</div>
+        </div>
+        <div class="result-stat-item">
+          <div class="result-stat-value" style="color:var(--purple);">${maxCombo}</div>
+          <div class="result-stat-label">最高连消</div>
         </div>
       </div>
+      <div class="rest-reminder">
+        <strong>&#x23f0; 休息提醒</strong><br>
+        单次训练建议不超过 30 分钟。请让孩子休息 5~10 分钟后再继续。
+      </div>
+      <button class="btn btn-start" onclick="startGame()" style="margin-right:8px;">再来一局</button>
+      <button class="btn" style="background:#fff;color:var(--purple);border:2px solid var(--purple);" onclick="hideEndOverlay()">关闭</button>
     `;
+    document.getElementById('endOverlay').style.display = 'flex';
+
     saveGameResult('matching-game', {score, pairs:matchesFound, combo:maxCombo, difficulty:currentDiff, duration:120});
   }
 
+  function hideEndOverlay() {
+    document.getElementById('endOverlay').style.display = 'none';
+  }
+
   function setDifficulty(diff) {
+    if (gameRunning) return;
     currentDiff = diff;
-    document.querySelectorAll('.diff-btn').forEach(b => {
+    document.querySelectorAll('#startOverlay .diff-btn').forEach(b => {
       b.classList.toggle('active', b.dataset.diff === diff);
     });
+    const d = DIFFICULTY[diff];
+    document.getElementById('startDiffInfo').innerHTML = `
+      难度：<strong>${d.label}</strong> &nbsp; | &nbsp;
+      网格：<strong>${d.cols}×${d.rows}</strong> &nbsp; | &nbsp;
+      训练时长：<strong>2 分钟</strong><br>
+      保持眼睛与屏幕 30~40cm 距离
+    `;
+    // 更新预览网格
+    generateGrid();
+    buildGridDOM();
   }
 
   document.getElementById('diffSelector').addEventListener('click', function(e) {
@@ -928,7 +869,7 @@
     }
   });
 
-  // ---- 初始预览 ----
+  // 初始预览
   generateGrid();
   buildGridDOM();
 </script>

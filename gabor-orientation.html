@@ -3,62 +3,44 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>葵神辨向 · 弱视训练</title>
+<title>葵神辨向 · 太阳花弱视训练</title>
 <link rel="manifest" href="manifest.json">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{font-family:'PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif;
-  background:#FFF8E7;color:#4A3828;min-height:100vh;display:flex;
-  flex-direction:column;align-items:center;overflow-x:hidden;
+  background:#f5f3ed;color:#4A3828;height:100vh;width:100vw;overflow:hidden;
+  display:flex;flex-direction:column;
   -webkit-tap-highlight-color:transparent;touch-action:manipulation}
-body{padding-bottom:30px}
 
-.top-bar{width:100%;max-width:560px;display:flex;align-items:center;
-  justify-content:space-between;padding:16px 20px;flex-shrink:0;
-  position:relative;z-index:101}
-.back-link{text-decoration:none;color:#7BC74D;font-weight:600;font-size:15px;
-  display:flex;align-items:center;gap:6px}
-.back-link:hover{opacity:0.8}
-
-.game-title{text-align:center;padding:2px 0 6px;flex-shrink:0}
-.game-title h1{font-size:22px;color:#2E7D32;margin:0;text-shadow:1px 1px 2px rgba(0,0,0,0.1)}
-
-.hud{display:flex;align-items:center;justify-content:space-between;
-  max-width:560px;width:100%;padding:6px 20px 8px;flex-shrink:0;gap:8px}
-.hud-item{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;
-  background:#fff;padding:7px 12px;border-radius:10px;color:#4A3828;
-  border:2px solid #E8E0D0;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
-.hud-icon{font-size:16px}
-.hud-value{color:#2E7D32;font-size:17px;font-weight:800;min-width:22px;text-align:center}
-.hud-label{color:#8D6E63;font-size:11px}
-.timer-warn{color:#EF5350 !important;animation:pulse 0.8s infinite}
+/* Top bar */
+.top-bar{position:absolute;top:0;left:0;right:0;height:38px;z-index:10;
+  background:rgba(0,0,0,0.18);backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:space-between;padding:0 12px}
+.back-link{text-decoration:none;color:#7BC74D;font-weight:600;font-size:14px;
+  display:flex;align-items:center;gap:4px}
+.hud-value{font-weight:800;font-size:15px;color:#2E7D32}
+.hud-icon{font-size:15px;line-height:1}
+.timer-warn{color:#EF5350!important;animation:pulse 0.8s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
 
-.game-area{position:relative;width:520px;max-width:100vw;margin:0 auto;
-  display:flex;flex-direction:column;align-items:center;flex-shrink:0}
-
-/* Canvas 容器 */
-.canvas-wrap{position:relative;width:520px;height:380px;max-width:100vw;
-  background:#808080;border-radius:16px;overflow:hidden;
-  border:3px solid #C8E6C9;box-shadow:0 2px 12px rgba(0,0,0,0.1)}
+/* Canvas wrapper */
+.canvas-wrap{flex:1;width:100%;position:relative;overflow:hidden;background:#808080}
 #gameCanvas{display:block;width:100%;height:100%}
 
-/* 飞行光斑 */
+/* Flying spark */
 .flying-spark{position:absolute;width:18px;height:18px;background:#FFD54F;
   border-radius:50%;pointer-events:none;z-index:5;
   box-shadow:0 0 14px 6px rgba(255,213,79,0.7);transition:all 0.3s ease-out}
 .flying-spark.flash{transform:scale(3);opacity:0;transition:all 0.2s ease-out}
 
-/* 单朵向日葵 — CSS绘制 */
-.sunflower-wrap{display:flex;align-items:flex-end;justify-content:center;
-  margin-top:-28px;position:relative;z-index:3;transition:filter 0.4s}
+/* Sunflower character */
+.sunflower-wrap{position:absolute;bottom:70px;left:50%;transform:translateX(-50%);z-index:3;
+  display:flex;align-items:flex-end;justify-content:center;transition:filter 0.4s}
 .sunflower-single{display:flex;flex-direction:column;align-items:center;gap:2px}
 .sunflower-wrap.wobble .sunflower-head{animation:wobble 0.6s ease-in-out}
 .sunflower-wrap.bounce{animation:bounce-up 0.7s ease-out}
 .sunflower-wrap.dim{filter:brightness(0.55) saturate(0.4)}
 .sunflower-wrap.glow{filter:brightness(1.3) drop-shadow(0 0 12px rgba(255,193,7,0.6))}
-
-/* radial-gradient 绘制太阳花：棕心 + 黄橙花瓣 */
 .sunflower-head{position:relative;width:64px;height:64px;
   background:radial-gradient(circle,#5D4037 35%,#FFD54F 37%,#FFC107 65%,#FF9800 100%);
   border-radius:50%;transition:transform 0.3s,filter 0.3s}
@@ -67,58 +49,56 @@ body{padding-bottom:30px}
   background:radial-gradient(circle,#4E342E 50%,#6D4C41 100%);
   border-radius:50%;z-index:2;box-shadow:inset 0 2px 3px rgba(0,0,0,0.3)}
 .sunflower-head::before{content:'';position:absolute;top:50%;left:50%;
-  width:58px;height:58px;transform:translate(-50%,-50%);
-  border-radius:50%;z-index:0;
+  width:58px;height:58px;transform:translate(-50%,-50%);border-radius:50%;z-index:0;
   box-shadow:
     0px -28px 0 0 #FFE082,11px -26px 0 0 #FFD54F,22px -18px 0 0 #FFCA28,
     28px 0px 0 0 #FFB300,22px 18px 0 0 #FFC107,11px 26px 0 0 #FFCA28,
     0px 28px 0 0 #FFD54F,-11px 26px 0 0 #FFE082,-22px 18px 0 0 #FFC107,
     -28px 0px 0 0 #FFB300,-22px -18px 0 0 #FFCA28,-11px -26px 0 0 #FFD54F}
-
-/* 茎和叶 */
 .stem-line{width:8px;height:52px;background:linear-gradient(180deg,#81C784,#43A047);
   border-radius:4px}
 .leaf{width:24px;height:12px;background:#66BB6A;border-radius:50%;
   position:absolute;bottom:10px;box-shadow:0 1px 2px rgba(0,0,0,0.1)}
 .leaf.left{left:-16px;transform:rotate(-40deg)}
 .leaf.right{right:-16px;transform:rotate(40deg)}
-
-/* 表情 */
 .sunflower-face{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
   font-size:18px;z-index:3;pointer-events:none;transition:all 0.3s}
 .sunflower-face.happy{font-size:24px;animation:pop-in 0.4s ease-out}
 @keyframes pop-in{0%{transform:translate(-50%,-50%) scale(0.3)}60%{transform:translate(-50%,-50%) scale(1.2)}100%{transform:translate(-50%,-50%) scale(1)}}
-
-/* 动画关键帧 */
 @keyframes wobble{0%,100%{transform:rotate(0) scale(1)}25%{transform:rotate(-15deg) scale(1.08)}50%{transform:rotate(5deg) scale(1.02)}75%{transform:rotate(-8deg) scale(1.05)}}
 @keyframes bounce-up{0%{transform:translateY(0) scale(1)}30%{transform:translateY(-32px) scale(1.12)}60%{transform:translateY(-8px) scale(0.94)}100%{transform:translateY(0) scale(1)}}
 @keyframes sad-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
 
-/* 方向按钮 */
-.btn-row{display:flex;gap:14px;justify-content:center;margin:12px 0 0;
-  padding:0 20px;max-width:520px;width:100%;flex-shrink:0}
-.btn-row.grid4{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.orient-btn{flex:1;min-height:56px;padding:12px 16px;border-radius:16px;
-  border:3px solid #7BC74D;background:#fff;color:#4A3828;
+/* Floating bottom buttons */
+.btn-row{position:absolute;bottom:16px;left:0;right:0;z-index:3;
+  display:flex;justify-content:center;gap:8px;pointer-events:none;padding:0 16px}
+.btn-row.grid4{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.orient-btn{flex:1;min-height:50px;padding:10px 14px;border-radius:14px;
+  border:2px solid #7BC74D;background:rgba(255,255,255,0.92);color:#4A3828;
   font-size:16px;font-weight:700;cursor:pointer;transition:all 0.15s;
-  display:flex;align-items:center;justify-content:center;gap:6px;
+  display:flex;align-items:center;justify-content:center;gap:4px;
   user-select:none;-webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;box-shadow:0 2px 6px rgba(0,0,0,0.06)}
-.orient-btn:hover{background:#E8F5E9;transform:scale(1.03);border-color:#66BB6A}
+  touch-action:manipulation;pointer-events:auto;
+  box-shadow:0 2px 8px rgba(0,0,0,0.1)}
 .orient-btn:active{transform:scale(0.95)}
 .orient-btn:disabled{pointer-events:none;opacity:0.5;cursor:not-allowed}
-.orient-btn.correct{background:#C8E6C9 !important;border-color:#4CAF50 !important;
+.orient-btn.correct{background:#C8E6C9!important;border-color:#4CAF50!important;
   box-shadow:0 0 16px rgba(76,175,80,0.3)}
-.orient-btn.wrong{background:#FFEBEE !important;border-color:#EF5350 !important;
+.orient-btn.wrong{background:#FFEBEE!important;border-color:#EF5350!important;
   animation:shake 0.4s ease}
-.orient-btn.highlight{background:#FFF9C4 !important;border-color:#FFB300 !important;
-  animation:pulse-green 0.6s infinite}
+.orient-btn.highlight{background:#FFF9C4!important;border-color:#FFB300!important;
+  animation:pulse-highlight 0.3s ease}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
-@keyframes pulse-green{0%,100%{box-shadow:0 0 8px rgba(255,179,0,0.4)}50%{box-shadow:0 0 20px rgba(255,179,0,0.7)}}
+@keyframes pulse-highlight{0%{box-shadow:0 0 4px rgba(255,179,0,0.3)}50%{box-shadow:0 0 22px rgba(255,179,0,0.8)}100%{box-shadow:0 0 4px rgba(255,179,0,0.3)}}
 
-.bottom-hint{text-align:center;padding:4px 0;font-size:12px;color:#8D6E63;flex-shrink:0}
+/* Toast notification */
+.toast{position:fixed;top:52px;right:16px;z-index:200;
+  background:rgba(0,0,0,0.72);color:#fff;font-size:12px;
+  padding:6px 12px;border-radius:8px;pointer-events:none;
+  opacity:0;transform:translateY(-8px);transition:all 0.25s ease}
+.toast.show{opacity:1;transform:translateY(0)}
 
-/* overlay 弹窗 */
+/* Overlays */
 .overlay{position:fixed;top:0;left:0;width:100%;height:100%;
   background:rgba(0,0,0,0.6);display:flex;align-items:center;
   justify-content:center;z-index:100;flex-direction:column;padding:20px}
@@ -134,7 +114,6 @@ body{padding-bottom:30px}
   margin-top:12px;box-shadow:0 3px 10px rgba(76,175,80,0.3);transition:all 0.15s}
 .btn-go:hover{transform:scale(1.05);box-shadow:0 5px 16px rgba(76,175,80,0.4)}
 .btn-go:active{transform:scale(0.95)}
-
 .end-icon{font-size:42px;margin-bottom:6px;display:block}
 .stars{font-size:28px;margin:4px 0;letter-spacing:4px}
 .result-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
@@ -142,65 +121,43 @@ body{padding-bottom:30px}
   border:1px solid #C8E6C9}
 .rs-label{font-size:11px;color:#8D6E63}.rs-value{font-size:20px;font-weight:800;color:#2E7D32}
 .tip{font-size:12px;color:#EF5350;margin:8px 0;line-height:1.6}
-
-/* 难度选择按钮 */
 .diff-select{display:flex;gap:8px;margin:10px 0 4px;justify-content:center;flex-wrap:wrap}
-.diff-btn{padding:10px 16px;border-radius:12px;border:2px solid #A5D6A7;
+.diff-btn{padding:10px 16px;border-radius:12px;border:2px solid #90CAF9;
   background:#fff;color:#4A3828;cursor:pointer;
   font-size:14px;font-weight:600;transition:all 0.2s}
-.diff-btn:hover{background:#E8F5E9;border-color:#7BC74D}
-.diff-btn.active{background:#7BC74D;color:#fff;border-color:#66BB6A;
-  box-shadow:0 0 10px rgba(123,199,77,0.3)}
-
-/* 计时进度环 */
-.question-timer{width:100%;height:4px;background:#E0E0E0;border-radius:2px;
-  margin-top:10px;overflow:hidden}
-.question-timer-fill{height:100%;background:#7BC74D;border-radius:2px;
-  transition:width 0.1s linear}
-
-/* 自适应难度指示器 */
-.diff-indicator{display:flex;align-items:center;gap:4px;justify-content:center;
-  margin-top:8px;font-size:11px;color:#8D6E63}
-.diff-indicator .active-dot{width:8px;height:8px;border-radius:50%;background:#7BC74D}
-.diff-indicator .dot{width:8px;height:8px;border-radius:50%;background:#DDD}
-.diff-indicator .arrow{color:#FF9800;font-weight:900}
+.diff-btn:hover{background:#E3F2FD;border-color:#42A5F5}
+.diff-btn.active{background:#1976D2;color:#fff;border-color:#1565C0;
+  box-shadow:0 0 10px rgba(25,118,210,0.3)}
 
 @media(max-width:560px){
-  .game-area{width:100vw}
-  .canvas-wrap{width:100vw;height:72vw;border-radius:0;border-left:none;border-right:none}
-  .btn-row{padding:0 12px}
-  .orient-btn{font-size:14px;min-height:50px;padding:10px 12px}
-  .hud{padding:6px 12px 6px}
-  .hud-item{padding:5px 8px;font-size:11px}
-  .top-bar{padding:12px 16px}
+  .btn-row{padding:0 8px;gap:6px}
+  .orient-btn{font-size:14px;min-height:46px;padding:8px 10px}
+  .top-bar{padding:0 8px}
 }
 </style>
 </head>
 <body>
 
+<!-- Top bar: overlay -->
 <div class="top-bar">
-  <a href="index.html" class="back-link">&#8592; 返回科普站</a>
-  <a href="index.html#games" class="back-link">&#8592; 训练游戏</a>
-  <a href="progress.html" class="back-link">&#x1F4CA; 训练进度</a>
-</div>
-
-<div class="game-title">
-  <h1>&#x1F33B; 葵神辨向</h1>
-</div>
-
-<div class="hud" id="hud">
-  <div class="hud-item"><span class="hud-icon">&#x2B50;</span><div><span class="hud-value" id="hudScore">0</span><span class="hud-label">得分</span></div></div>
-  <div class="hud-item"><span class="hud-icon">&#x1F4CA;</span><div><span class="hud-value" id="hudAccuracy">-</span><span class="hud-label">正确率</span></div></div>
-  <div class="hud-item"><span class="hud-icon">&#x23F1;</span><div><span class="hud-value" id="hudTime">120</span><span class="hud-label">秒</span></div></div>
-  <div class="hud-item" style="cursor:pointer" id="hudSound" onclick="toggleSound()"><span class="hud-icon">&#x1F50A;</span><span class="hud-label">音效</span></div>
-</div>
-
-<div class="game-area" id="gameArea">
-  <div class="canvas-wrap" id="canvasWrap">
-    <canvas id="gameCanvas"></canvas>
+  <a href="index.html#games" class="back-link">&#8592; 返回游戏</a>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="hud-value" id="hudTime">120</span>
+    <div id="hudSound" onclick="toggleSound()" style="cursor:pointer">
+      <span class="hud-icon">&#x1F50A;</span>
+    </div>
+    <a href="contact.html" style="font-size:15px;text-decoration:none;margin-left:6px;color:var(--blue)" title="联系我们">📬</a>
   </div>
+</div>
 
-  <!-- 单朵向日葵 -->
+<!-- Hidden HUD for JS compatibility -->
+<div style="display:none"><span id="hudScore">0</span><span id="hudAccuracy">-</span></div>
+
+<!-- Canvas area -->
+<div class="canvas-wrap" id="canvasWrap">
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- Sunflower character -->
   <div class="sunflower-wrap" id="sunflowerWrap">
     <div class="sunflower-single" id="sunflowerSingle">
       <div class="sunflower-head" id="sunflowerH">
@@ -213,16 +170,11 @@ body{padding-bottom:30px}
     </div>
   </div>
 
-  <!-- 方向按钮 -->
-  <div class="btn-row" id="btnRow">
-    <button class="orient-btn" data-angle="0" disabled>&#x2194; 横向条纹</button>
-    <button class="orient-btn" data-angle="90" disabled>&#x2195; 竖向条纹</button>
-  </div>
+  <!-- Floating direction buttons -->
+  <div class="btn-row" id="btnRow"></div>
 </div>
 
-<div class="bottom-hint">&#x1F446; 观察条纹方向，点击对应按钮 · 连续答对升级，答错降级</div>
-
-<!-- start overlay: 难度选择 -->
+<!-- start overlay -->
 <div class="overlay" id="startOverlay">
   <div class="overlay-card">
     <span class="overlay-icon">&#x1F33B;</span>
@@ -237,7 +189,10 @@ body{padding-bottom:30px}
   </div>
 </div>
 
-<!-- cover overlay: 遮盖提醒 -->
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<!-- cover overlay -->
 <div class="overlay hidden" id="coverOverlay">
   <div class="overlay-card">
     <span class="overlay-icon">&#x1F453;</span>
@@ -253,7 +208,7 @@ body{padding-bottom:30px}
   </div>
 </div>
 
-<!-- end overlay: 结果结算 -->
+<!-- end overlay -->
 <div class="overlay hidden" id="endOverlay">
   <div class="overlay-card" id="endCard"></div>
 </div>
@@ -315,6 +270,17 @@ var questionStartTime = 0;
 
 // ========== 音频 ==========
 var audioCtx = null, soundOn = true;
+
+// ========== Toast ==========
+var toastTimer = null;
+var toastEl = document.getElementById('toast');
+function showToast(msg) {
+  if (!toastEl) return;
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 1200);
+}
 
 function initAudio() {
   if (audioCtx) return;
@@ -640,6 +606,7 @@ function handleTimeout() {
   highlightCorrectAnswer();
   disableButtons(true);
   updateHUD();
+  showToast('超时了，正确答案是 ' + angleToLabel(currentQuestion.correctAngle));
   setTimeout(nextQuestion, 2000);
 }
 
@@ -671,6 +638,7 @@ function onButtonClick(btn) {
     sunflowerSad();
     btn.classList.add('wrong');
     highlightCorrectAnswer();
+    showToast('正确答案是 ' + angleToLabel(currentQuestion.correctAngle));
     // 自适应降级
     if (consecutiveWrong >= 3) downgradeDifficulty();
   }
@@ -688,6 +656,22 @@ function highlightCorrectAnswer() {
       btns[i].classList.add('highlight');
     }
   }
+  // 300ms 后移除高亮
+  setTimeout(function(){
+    var btnsAll = btnRow.querySelectorAll('.orient-btn');
+    for (var i = 0; i < btnsAll.length; i++) {
+      btnsAll[i].classList.remove('highlight');
+    }
+  }, 300);
+}
+
+/** 角度转方向标签 */
+function angleToLabel(angle) {
+  if (angle === 0) return '竖向';
+  if (angle === 45) return '右斜';
+  if (angle === 90) return '横向';
+  if (angle === 135) return '左斜';
+  return angle + '°';
 }
 
 /** 自适应升级 */

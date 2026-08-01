@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>联系我们 · 太阳花弱视训练</title>
+<meta name="description" content="本站微信公众号、小红书账号、反馈渠道与公益说明">
+<link rel="manifest" href="manifest.json">
+<style>
+:root{
+  --blue:#F9A825;--blue-light:#FFF8E1;
+  --pink:#EF6C00;--pink-light:#FFF3E0;
+  --green:#388E3C;--green-light:#E8F5E9;
+  --purple:#1976D2;--purple-light:#E3F2FD;
+  --text:#3E2723;--text-muted:#8D6E63;
+  --bg:#FFFBF0;--card-bg:#fff;
+  --radius:24px;--radius-sm:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:var(--bg);min-height:100vh;line-height:1.7}
+nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.88);backdrop-filter:blur(20px);border-bottom:2px solid #F0E6C8}
+.nav-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:12px 20px}
+.nav-logo{font-size:18px;font-weight:700;color:var(--blue);display:flex;align-items:center;gap:8px}
+.logo-eye{width:36px;height:36px;border-radius:50%;background:url("logo.png") center/cover no-repeat;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.nav-links{display:flex;gap:28px;list-style:none}
+.nav-links a{text-decoration:none;color:var(--text-muted);font-size:15px;font-weight:500}
+.nav-links a:hover,.nav-links a.active{color:var(--blue)}
+.container{max-width:760px;margin:30px auto 60px;padding:0 20px}
+
+/* Hero */
+.hero{text-align:center;padding:32px 16px 20px}
+.hero h1{font-size:30px;font-weight:800;color:var(--text);margin-bottom:8px}
+.hero h1 .icon{font-size:32px;margin-right:6px;vertical-align:-3px}
+.hero .sub{font-size:15px;color:var(--text-muted);max-width:540px;margin:0 auto;line-height:1.7}
+.hero .badge{display:inline-block;margin-top:14px;padding:5px 14px;border-radius:50px;font-size:12px;font-weight:700;background:var(--green-light);color:var(--green);border:1px solid #C8E6C9}
+
+/* Card */
+.card{background:var(--card-bg);border-radius:var(--radius);padding:28px 26px;margin-bottom:20px;box-shadow:0 4px 20px rgba(0,0,0,0.04);border:2px solid #f0f0f5}
+.card-head{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.card-head .icon{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.card-head .icon.gzh{background:#E8F5E9}
+.card-head .icon.xhs{background:#FFEBEE}
+.card-head .icon.fb{background:#E3F2FD}
+.card-head h2{font-size:20px;font-weight:800;color:var(--text)}
+.card-head .pill{margin-left:auto;display:inline-block;padding:3px 12px;border-radius:50px;font-size:11px;font-weight:700;background:var(--blue-light);color:var(--blue)}
+.card-head .pill.green{background:var(--green-light);color:var(--green)}
+
+/* 公众号卡片 */
+.gzh-grid{display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:center}
+.qr-box{background:#fff;padding:14px;border-radius:var(--radius-sm);border:2px solid #f0f0f5;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.qr-box img{width:100%;height:auto;display:block;border-radius:8px}
+.qr-box .qr-caption{font-size:12px;color:var(--text-muted);margin-top:10px;font-weight:600}
+.qr-box .qr-caption strong{color:var(--blue);display:block;font-size:13px;margin-bottom:2px}
+.gzh-info .lead{font-size:15px;color:var(--text);margin-bottom:14px;line-height:1.7}
+.gzh-info .lead strong{color:var(--blue)}
+.auto-reply{background:linear-gradient(135deg,#F1F8E9,#E8F5E9);border:1px dashed #A5D6A7;border-radius:14px;padding:14px 16px;font-size:13.5px;color:#2E5D32;line-height:1.75;position:relative}
+.auto-reply::before{content:"💬 自动回复预览";position:absolute;top:-10px;left:14px;background:#fff;padding:0 8px;font-size:11px;color:var(--green);font-weight:700}
+.auto-reply b{color:#1B5E20}
+.kw-list{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px}
+.kw-list .kw{display:inline-block;padding:5px 12px;border-radius:50px;font-size:12.5px;font-weight:600;background:var(--blue-light);color:var(--blue);border:1px solid #FFE082}
+
+/* 小红书卡片 */
+.xhs-row{display:flex;align-items:center;gap:18px;margin-bottom:14px}
+.xhs-avatar{width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,#FF6B6B,#FF4757);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:800;flex-shrink:0;box-shadow:0 4px 12px rgba(255,71,87,0.25)}
+.xhs-meta h3{font-size:18px;font-weight:800;color:var(--text);margin-bottom:2px}
+.xhs-meta .role{font-size:12px;color:#FF4757;font-weight:600;margin-bottom:6px}
+.xhs-bio{font-size:14px;color:var(--text-muted);line-height:1.7;margin-bottom:16px;padding:14px;background:#FFF5F5;border-radius:12px;border-left:3px solid #FF4757}
+.xhs-id-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.xhs-id-label{font-size:13px;color:var(--text-muted);font-weight:600}
+.xhs-id{font-family:'SF Mono','Monaco','Consolas',monospace;font-size:16px;font-weight:700;color:var(--text);background:#FAFAFA;padding:8px 14px;border-radius:10px;border:1px solid #E8E8E8;letter-spacing:0.5px}
+.copy-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 16px;border-radius:50px;font-size:13px;font-weight:700;background:linear-gradient(135deg,#FF4757,#FF6B6B);color:#fff;border:none;cursor:pointer;transition:transform 0.15s;font-family:inherit}
+.copy-btn:hover{transform:translateY(-1px)}
+.copy-btn.copied{background:linear-gradient(135deg,var(--green),#43A047)}
+
+/* 反馈卡片 */
+.fb-list{display:flex;flex-direction:column;gap:10px}
+.fb-item{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:14px;background:#FAFAFA;border:1px solid #EEEEEE;transition:all 0.2s}
+.fb-item:hover{background:#fff;border-color:var(--blue);box-shadow:0 2px 8px rgba(249,168,37,0.1)}
+.fb-item .fi-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.fb-item .fi-body{flex:1}
+.fb-item .fi-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:2px}
+.fb-item .fi-desc{font-size:13px;color:var(--text-muted);line-height:1.6}
+.fb-item.recommend{background:#FFF8E1;border-color:#FFE082}
+.fb-item.recommend .fi-tag{display:inline-block;font-size:10px;padding:1px 8px;border-radius:50px;background:var(--blue);color:#fff;font-weight:700;margin-left:6px;vertical-align:2px}
+
+/* 透明声明 */
+.transparent{margin:24px 0;padding:18px 22px;border-radius:18px;background:linear-gradient(135deg,#F3E5F5,#E1BEE7);border:1px solid #CE93D8;color:#4A148C;font-size:13.5px;line-height:1.8;text-align:center}
+.transparent strong{font-size:14px;display:block;margin-bottom:4px}
+
+/* PWA 安装步骤 */
+.pwa-steps{display:flex;flex-direction:column;gap:16px}
+.pwa-step{display:flex;gap:16px;align-items:flex-start;padding:14px 16px;border-radius:14px;background:#FAFAFA;border:1px solid #EEEEEE}
+.pwa-step:hover{background:#fff;border-color:var(--blue);box-shadow:0 2px 8px rgba(249,168,37,0.1)}
+.pwa-num{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--pink));color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0;box-shadow:0 2px 8px rgba(249,168,37,0.25)}
+.pwa-body{flex:1;min-width:0}
+.pwa-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;line-height:1.5}
+.pwa-desc{font-size:13px;color:var(--text-muted);line-height:1.6}
+
+/* Footer */
+footer{text-align:center;padding:20px;font-size:12px;color:var(--text-muted)}
+footer a{color:var(--blue);text-decoration:none}
+
+/* Toast */
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:rgba(0,0,0,0.85);color:#fff;padding:12px 22px;border-radius:50px;font-size:14px;font-weight:600;z-index:1000;opacity:0;transition:all 0.3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* 移动端 */
+@media(max-width:600px){
+  .hero h1{font-size:24px}
+  .hero .sub{font-size:14px}
+  .card{padding:22px 18px}
+  .gzh-grid{grid-template-columns:1fr;text-align:center}
+  .qr-box{max-width:200px;margin:0 auto}
+  .gzh-info .lead{text-align:left}
+  .xhs-row{flex-direction:column;text-align:center;align-items:center}
+  .xhs-id-row{justify-content:center}
+  .nav-links{gap:18px}
+  .nav-links a{font-size:14px}
+}
+@media(max-width:420px){
+  .nav-links{gap:14px}
+  .nav-links a{font-size:13px}
+}
+</style>
+</head>
+<body>
+<nav><div class="nav-inner"><div class="nav-logo"><div class="logo-eye"></div>太阳花弱视训练</div><ul class="nav-links"><li><a href="index.html">首页</a></li><li><a href="index.html#games">训练游戏</a></li><li><a href="assessment.html">训练路径</a></li><li><a href="progress.html">训练进度</a></li><li><a href="contact.html" class="active">联系我们</a></li></ul></div></nav>
+
+<div class="container">
+  <div class="hero">
+    <h1><span class="icon">📬</span>联系我们</h1>
+    <p class="sub">关注我们、提意见、找同伴。<br>你的每一条反馈都在帮这个公益站变得更好。</p>
+    <span class="badge">🌱 公益项目 · 免费 · 无广告</span>
+  </div>
+
+  <!-- 公众号卡片 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="icon gzh">📢</div>
+      <h2>本站微信公众号</h2>
+      <span class="pill green">推荐</span>
+    </div>
+    <div class="gzh-grid">
+      <div class="qr-box">
+        <img src="assets/images/qrcode-gzh.jpg" alt="公众号二维码">
+        <div class="qr-caption">
+          <strong>长按识别二维码</strong>
+          关注公众号
+        </div>
+      </div>
+      <div class="gzh-info">
+        <p class="lead">
+          微信扫码或长按识别，<strong>关注后回复"弱视网站"即可获取链接</strong>。
+        </p>
+        <div class="auto-reply">
+          欢迎关注🌻本站已上线 <b>24 款太阳花弱视训练小游戏</b>，覆盖 5 个临床阶段，全部免费、无广告。<br>
+          👉 回复关键词 <b>「弱视网站」</b> 即可获取网站地址。<br>
+          👉 任何意见/建议，直接在公众号对话框留言即可。
+        </div>
+        <div class="kw-list">
+          <span class="kw">训练</span>
+          <span class="kw">链接</span>
+          <span class="kw">目录</span>
+          <span class="kw">弱视网站</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 小红书卡片 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="icon xhs">📕</div>
+      <h2>小红书账号</h2>
+      <span class="pill">日常更新</span>
+    </div>
+    <div class="xhs-row">
+      <!-- 头像占位：可后续替换为真实头像图片 -->
+      <div class="xhs-avatar">SK</div>
+      <div class="xhs-meta">
+        <h3>石凯瑞</h3>
+        <div class="role">小红书号：159173545</div>
+      </div>
+    </div>
+    <div class="xhs-bio">
+      "陪孩子在纠正远视弱视和提升专注力的路上打怪升级。"
+    </div>
+    <div class="xhs-id-row">
+      <span class="xhs-id-label">小红书号：</span>
+      <span class="xhs-id" id="xhsId">159173545</span>
+      <button class="copy-btn" id="copyBtn" onclick="copyXhsId()">📋 复制</button>
+    </div>
+  </div>
+
+  <!-- 反馈卡片 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="icon fb">💬</div>
+      <h2>给我们反馈</h2>
+    </div>
+    <div class="fb-list">
+      <div class="fb-item recommend">
+        <div class="fi-icon">💬</div>
+        <div class="fi-body">
+          <div class="fi-title">公众号私信<span class="fi-tag">推荐</span></div>
+          <div class="fi-desc">关注后直接发消息即可：训练建议、Bug 反馈、内容吐槽都欢迎。</div>
+        </div>
+      </div>
+      <div class="fb-item">
+        <div class="fi-icon">📕</div>
+        <div class="fi-body">
+          <div class="fi-title">小红书私信 / 评论区</div>
+          <div class="fi-desc">在笔记下留言或私信，日常活跃的反馈渠道。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PWA 安装卡片 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="icon" style="background:#E8F5E9">📱</div>
+      <h2>把网站装成 APP</h2>
+      <span class="pill green">免下载</span>
+    </div>
+    <div class="pwa-steps">
+      <div class="pwa-step">
+        <div class="pwa-num">1</div>
+        <div class="pwa-body">
+          <div class="pwa-title">用手机浏览器打开网站</div>
+          <div class="pwa-desc">Safari 或 Chrome 都可以，微信内置浏览器不行。</div>
+        </div>
+      </div>
+      <div class="pwa-step">
+        <div class="pwa-num">2</div>
+        <div class="pwa-body">
+          <div class="pwa-title">
+            iPhone：点分享 → 添加到主屏幕<br>
+            Android：点菜单 → 添加到主屏幕
+          </div>
+          <div class="pwa-desc">iPhone 点底部中间的 <b>分享按钮</b>（方框+箭头），Android 点右上角 <b>⋮ 菜单</b>。</div>
+        </div>
+      </div>
+      <div class="pwa-step">
+        <div class="pwa-num">3</div>
+        <div class="pwa-body">
+          <div class="pwa-title">桌面出现图标，像 APP 一样使用</div>
+          <div class="pwa-desc">离线也能打开，不用每次都输网址。训练记录、游戏进度都在，和 APP 体验一样。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 透明声明 -->
+  <div class="transparent">
+    <strong>🌻 一个透明的承诺</strong>
+    关注公众号不是使用网站的必要条件——直接扫码或浏览器输入网址即可使用。<br>
+    本站为公益项目，不收取任何费用，不投放任何广告，不收集个人隐私数据。
+  </div>
+</div>
+
+<footer>
+  <p>太阳花弱视训练 · 让每一双眼睛都看见清晰的世界</p>
+  <p style="margin-top:6px;">公益项目 · 免费使用 · 无商业广告 · <a href="index.html">返回首页</a></p>
+</footer>
+
+<div class="toast" id="toast">已复制到剪贴板 ✓</div>
+
+<script>
+// 复制小红书号
+function copyXhsId(){
+  var id = '159173545';
+  var btn = document.getElementById('copyBtn');
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(id).then(function(){
+      onCopyOk(btn);
+    }).catch(function(){
+      fallbackCopy(id, btn);
+    });
+  } else {
+    fallbackCopy(id, btn);
+  }
+}
+function fallbackCopy(text, btn){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); onCopyOk(btn); }
+  catch(e){ showToast('复制失败，请手动选择'); }
+  document.body.removeChild(ta);
+}
+function onCopyOk(btn){
+  btn.classList.add('copied');
+  btn.innerHTML = '✓ 已复制';
+  showToast('小红书号 159173545 已复制');
+  setTimeout(function(){
+    btn.classList.remove('copied');
+    btn.innerHTML = '📋 复制';
+  }, 2200);
+}
+function showToast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2000);
+}
+
+// SW
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}
+</script>
+</body>
+</html>

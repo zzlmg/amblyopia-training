@@ -2,7 +2,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>舒尔特方格 · 弱视训练</title>
+<title>舒尔特方格 · 太阳花弱视训练</title>
 <link rel="manifest" href="manifest.json">
 <style>
 /* ===== Reset & Base ===== */
@@ -10,60 +10,44 @@
 html{font-size:16px;height:100%}
 body{
   font-family:'PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif;
-  background:#EDE7F6; color:#333; min-height:100%;
-  display:flex; flex-direction:column; align-items:center;
+  background:#EDE7F6; color:#333;
+  height:100vh; width:100vw; overflow:hidden;
+  display:flex; flex-direction:column;
   -webkit-tap-highlight-color:transparent;
   user-select:none; -webkit-user-select:none;
 }
 
 /* ===== Top Bar ===== */
 .top-bar{
-  width:100%; max-width:960px; display:flex;
-  align-items:center; justify-content:space-between;
-  padding:16px 20px; flex-shrink:0;
+  position:absolute; top:0; left:0; right:0; height:38px; z-index:10;
+  background:rgba(92,107,192,0.25); backdrop-filter:blur(6px);
+  display:flex; align-items:center; justify-content:space-between; padding:0 12px;
 }
 .back-link{
-  text-decoration:none; color:#5C6BC0; font-weight:600;
-  font-size:15px; display:flex; align-items:center; gap:6px;
+  text-decoration:none; color:#3F51B5; font-weight:600;
+  font-size:14px; display:flex; align-items:center; gap:4px;
 }
 .back-link:hover{opacity:0.8}
-
-/* ===== Game Header ===== */
-.game-header{
-  width:100%; max-width:960px; text-align:center;
-  padding:0 20px 10px; flex-shrink:0;
+.top-bar-right{
+  display:flex; align-items:center; gap:10px;
 }
-.game-header h1{
-  font-size:1.6rem; color:#3F51B5; margin-bottom:4px;
-  display:flex; align-items:center; justify-content:center; gap:10px;
+.timer-display{
+  font-size:14px; font-weight:700; color:#3F51B5;
+  background:rgba(255,255,255,0.7); border-radius:10px;
+  padding:3px 10px; min-width:50px; text-align:center;
 }
-.game-header .sub{font-size:0.82rem;color:#7986CB}
+.sound-btn{
+  cursor:pointer; font-size:16px; padding:2px 4px;
+  border-radius:6px; background:rgba(255,255,255,0.5);
+  width:28px; height:28px; display:flex; align-items:center; justify-content:center;
+}
 
 /* ===== Canvas Wrap ===== */
 .canvas-wrap{
-  position:relative; width:100%; max-width:960px;
-  aspect-ratio:960/540; background:#F5F0FF;
-  border-radius:20px; overflow:hidden;
-  box-shadow:0 8px 32px rgba(92,107,192,0.15);
-  margin:0 20px; flex-shrink:0; outline:2px solid #D1C4E9;
+  flex:1; width:100%; position:relative; overflow:hidden;
+  background:#F5F0FF; outline:2px solid #D1C4E9;
   touch-action:manipulation;
 }
-
-/* ===== HUD ===== */
-.hud{
-  width:100%; max-width:960px; display:flex;
-  justify-content:center; align-items:center; gap:20px;
-  padding:8px 20px; flex-shrink:0;
-}
-.hud-item{
-  display:flex; align-items:center; gap:6px;
-  background:rgba(92,107,192,0.1); border-radius:12px;
-  padding:6px 14px;
-}
-.hud-label{font-size:0.75rem;color:#5C6BC0;font-weight:600}
-.hud-value{font-size:1.1rem;font-weight:700;color:#3F51B5;min-width:36px;text-align:center}
-.hud-value.next{color:#FF6D00;animation:pulse-next 1.5s ease-in-out infinite}
-@keyframes pulse-next{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
 
 /* ===== Grating Canvas ===== */
 #gratingCanvas{
@@ -75,10 +59,9 @@ body{
 #gridContainer{
   position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
   display:grid; gap:10px; z-index:2;
-  /* grid-template set by JS */
 }
 .grid-cell{
-  background:rgba(255,255,255,0.94);
+  background:rgba(255,255,255,0.97);
   border:2.5px solid #D1C4E9; border-radius:14px;
   display:flex; align-items:center; justify-content:center;
   font-weight:800; color:#3F51B5;
@@ -111,11 +94,20 @@ body{
 }
 .grid-cell.disabled{pointer-events:none;opacity:0.7}
 
-/* ===== Diff Selector ===== */
-.diff-row{
-  width:100%; max-width:960px; display:flex;
-  justify-content:center; gap:10px; padding:8px 20px; flex-shrink:0;
+/* ===== Overlays ===== */
+.overlay{
+  position:absolute; inset:0; background:rgba(237,231,246,0.94);
+  display:flex; align-items:center; justify-content:center;
+  z-index:20; backdrop-filter:blur(6px);
 }
+.overlay.hidden{display:none}
+.overlay-card{
+  text-align:center; padding:36px; max-width:380px;
+}
+.overlay-card .icon-big{font-size:3.5rem;display:block;margin-bottom:8px}
+.overlay-card h2{font-size:1.4rem;color:#3F51B5;margin-bottom:10px}
+.overlay-card p{font-size:0.88rem;color:#666;margin-bottom:8px;line-height:1.5}
+.diff-select{display:flex;gap:8px;justify-content:center;margin:14px 0}
 .diff-btn{
   padding:8px 18px; border-radius:24px; border:2px solid #D1C4E9;
   background:#FFF; color:#5C6BC0; font-size:0.82rem;
@@ -125,11 +117,6 @@ body{
 .diff-btn:hover{background:#EDE7F6}
 .diff-btn.active{background:#5C6BC0;color:#FFF;border-color:#5C6BC0}
 
-/* ===== Btn Row ===== */
-.btn-row{
-  width:100%; max-width:960px; display:flex;
-  justify-content:center; gap:14px; padding:10px 20px; flex-shrink:0;
-}
 .btn-go{
   padding:10px 32px; border-radius:28px; border:none;
   background:linear-gradient(135deg,#5C6BC0,#3F51B5);
@@ -140,40 +127,6 @@ body{
 .btn-go:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(92,107,192,0.4)}
 .btn-go:active{transform:translateY(0)}
 .btn-go:disabled{opacity:0.5;cursor:not-allowed;pointer-events:none}
-.btn-outline{
-  padding:10px 28px; border-radius:28px; border:2px solid #5C6BC0;
-  background:transparent; color:#5C6BC0; font-size:0.95rem;
-  font-weight:600; cursor:pointer; transition:all 0.2s;
-  text-decoration:none; display:inline-flex;align-items:center;gap:6px;
-}
-.btn-outline:hover{background:#EDE7F6}
-
-/* ===== Training Tips Card ===== */
-.tips-card{
-  width:100%; max-width:960px; background:#FFF;
-  border-radius:16px; padding:16px 20px; margin:6px 20px;
-  box-shadow:0 2px 12px rgba(92,107,192,0.08);
-  display:flex; align-items:flex-start; gap:10px;
-  font-size:0.82rem; color:#666; line-height:1.6; flex-shrink:0;
-}
-.tips-card .tip-icon{font-size:1.3rem;flex-shrink:0;margin-top:2px}
-.tips-card .warn{color:#EF5350;font-weight:600}
-
-/* ===== Overlays ===== */
-.overlay{
-  position:absolute; inset:0; background:rgba(237,231,246,0.94);
-  display:flex; align-items:center; justify-content:center;
-  z-index:20; backdrop-filter:blur(6px); border-radius:20px;
-}
-.overlay.hidden{display:none}
-.overlay-card{
-  text-align:center; padding:36px; max-width:380px;
-}
-.overlay-card .icon-big{font-size:3.5rem;display:block;margin-bottom:8px}
-.overlay-card h2{font-size:1.4rem;color:#3F51B5;margin-bottom:10px}
-.overlay-card p{font-size:0.88rem;color:#666;margin-bottom:8px;line-height:1.5}
-.diff-select{display:flex;gap:8px;justify-content:center;margin:14px 0}
-.diff-select .diff-btn{font-size:0.8rem}
 
 /* ===== End Result Card ===== */
 .result-card{text-align:center}
@@ -193,66 +146,23 @@ body{
 
 /* ===== Toast ===== */
 .toast{
-  position:fixed;top:20px;left:50%;transform:translateX(-50%);
+  position:fixed;top:50px;left:50%;transform:translateX(-50%);
   background:#3F51B5;color:#FFF;padding:10px 24px;
   border-radius:24px;font-weight:700;font-size:0.9rem;
   z-index:100; opacity:0; transition:opacity 0.3s;
   pointer-events:none;
 }
 .toast.show{opacity:1}
-
-/* ===== Responsive ===== */
-@media(max-width:640px){
-  .top-bar{padding:12px 14px}
-  .back-link{font-size:13px}
-  .game-header h1{font-size:1.3rem}
-  .canvas-wrap{margin:0 10px;border-radius:14px}
-  .hud{gap:10px;padding:6px 10px}
-  .hud-item{padding:5px 10px}
-  .diff-btn{padding:6px 14px;font-size:0.76rem}
-  .btn-go{padding:8px 24px;font-size:0.9rem}
-  .tips-card{margin:4px 10px;padding:12px 14px;font-size:0.76rem}
-  .overlay-card{padding:24px}
-  #gridContainer{gap:6px}
-  .grid-cell{border-radius:10px}
-}
 </style>
 </head>
 <body>
 
 <!-- Top Bar -->
 <div class="top-bar">
-  <a href="index.html" class="back-link">← 返回科普站</a>
-  <a href="index.html#games" class="back-link">← 训练游戏</a>
-  <a href="progress.html" class="back-link">← 训练进度</a>
-</div>
-
-<!-- Game Header -->
-<div class="game-header">
-  <h1>🔢 舒尔特方格</h1>
-  <div class="sub">视觉搜索 · 中心凹注视 · 抗干扰扫描</div>
-</div>
-
-<!-- Difficulty Selector -->
-<div class="diff-row" id="diffRow">
-  <button class="diff-btn active" data-diff="easy">3×3 入门</button>
-  <button class="diff-btn" data-diff="medium">4×4 初级</button>
-  <button class="diff-btn" data-diff="hard">5×5 进阶</button>
-</div>
-
-<!-- HUD -->
-<div class="hud">
-  <div class="hud-item">
-    <span class="hud-label">得分</span>
-    <span class="hud-value" id="hudScore">0</span>
-  </div>
-  <div class="hud-item">
-    <span class="hud-label">计时</span>
-    <span class="hud-value" id="hudTimer">2:00</span>
-  </div>
-  <div class="hud-item" id="hudNextWrap">
-    <span class="hud-label">下一个</span>
-    <span class="hud-value next" id="hudNext">1</span>
+  <a href="index.html#games" class="back-link">&#8592; 返回游戏</a>
+  <div class="top-bar-right">
+    <span class="timer-display" id="hudTimer">2:00</span>
+    <span class="sound-btn" id="soundToggle" onclick="toggleSound()" title="音效">🔊</span><a href="contact.html" style="font-size:15px;text-decoration:none;margin-left:6px;color:var(--blue)" title="联系我们">📬</a>
   </div>
 </div>
 
@@ -293,14 +203,7 @@ body{
   </div>
 </div>
 
-<!-- Tips Card -->
-<div class="tips-card" id="tipsCard">
-  <span class="tip-icon">💡</span>
-  <div>
-    <b>训练要点：</b>眼睛聚焦方格中心，用余光定位数字位置。<br>
-    <span class="warn">单局 ≤3分钟 · 全天训练 ≤15分钟 · 结束后远眺5分钟</span>
-  </div>
-</div>
+<div class="toast" id="toast"></div>
 
 <script>
 /* ============================================================
@@ -339,7 +242,7 @@ let diff = 'easy';
 let cfg = DIFFICULTY[diff];
 
 /* ── State ── */
-let grid = [];           // flat array: { value, x, y, done }
+let grid = [];
 let nextTarget = 1;
 let score = 0;
 let totalClicks = 0;
@@ -351,16 +254,23 @@ let animId = null;
 let timerInterval = null;
 let gratingOffset = 0;
 let lastGratingTime = 0;
-let gratingMode = 0;          // 0=竖条纹, 1=横条纹
-let gratingModeTimer = 0;     // accumulated seconds for mode switch
+let gratingMode = 0;
+let gratingModeTimer = 0;
 
 /* ── Audio ── */
 let audioCtx = null;
+let soundOn = true;
 function getAudioCtx() {
   if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
   return audioCtx;
 }
+function toggleSound(){
+  soundOn = !soundOn;
+  document.getElementById('soundToggle').textContent = soundOn ? '🔊' : '🔇';
+  if(soundOn) getAudioCtx();
+}
 function playCorrect() {
+  if(!soundOn) return;
   try {
     const ac = getAudioCtx();
     const t = ac.currentTime;
@@ -371,6 +281,7 @@ function playCorrect() {
   } catch(e) {}
 }
 function playWrong() {
+  if(!soundOn) return;
   try {
     const ac = getAudioCtx();
     const t = ac.currentTime;
@@ -381,10 +292,11 @@ function playWrong() {
   } catch(e) {}
 }
 function playVictory() {
+  if(!soundOn) return;
   try {
     const ac = getAudioCtx();
     const t = ac.currentTime;
-    const notes = [523,659,784,1047]; // C5 E5 G5 C6
+    const notes = [523,659,784,1047];
     notes.forEach((f,i) => {
       const osc = ac.createOscillator(); osc.type='sine'; osc.frequency.value=f;
       const gain = ac.createGain(); gain.gain.setValueAtTime(0.2,t+i*0.12); gain.gain.exponentialRampToValueAtTime(0.01,t+i*0.12+0.25);
@@ -394,6 +306,7 @@ function playVictory() {
   } catch(e) {}
 }
 function playTimeout() {
+  if(!soundOn) return;
   try {
     const ac = getAudioCtx();
     const t = ac.currentTime;
@@ -419,17 +332,16 @@ function drawGrating(timestamp) {
   const dt = Math.min((timestamp - lastGratingTime) / 1000, 0.1);
   lastGratingTime = timestamp;
 
-  const SPEED = 200; // px/s — unified across all difficulties
-  const OPACITY = 1.0; // pure black for max clinical grating contrast
+  const SPEED = 200;
+  const OPACITY = 1.0;
   const STRIPE_W = 20;
-  const MODE_INTERVAL = 5; // switch pattern every 5 seconds
+  const MODE_INTERVAL = 8;
 
-  // Track mode timer
   if (running) {
     gratingModeTimer += dt;
     if (gratingModeTimer >= MODE_INTERVAL) {
       gratingModeTimer = 0;
-      gratingMode = (gratingMode + 1) % 2; // 0=竖条纹, 1=横条纹
+      gratingMode = (gratingMode + 1) % 2;
     }
   }
 
@@ -438,16 +350,14 @@ function drawGrating(timestamp) {
   const w = gratingCanvas.width, h = gratingCanvas.height;
   gctx.clearRect(0, 0, w, h);
 
-  const sz = STRIPE_W * 2; // full period = dark + light stripe
+  const sz = STRIPE_W * 2;
 
   if (gratingMode === 0) {
-    // Vertical stripes
     for (let x = -gratingOffset; x < w; x += sz) {
       gctx.fillStyle = 'rgba(0,0,0,' + OPACITY + ')';
       gctx.fillRect(x, 0, STRIPE_W, h);
     }
   } else if (gratingMode === 1) {
-    // Horizontal stripes
     for (let y = -gratingOffset; y < h; y += sz) {
       gctx.fillStyle = 'rgba(0,0,0,' + OPACITY + ')';
       gctx.fillRect(0, y, w, STRIPE_W);
@@ -474,7 +384,6 @@ function generateGrid(n) {
   const values = [];
   for (let i = 1; i <= total; i++) values.push(i);
 
-  // Fisher-Yates shuffle
   for (let i = values.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [values[i], values[j]] = [values[j], values[i]];
@@ -499,9 +408,9 @@ function renderGrid() {
   const cellPx = cfg.cellSize;
   container.style.gridTemplateColumns = `repeat(${n}, ${cellPx}px)`;
   container.style.gridTemplateRows = `repeat(${n}, ${cellPx}px)`;
-  container.style.gap = '10px';
+  // 医学修正: 困难档格间距+2px，缓解弱视拥挤效应
+  container.style.gap = (n >= 5 ? 12 : 10) + 'px';
 
-  // Calculate container bounds to center it
   const totalW = n * cellPx + (n - 1) * 10;
   const totalH = n * cellPx + (n - 1) * 10;
   container.style.width = totalW + 'px';
@@ -529,7 +438,6 @@ function renderGrid() {
     container.appendChild(div);
   });
 
-  // Update cell references
   const allCells = container.querySelectorAll('.grid-cell');
   sortedByPos.forEach((cell, i) => {
     cell._el = allCells[i];
@@ -543,43 +451,26 @@ function handleCellClick(cell, el) {
   totalClicks++;
 
   if (cell.value === nextTarget) {
-    // Correct!
     correctClicks++;
     score += 10;
     cell.done = true;
     el.classList.add('correct');
     playCorrect();
 
-    updateHUD();
-
     if (nextTarget === cfg.n * cfg.n) {
-      // All done!
       completed = true;
       endGame(true);
     } else {
       nextTarget++;
-      updateHUD();
     }
   } else {
-    // Wrong
     el.classList.add('wrong');
     setTimeout(() => el.classList.remove('wrong'), 400);
     playWrong();
   }
 }
 
-/* ── Update HUD ── */
-function updateHUD() {
-  document.getElementById('hudScore').textContent = score;
-  document.getElementById('hudNext').textContent = nextTarget;
-
-  if (nextTarget > cfg.n * cfg.n) {
-    document.getElementById('hudNext').textContent = '✓';
-    document.getElementById('hudNext').classList.remove('next');
-    document.getElementById('hudNextWrap').querySelector('.hud-label').textContent = '完成';
-  }
-}
-
+/* ── Update Timer Display ── */
 function updateTimer() {
   const m = Math.floor(timeLeft / 60);
   const s = timeLeft % 60;
@@ -594,7 +485,6 @@ function animate(timestamp) {
 
 /* ── Game Loop ── */
 function startGame() {
-  // Reset state
   score = 0;
   totalClicks = 0;
   correctClicks = 0;
@@ -606,21 +496,16 @@ function startGame() {
   gratingMode = 0;
   gratingModeTimer = 0;
 
-  // Hide overlays
   document.getElementById('startOverlay').classList.add('hidden');
   document.getElementById('coverOverlay').classList.add('hidden');
   document.getElementById('endOverlay').classList.add('hidden');
 
-  // Disable diff buttons during game
-  document.querySelectorAll('.diff-btn').forEach(b => b.disabled = true);
+  document.querySelectorAll('#diffSelect .diff-btn').forEach(b => b.disabled = true);
 
-  // Generate & render
   generateGrid(cfg.n);
   renderGrid();
-  updateHUD();
   updateTimer();
 
-  // Start timer
   if (timerInterval) clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     timeLeft--;
@@ -630,7 +515,6 @@ function startGame() {
     }
   }, 1000);
 
-  // Start grating animation
   if (animId) cancelAnimationFrame(animId);
   animId = requestAnimationFrame(animate);
 }
@@ -641,20 +525,17 @@ function endGame(finished) {
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   if (animId) { cancelAnimationFrame(animId); animId = null; }
 
-  // Disable grid
   document.querySelectorAll('#gridContainer .grid-cell').forEach(el => {
     el.classList.add('disabled');
   });
 
-  // Re-enable diff buttons
-  document.querySelectorAll('.diff-btn').forEach(b => b.disabled = false);
+  document.querySelectorAll('#diffSelect .diff-btn').forEach(b => b.disabled = false);
 
   const n = cfg.n;
   const total = n * n;
   const accuracy = totalClicks > 0 ? Math.round(correctClicks / totalClicks * 100) : 0;
   const timeTaken = TOTAL_TIME - timeLeft;
 
-  // Rating
   let stars = 0, ratingText = '';
   if (finished) {
     const completionPercent = correctClicks / total;
@@ -672,7 +553,6 @@ function endGame(finished) {
 
   if (finished) playVictory(); else playTimeout();
 
-  // Build result card
   const starEmoji = {1:'⭐',2:'⭐⭐',3:'⭐⭐⭐'};
   const icons = {3:'🏆',2:'🎯',1:'💪'};
 
@@ -691,7 +571,6 @@ function endGame(finished) {
 
   document.getElementById('endOverlay').classList.remove('hidden');
 
-  // Save progress
   saveGameResult('schulte-grid', {
     score: score,
     hits: correctClicks,
@@ -699,8 +578,6 @@ function endGame(finished) {
     duration: timeTaken,
     difficulty: diff
   });
-
-  // Retry — defined as global function for onclick
 }
 function restartGame() {
   document.getElementById('endOverlay').classList.add('hidden');
@@ -708,39 +585,20 @@ function restartGame() {
 }
 
 /* ── Event Listeners ── */
-// Difficulty buttons (both in overlay and in page)
 document.querySelectorAll('#diffSelect .diff-btn').forEach(btn => {
   btn.addEventListener('click', function() {
     document.querySelectorAll('#diffSelect .diff-btn').forEach(b => b.classList.remove('active'));
     this.classList.add('active');
     diff = this.dataset.diff;
     cfg = DIFFICULTY[diff];
-    // Sync with page buttons
-    document.querySelectorAll('#diffRow .diff-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.diff === diff);
-    });
-  });
-});
-document.querySelectorAll('#diffRow .diff-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
-    document.querySelectorAll('#diffRow .diff-btn').forEach(b => b.classList.remove('active'));
-    this.classList.add('active');
-    diff = this.dataset.diff;
-    cfg = DIFFICULTY[diff];
-    // Sync with overlay buttons
-    document.querySelectorAll('#diffSelect .diff-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.diff === diff);
-    });
   });
 });
 
-// Start button
 document.getElementById('btnStart').addEventListener('click', () => {
   document.getElementById('startOverlay').classList.add('hidden');
   document.getElementById('coverOverlay').classList.remove('hidden');
 });
 
-// Ready button
 document.getElementById('btnReady').addEventListener('click', startGame);
 
 /* ── Initialize ── */
@@ -748,17 +606,15 @@ function init() {
   resize();
   window.addEventListener('resize', resize);
 
-  // Draw initial grating (vertical stripes, idle state)
   const STRIPE_W = 20, OP = 1.0;
   for (let x = 0; x < gratingCanvas.width; x += STRIPE_W * 2) {
     gctx.fillStyle = 'rgba(0,0,0,' + OP + ')';
     gctx.fillRect(x, 0, STRIPE_W, gratingCanvas.height);
   }
 
-  // Generate initial grid preview
   generateGrid(cfg.n);
   renderGrid();
-  updateHUD();
+  updateTimer();
   resetGridDisplay();
 }
 

@@ -3,28 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>弱视训练公益站 — 让每一双眼睛都看见清晰的世界</title>
-<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
-<link rel="apple-touch-icon" sizes="192x192" href="assets/icons/icon-192.png">
-<link rel="apple-touch-icon" sizes="512x512" href="assets/icons/icon-512.png">
+<title>太阳花弱视训练 — 让每一双眼睛都看见清晰的世界</title>
 <link rel="manifest" href="manifest.json">
 <style>
   :root {
-    --blue: #4da6ff;
-    --blue-light: #e6f2ff;
-    --pink: #ff6b9d;
-    --pink-light: #fff0f5;
-    --green: #45c4a0;
-    --green-light: #e6faf5;
-    --orange: #ffa940;
-    --orange-light: #fff7e6;
-    --purple: #9b7ef0;
-    --purple-light: #f3efff;
-    --yellow: #ffd43b;
-    --yellow-light: #fffbe6;
-    --text: #3a3a4a;
-    --text-muted: #7a7a8a;
-    --bg: #fefdf8;
+    /* ── 向日葵品牌色 ── */
+    --blue: #F9A825;        /* 花瓣金 — 主色/链接/导航 */
+    --blue-light: #FFF8E1;  /* 主色浅底 */
+    --pink: #EF6C00;        /* 暖橙 — 强调/CTA渐变 */
+    --pink-light: #FFF3E0;  /* 暖橙浅底 */
+    --green: #388E3C;       /* 叶绿 — 成功/正面 */
+    --green-light: #E8F5E9; /* 叶绿浅底 */
+    --orange: #F57C00;      /* 深橙 — 积分/等级 */
+    --orange-light: #FFF3E0;/* 深橙浅底 */
+    --purple: #1976D2;      /* 蓝(眼罩) — 按钮渐变/辅助色 */
+    --purple-light: #E3F2FD;/* 蓝浅底 */
+    --yellow: #FFD54F;      /* 亮黄 — 阳光/微量高亮 */
+    --yellow-light: #FFFDE7;/* 亮黄浅底 */
+    --text: #3E2723;        /* 深棕 — 正文字(暖调) */
+    --text-muted: #8D6E63;  /* 浅棕 — 辅助文字 */
+    --bg: #FFFBF0;          /* 暖白底 */
     --card-bg: #ffffff;
     --radius: 24px;
     --radius-sm: 16px;
@@ -56,7 +54,7 @@
     position: sticky; top: 0; z-index: 100;
     background: rgba(255,255,255,0.88);
     backdrop-filter: blur(20px);
-    border-bottom: 2px solid #ffe8cc;
+    border-bottom: 2px solid #F0E6C8;
   }
   .nav-inner {
     max-width: 1100px; margin: 0 auto;
@@ -69,10 +67,11 @@
   }
   .nav-logo .logo-eye {
     width: 36px; height: 36px; border-radius: 50%;
-    background: linear-gradient(135deg, #4da6ff, #9b7ef0);
+    background: url('logo.png') center/cover no-repeat;
     display: flex; align-items: center; justify-content: center;
-    color: #fff; font-size: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   }
+  .nav-logo .logo-eye-text { display: none; }
   .nav-logo span { color: var(--text-muted); font-weight: 400; font-size: 14px; }
   .nav-links { display: flex; gap: 28px; list-style: none; }
   .nav-links a {
@@ -85,6 +84,25 @@
   }
   .nav-links a:hover { color: var(--blue); }
   .nav-links a:hover::after { width: 100%; }
+
+  /* ── Hamburger Menu ── */
+  .nav-toggle { display: none; background: none; border: none; font-size: 24px; cursor: pointer; padding: 4px 8px; color: var(--text); line-height: 1; }
+  @media (max-width: 640px) {
+    .nav-toggle { display: block; }
+    .nav-links { display: none; position: absolute; top: 60px; left: 0; right: 0; background: rgba(255,255,255,0.97); backdrop-filter: blur(20px); padding: 8px 0; flex-direction: column; gap: 0; border-bottom: 2px solid #f0f0f5; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+    .nav-links.open { display: flex; }
+    .nav-links li { border-bottom: 1px solid #f5f5fa; }
+    .nav-links a { display: block; padding: 14px 24px; font-size: 16px; }
+    .nav-links a::after { display: none; }
+  }
+
+  /* ── Accessibility ── */
+  :focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; border-radius: 4px; }
+  a:focus-visible, button:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; border-radius: 8px; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+    .bg-deco { display: none; }
+  }
 
   .hero {
     position: relative; z-index: 1;
@@ -115,14 +133,24 @@
   }
   .hero .btn {
     display: inline-block;
-    background: linear-gradient(135deg, #4da6ff, #6c5ce7);
+    background: linear-gradient(135deg, var(--blue), var(--pink));
     color: #fff; padding: 16px 44px; border-radius: 50px;
     text-decoration: none; font-size: 18px; font-weight: 700;
     transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 6px 24px rgba(77,166,255,0.35);
+    box-shadow: 0 6px 24px rgba(249,168,37,0.35);
     position: relative;
   }
-  .hero .btn:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(77,166,255,0.5); }
+  .hero .btn:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(249,168,37,0.5); }
+
+  /* ── Path bar ── */
+  .path-bar{max-width:1100px;margin:0 auto 32px;padding:12px 20px;position:relative;z-index:1}
+  .path-bar-inner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 20px;border-radius:var(--radius-sm);background:var(--green-light);border:2px solid var(--green);font-size:14px;font-weight:600}
+  .path-bar-inner.new{background:var(--blue-light);border-color:var(--blue)}
+  .path-bar-inner .path-stage{color:var(--green);font-size:15px}
+  .path-bar-inner.new .path-stage{color:var(--blue)}
+  .path-bar a{color:var(--text-muted);font-size:13px;text-decoration:none;margin-left:auto;white-space:nowrap}
+  .path-bar a:hover{color:var(--blue)}
+  @media(max-width:640px){.path-bar{padding:12px 16px}.path-bar-inner{gap:6px;font-size:13px}}
 
   @keyframes twinkle {
     0%, 100% { opacity: 0.4; transform: scale(0.8); }
@@ -326,25 +354,49 @@
     background: #fff; border-radius: 24px; padding: 30px 22px; text-align: center;
     border: 2px solid #f0f0f5; transition: transform 0.25s, box-shadow 0.25s;
     animation: float 3s ease-in-out infinite;
+    position:relative; text-decoration:none; color:inherit; display:block;
   }
-  .game-card:nth-child(2) { animation-delay: 0.2s; }
-  .game-card:nth-child(3) { animation-delay: 0.4s; }
-  .game-card:nth-child(4) { animation-delay: 0.15s; }
-  .game-card:nth-child(5) { animation-delay: 0.35s; }
-  .game-card:nth-child(6) { animation-delay: 0.25s; }
-  .game-card:nth-child(7) { animation-delay: 0.1s; }
-  .game-card:nth-child(8) { animation-delay: 0.3s; }
   .game-card:hover { transform: translateY(-6px); box-shadow: 0 12px 32px rgba(0,0,0,0.08); animation-play-state: paused; }
-  .game-icon {
-    font-size: 44px; margin-bottom: 14px;
-    display: inline-block; animation: twinkle 2s ease-in-out infinite;
-  }
+  .game-icon { font-size: 44px; margin-bottom: 14px; display: inline-block; }
   .game-card h3 { font-size: 18px; margin-bottom: 8px; font-weight: 700; }
   .game-card p { font-size: 14px; color: var(--text-muted); }
-  .game-tag {
-    display: inline-block; margin-top: 10px; padding: 4px 12px;
-    border-radius: 50px; font-size: 12px; font-weight: 600;
-  }
+  .game-tag { display: inline-block; margin-top: 10px; padding: 4px 12px; border-radius: 50px; font-size: 12px; font-weight: 600; }
+
+  /* ── Stage Layout ── */
+  .stage-group { margin-bottom: 32px; padding: 28px 24px; background: var(--card-bg); border-radius: var(--radius); border: 2px solid #f0f0f5; transition: border-color 0.3s; }
+  .stage-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 2px dashed #f0f0f5; flex-wrap:wrap; }
+  .stage-badge { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; color: #fff; flex-shrink: 0; }
+  .stage-badge.s1 { background: var(--blue); }
+  .stage-badge.s2 { background: var(--green); }
+  .stage-badge.s3 { background: var(--orange); }
+  .stage-badge.s4 { background: var(--purple); }
+  .stage-badge.s5 { background: var(--pink); }
+  .stage-badge.s6 { background: var(--yellow); color: var(--text); }
+  .stage-name { font-size: 19px; font-weight: 700; color: var(--text); }
+  .stage-desc { font-size: 14px; color: var(--text-muted); margin-left: auto; text-align: right; max-width: 240px; line-height: 1.5; }
+  .stage-games { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
+
+  /* ── Quiz Banner ── */
+  .quiz-banner { display: flex; align-items: center; gap: 16px; padding: 20px 24px; background: linear-gradient(135deg, var(--blue-light) 0%, var(--purple-light) 100%); border-radius: var(--radius); margin-bottom: 28px; border: 2px solid var(--blue-light); flex-wrap: wrap; }
+  .quiz-banner-icon { font-size: 36px; flex-shrink: 0; }
+  .quiz-banner-text { flex: 1; min-width: 180px; }
+  .quiz-banner-text strong { display: block; font-size: 16px; color: var(--text); margin-bottom: 4px; }
+  .quiz-banner-text span { font-size: 13px; color: var(--text-muted); }
+  .quiz-banner-btn { display: inline-block; padding: 10px 28px; background: linear-gradient(135deg, var(--blue), var(--pink)); color: #fff; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 15px; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 16px rgba(249,168,37,0.3); white-space:nowrap; }
+  .quiz-banner-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(249,168,37,0.45); }
+
+  /* ── Stage result banner ── */
+  .stage-result { display: none; padding: 16px 20px; border-radius: 16px; margin-bottom: 24px; text-align: center; font-weight: 600; font-size: 14px; }
+
+  /* ── Recommendation badges ── */
+  .game-card.recommended { border-color: var(--green) !important; box-shadow: 0 0 16px rgba(69,196,160,0.18); }
+  .game-card.recommended::after { content: "✓"; position: absolute; top: 10px; right: 14px; width: 24px; height: 24px; border-radius: 50%; background: var(--green); color: #fff; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; z-index: 2; }
+  .game-card.not-recommended { opacity: 0.58; filter: grayscale(0.12); }
+  .game-card.not-recommended:hover { opacity: 0.88; filter: grayscale(0); }
+  .lock-badge { position: absolute; top: 10px; right: 14px; font-size: 16px; z-index: 2; }
+  .lock-tooltip { display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: rgba(58,58,74,0.9); color: #fff; font-size: 11px; padding: 4px 10px; border-radius: 8px; white-space: nowrap; z-index: 10; pointer-events: none; }
+  .lock-badge:hover + .lock-tooltip { display: block; }
+  .game-card.placeholder { opacity: 0.5; border-style: dashed; cursor: default; pointer-events: none; animation: none; }
 
   footer {
     position: relative; z-index: 1;
@@ -352,16 +404,15 @@
     text-align: center; font-size: 14px; color: var(--text-muted);
   }
   footer .disclaimer {
-    background: #fffbe6; border: 2px solid #ffe066;
+    background: #FFF8E1; border: 2px solid #FFE082;
     border-radius: var(--radius-sm); padding: 20px 24px;
     margin-bottom: 24px; text-align: left; font-size: 14px; line-height: 1.7;
   }
-  footer .disclaimer strong { color: #e6a800; font-size: 15px; }
+  footer .disclaimer strong { color: #F57C00; font-size: 15px; }
 
   @media (max-width: 640px) {
     .hero h1 { font-size: 30px; }
     .hero p { font-size: 16px; }
-    .nav-links { display: none; }
     section { padding: 48px 16px; }
     .section-title { font-size: 26px; }
     .bg-section, .bg-section-warm { padding: 48px 16px !important; border-radius: 24px; }
@@ -369,14 +420,18 @@
     .cta h2 { font-size: 24px; }
     .cards { grid-template-columns: 1fr; }
     .game-cards { grid-template-columns: repeat(2, 1fr); }
+    .stage-games { grid-template-columns: repeat(2, 1fr); }
     .method-grid { grid-template-columns: repeat(2, 1fr); }
     .tl-item { padding: 18px 16px 18px 70px; }
+    .stage-quiz-banner { flex-direction: column; text-align: center; }
+    .stage-header { flex-wrap: wrap; }
+    .stage-desc { margin-left: 0; text-align: left; width: 100%; }
   }
 </style>
 </head>
 <body>
 
-<h2 class="sr-only">弱视训练公益站 — 科普知识、家庭训练指南与小游戏导航</h2>
+<h2 class="sr-only">太阳花弱视训练 — 科普知识、家庭训练指南与小游戏导航</h2>
 
 <div class="bg-deco" aria-hidden="true">
   <div class="dot" style="width:200px;height:200px;background:#4da6ff;top:8%;left:-60px;opacity:0.06;"></div>
@@ -389,17 +444,22 @@
 <nav>
   <div class="nav-inner">
     <div class="nav-logo">
-      <div class="logo-eye">&#x1f441;</div>
-      弱视训练公益站
+      <div class="logo-eye"><span class="logo-eye-text">&#x1f441;</span></div>
+      太阳花弱视训练
       <span>| 专业 · 免费 · 无广告</span>
     </div>
-    <ul class="nav-links">
+    <ul class="nav-links" id="navLinks">
       <li><a href="#what">认识弱视</a></li>
       <li><a href="#timeline">治疗时机</a></li>
       <li><a href="#training">家庭训练</a></li>
       <li><a href="#myths">常见误区</a></li>
+      <li><a href="assessment.html">训练路径</a></li>
       <li><a href="#games">训练游戏</a></li>
+      <li><a href="contact.html">联系我们</a></li>
     </ul>
+    <button class="nav-toggle" id="navToggle" aria-label="打开导航菜单" onclick="document.getElementById('navLinks').classList.toggle('open');
+      this.setAttribute('aria-label',document.getElementById('navLinks').classList.contains('open')?'关闭导航菜单':'打开导航菜单');
+      this.textContent=document.getElementById('navLinks').classList.contains('open')?'✕':'☰'">☰</button>
   </div>
 </nav>
 
@@ -418,6 +478,8 @@
   <p>弱视是可以治疗的。抓住黄金时期，用科学的方法坚持训练，孩子的视力可以重获新生。这个网站，就是你的免费助手。</p>
   <a href="#what" class="btn">开始了解</a>
 </header>
+
+<div class="path-bar" id="pathBar"></div>
 
 <section id="what">
   <div style="text-align:center;margin-bottom:20px;">
@@ -597,119 +659,29 @@
 
 <section id="games" class="bg-section">
   <div style="text-align:center;margin-bottom:20px;">
-    <span class="section-badge" style="background:#fff7e6;color:#ffa940;">游戏</span>
+    <span class="section-badge" style="background:var(--blue-light);color:var(--blue);">游戏</span>
   </div>
   <h2 class="section-title">训练小游戏</h2>
-  <p class="section-sub">把治疗变成游戏，让孩子主动参与、快乐训练</p>
+  <p class="section-sub">按阶段选择，循序渐进效果更好</p>
 
-  <div class="game-cards">
-    <a href="whack-a-mole.html" class="game-card" style="text-decoration:none;color:inherit;display:block;">
-      <div class="game-icon">&#x1f3af;</div>
-      <h3>打地鼠</h3>
-      <p>视觉追踪 · 动态目标锁定</p>
-      <span class="game-tag" style="background:#fff7e6;color:#ffa940;">训练追踪力</span>
-    </a>
-    <a href="spot-the-difference.html" class="game-card">
-      <div class="game-icon">&#x1f50d;</div>
-      <h3>找不同</h3>
-      <p>对比敏感度 · 细节辨别</p>
-      <span class="game-tag" style="background:#fff0f5;color:#ff6b9d;">训练分辨力</span>
-    </a>
-    <a href="matching-game.html" class="game-card">
-      <div class="game-icon">&#x1f517;</div>
-      <h3>连连看</h3>
-      <p>精细目力 · 图形识别</p>
-      <span class="game-tag" style="background:#e6f2ff;color:#4da6ff;">训练精细力</span>
-    </a>
-    <a href="maze-game.html" class="game-card">
-      <div class="game-icon">&#x1f300;</div>
-      <h3>走迷宫</h3>
-      <p>空间定位 · 持续专注</p>
-      <span class="game-tag" style="background:#e6faf5;color:#45c4a0;">训练专注力</span>
-    </a>
-    <a href="chase-the-light.html" class="game-card">
-      <div class="game-icon">&#x2728;</div>
-      <h3>追光点</h3>
-      <p>平滑追随 · 周边视野</p>
-      <span class="game-tag" style="background:#f3efff;color:#9b7ef0;">训练追随力</span>
-    </a>
-    <a href="fly-swatter.html" class="game-card">
-      <div class="game-icon">&#x1f4a5;</div>
-      <h3>打苍蝇</h3>
-      <p>精细刺激 · 快速反应</p>
-      <span class="game-tag" style="background:#fff0e6;color:#ff6b35;">训练反应力</span>
-    </a>
-    <a href="zombie-whacker.html" class="game-card">
-      <div class="game-icon">&#x1f9df;</div>
-      <h3>打僵尸</h3>
-      <p>精细刺激 · 手眼协调</p>
-      <span class="game-tag" style="background:#e8f5e9;color:#43a047;">训练反应力</span>
-    </a>
-    <a href="schulte-grid.html" class="game-card">
-      <div class="game-icon">&#x1f522;</div>
-      <h3>舒尔特方格</h3>
-      <p>视觉搜索 · 注意力训练</p>
-      <span class="game-tag" style="background:#e8eaf6;color:#5C6BC0;">训练专注力</span>
-    </a>
-    <a href="zombie-schulte-grid.html" class="game-card">
-      <div class="game-icon">&#x1F9DF;</div>
-      <h3>僵尸舒尔特</h3>
-      <p>网格扫视 · 破防挑战</p>
-      <span class="game-tag" style="background:#ffebee;color:#C62828;">进阶训练</span>
-    </a>
-    <a href="blueberry-flash.html" class="game-card">
-      <div class="game-icon" style="background:linear-gradient(135deg,#9b7ef0,#7B1FA2);">&#x26A1;</div>
-      <h3>电击蓝莓</h3>
-      <p>闪描训练 · 螺旋追踪</p>
-      <span class="game-tag" style="background:#f3e8ff;color:#7B1FA2;">CAM 条栅</span>
-    </a>
-    <a href="gabor-orientation.html" class="game-card">
-      <div class="game-icon" style="background:linear-gradient(135deg,#FFD54F,#FF9800);">&#x1F33B;</div>
-      <h3>葵神辨向</h3>
-      <p>Gabor 朝向 · 视觉辨别</p>
-      <span class="game-tag" style="background:#fff8e1;color:#E65100;">新品上线</span>
-    </a>
-    <a href="aloe-detective.html" class="game-card">
-      <div class="game-icon" style="background:linear-gradient(135deg,#81C784,#2E7D32);">&#x1F50D;</div>
-      <h3>芦荟探踪</h3>
-      <p>噪声掩蔽 · 朝向辨别</p>
-      <span class="game-tag" style="background:#e8f5e9;color:#2E7D32;">新品上线</span>
-    </a>
-    <a href="C1-E-contrast.html" class="game-card">
-      <div class="game-icon" style="background:linear-gradient(135deg,#888,#444);">&#x1F441;</div>
-      <h3>辨E</h3>
-      <p>对比敏感度 · E字辨别</p>
-      <span class="game-tag" style="background:#eee;color:#555;">新品上线</span>
-    </a>
-    <a href="find-fireflies.html" class="game-card">
-      <div class="game-icon" style="position:relative;width:50px;height:58px;background:transparent;display:inline-flex;align-items:center;justify-content:center">
-        <!-- CSS萤火虫 -->
-        <div style="position:relative;width:34px;height:44px">
-          <div style="position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:26px;height:26px;border-radius:50%;background:radial-gradient(circle,#FFD54F 0%,#FFB300 30%,rgba(255,179,0,0.3) 60%,transparent 100%);animation:firefly-card-glow 1.5s ease-in-out infinite alternate"></div>
-          <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:14px;height:20px;border-radius:50% 50% 40% 40%;background:linear-gradient(180deg,#FF9800,#E65100);z-index:3"></div>
-          <div style="position:absolute;top:2px;left:50%;transform:translateX(-50%);width:11px;height:9px;border-radius:50%;background:#5D4037;z-index:4"></div>
-          <div style="position:absolute;top:5px;width:13px;height:16px;background:rgba(100,180,220,0.5);border-radius:60% 60% 20% 20%;border:1px solid rgba(120,200,240,0.25);z-index:2;left:2px;transform:rotate(-15deg)"></div>
-          <div style="position:absolute;top:5px;width:13px;height:16px;background:rgba(100,180,220,0.5);border-radius:60% 60% 20% 20%;border:1px solid rgba(120,200,240,0.25);z-index:2;right:2px;transform:rotate(15deg)"></div>
-        </div>
-      </div>
-      <style>@keyframes firefly-card-glow{0%{opacity:0.5;transform:translateX(-50%) scale(0.85)}100%{opacity:1;transform:translateX(-50%) scale(1.25)}}</style>
-      <h3>寻找萤火虫</h3>
-      <p>CSF对比度 · 点目标检测</p>
-      <span class="game-tag" style="background:rgba(255,224,130,0.12);color:#FFD54F;">新品上线</span>
-    </a>
-    <div class="game-card">
-      <div class="game-icon">&#x1f9e9;</div>
-      <h3>更多即将上线</h3>
-      <p>立体视觉 · 双眼融合</p>
-      <span class="game-tag" style="background:#fffbe6;color:#e6a800;">持续开发中</span>
+  <!-- 测评横幅 -->
+  <div class="quiz-banner" id="quizBanner">
+    <span class="quiz-banner-icon">🏥</span>
+    <div class="quiz-banner-text">
+      <strong>开始前先测：娃在第几阶？</strong>
+      <span>5 题快速测评 · 获取个性化训练计划</span>
     </div>
+    <a href="assessment.html" class="quiz-banner-btn">开始测评</a>
   </div>
 
-  <div class="cta" style="margin-top:56px;">
+  <div class="stage-result" id="stageResultBanner"></div>
+  <div id="stageGroupsContainer"><div style="text-align:center;padding:20px;color:var(--text-muted);">加载训练路径中...</div></div>
+
+<div class="cta" style="margin-top:56px;">
     <h2>训练不枯燥，游戏来帮忙</h2>
     <p>每个游戏背后都有医学原理支撑，每次点击都在为视力康复助力。</p>
     <a href="whack-a-mole.html" class="btn-cta">开始玩打地鼠</a>
-    <a href="progress.html" class="btn-cta" style="background:linear-gradient(135deg,#9b7ef0,#7c5cbf);margin-left:12px;">📊 查看训练进度</a>
+    <a href="progress.html" class="btn-cta" style="background:linear-gradient(135deg,var(--purple),var(--blue));margin-left:12px;">📊 查看训练进度</a>
   </div>
 </section>
 
@@ -718,10 +690,97 @@
     <strong>免责声明</strong><br>
     本网站提供的内容仅供科普参考，不能替代专业医疗诊断、治疗或建议。弱视的诊断和治疗应由眼科医生进行。在使用本网站任何训练工具前，请先咨询专业眼科医生，确认是否适合您的孩子。本网站为公益性质，不收取任何费用，不提供医疗咨询服务。
   </div>
-  <p>弱视训练公益站 · 让每一双眼睛都看见清晰的世界</p>
+  <p style="margin-bottom:14px;font-size:14px;"><a href="contact.html" style="color:var(--blue);text-decoration:none;font-weight:600;">📬 联系我们：公众号回复"弱视网站" · 小红书 @石凯瑞 · 反馈建议 →</a></p>
+  <p>太阳花弱视训练 · 让每一双眼睛都看见清晰的世界</p>
   <p style="margin-top:6px;">公益项目 · 免费使用 · 无商业广告</p>
 </footer>
 
+<script>
+/* ── 阶段化游戏布局 ── */
+var STAGE_CONFIG = [
+  { id:1, name:'第一阶', subtitle:'单眼基础', desc:'遮盖健眼 · 弱视眼单独练',
+    color:'s1', link:'stage-1.html',
+    games:[{name:'打地鼠',icon:'🎯',href:'whack-a-mole.html',tag:'视觉追踪'},
+           {name:'打苍蝇',icon:'💥',href:'fly-swatter.html',tag:'精细刺激'},
+           {name:'打僵尸',icon:'🧟',href:'zombie-whacker.html',tag:'精细刺激'},
+           {name:'连连看',icon:'🔗',href:'matching-game.html',tag:'精细目力'},
+           {name:'走迷宫',icon:'🌀',href:'maze-game.html',tag:'手眼协调'}] },
+  { id:2, name:'第二阶', subtitle:'视觉提升', desc:'干扰背景下看得稳',
+    color:'s2', link:'stage-2.html',
+    games:[{name:'舒尔特方格',icon:'🔢',href:'schulte-grid.html',tag:'视觉搜索'},
+           {name:'追光点',icon:'✨',href:'chase-the-light.html',tag:'平滑追随'},
+           {name:'找不同',icon:'🔍',href:'spot-the-difference.html',tag:'对比辨别'},
+           {name:'对齐大师',icon:'📏',href:'vernier-line.html',tag:'游标锐度'},
+           {name:'闪烁侦探',icon:'💡',href:'flash-spotter.html',tag:'时间分辨'}] },
+  { id:3, name:'第三阶', subtitle:'脱抑制', desc:'双眼开始合作',
+    color:'s3', link:'stage-3.html',
+    games:[{name:'双眼探点',icon:'🔴',href:'dichoptic-dots.html',tag:'脱抑制入门'},
+           {name:'追光泡泡',icon:'🫧',href:'bubble-chase.html',tag:'动态追踪'},
+           {name:'融色大师',icon:'🧩',href:'fusion-color.html',tag:'双眼融合'},
+           {name:'电击蓝莓',icon:'⚡',href:'blueberry-flash.html',tag:'CAM光栅'},
+           {name:'僵尸舒尔特',icon:'🧟',href:'zombie-schulte-grid.html',tag:'抗干扰搜索'},
+           {name:'双眼拼图',icon:'👓',href:'binocular-puzzle.html',tag:'双眼分视'}] },
+  { id:4, name:'第四阶', subtitle:'精细辨别', desc:'V1 + 对比敏感度',
+    color:'s4', link:'stage-4.html',
+    games:[{name:'葵神辨向',icon:'🌻',href:'gabor-orientation.html',tag:'Gabor朝向'},
+           {name:'芦荟探踪',icon:'🔍',href:'aloe-detective.html',tag:'噪声掩蔽'},
+           {name:'辨E',icon:'👁',href:'C1-E-contrast.html',tag:'对比敏感度'},
+           {name:'寻找萤火虫',icon:'🔥',href:'find-fireflies.html',tag:'CSF检测'},
+           {name:'拥挤挑战',icon:'🏙',href:'crowding-breaker.html',tag:'抗拥挤'}] },
+  { id:5, name:'第五阶', subtitle:'立体巩固', desc:'深度+自由训练',
+    color:'s5', link:'stage-5.html',
+    games:[{name:'浮出来的形状',icon:'🎯',href:'depth-pop.html',tag:'RDS立体视'},
+           {name:'谁在前谁在后',icon:'🦋',href:'depth-order.html',tag:'深度排序'},
+           {name:'玩具箱',icon:'🧸',href:'stereo-match.html',tag:'立体视配对'}] }
+];
+
+function getPathData(){try{var d=JSON.parse(localStorage.getItem('lazyeye_path'));if(d&&d.stage)return d}catch(e){}return null}
+function renderPathBar(){
+  var bar=document.getElementById('pathBar'), path=getPathData();
+  if(path&&path.stage>=1&&path.stage<=5){
+    var stages=['','第一阶·单眼基础','第二阶·视觉提升','第三阶·脱抑制','第四阶·精细辨别','第五阶·立体巩固'];
+    var games=path.games.slice(0,3).map(function(g){return g.charAt(0).toUpperCase()+g.slice(1)}).join(' → ');
+    bar.innerHTML='<div class="path-bar-inner">📍 <span class="path-stage">当前：'+stages[path.stage]+'</span> · 推荐 '+games+' <a href="assessment.html">换阶段</a></div>';
+  }else{
+    bar.innerHTML='<div class="path-bar-inner new">💡 第一次来？<span class="path-stage">5题快速测评，找到娃的训练起点</span> <a href="assessment.html">开始前先测 →</a></div>';
+  }
+}
+
+function renderStageGroups(){
+  var container=document.getElementById('stageGroupsContainer'), path=getPathData(), userStage=path?path.stage:null;
+  var r=document.getElementById('stageResultBanner'), SN=['','第一阶·单眼基础','第二阶·视觉提升','第三阶·脱抑制','第四阶·精细辨别','第五阶·立体巩固'];
+  if(userStage){r.style.display='block';r.style.background='#e6faf5';r.style.border='2px solid var(--green)';
+    r.innerHTML='✅ 当前推荐：<strong>'+SN[userStage]+'</strong> · <a href="assessment.html" style="color:var(--blue)">重新测评</a>';
+  }
+  var html='';
+  STAGE_CONFIG.forEach(function(stage){
+    html+='<div class="stage-group"><div class="stage-header">'+
+      '<a href="'+stage.link+'" style="text-decoration:none;display:flex;align-items:center;gap:12px;flex:1;min-width:0">'+
+      '<div class="stage-badge '+stage.color+'">'+stage.id+'</div>'+
+      '<div class="stage-name">'+stage.name+' · '+stage.subtitle+'</div></a>'+
+      '<div class="stage-desc">'+stage.desc+'</div></div><div class="stage-games">';
+    stage.games.forEach(function(g){
+      var status='normal';
+      if(userStage){if(stage.id===userStage)status='recommended';else if(stage.id>userStage)status='not-recommended'}
+      var cls='';if(status==='recommended')cls=' recommended';else if(status==='not-recommended')cls=' not-recommended';
+      html+='<a href="'+g.href+'" class="game-card'+cls+'" aria-label="'+g.name+' — '+g.tag+'" style="text-decoration:none;color:inherit;display:block">';
+      if(status==='not-recommended')html+='<span class="lock-badge" title="建议先完成第'+userStage+'阶">🔒</span><div class="lock-tooltip">建议先完成第'+userStage+'阶</div>';
+      html+='<div class="game-icon">'+g.icon+'</div><h3>'+g.name+'</h3><p>'+g.tag+'</p></a>';
+    });
+    html+='</div></div>';
+  });
+  container.innerHTML=html;
+}
+renderPathBar();renderStageGroups();
+// 手机端点击导航链接后自动关闭菜单
+document.getElementById('navLinks').addEventListener('click',function(e){
+  if(e.target.tagName==='A'){
+    document.getElementById('navLinks').classList.remove('open');
+    document.getElementById('navToggle').textContent='☰';
+    document.getElementById('navToggle').setAttribute('aria-label','打开导航菜单');
+  }
+});
+</script>
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}</script>
 </body>
 </html>

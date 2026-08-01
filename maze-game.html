@@ -14,72 +14,48 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
-    background: linear-gradient(180deg, #e6fff0 0%, #fefdf8 30%, #e6f2ff 70%, #fefdf8 100%);
-    min-height: 100vh; color: var(--text); overflow-x: hidden;
-    display: flex; flex-direction: column; align-items: center;
-    user-select: none; -webkit-user-select: none;
+    background: #f5f3ed;
+    height: 100vh; width: 100vw; overflow: hidden;
+    display: flex; flex-direction: column;
+    color: var(--text); user-select: none; -webkit-user-select: none;
     touch-action: none;
   }
 
-  .top-bar {
-    width: 100%; max-width: 560px; display: flex;
-    align-items: center; justify-content: space-between;
-    padding: 16px 20px;
+  /* ── 浮动顶栏 ── */
+  .floating-bar {
+    position: absolute; top: 0; left: 0; right: 0; height: 38px; z-index: 10;
+    background: rgba(0,0,0,0.18); backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 12px;
   }
-  .back-link {
-    text-decoration: none; color: var(--green); font-weight: 600; font-size: 15px;
-    display: flex; align-items: center; gap: 6px;
+  .floating-bar .back-link {
+    text-decoration: none; color: #fff; font-weight: 600; font-size: 14px;
+    opacity: 0.9; display: flex; align-items: center; gap: 4px;
   }
-  .back-link:hover { opacity: 0.8; }
+  .floating-bar .bar-right {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .floating-bar .bar-timer {
+    color: #fff; font-size: 15px; font-weight: 700;
+    background: rgba(255,255,255,0.2); padding: 2px 10px;
+    border-radius: 10px; display: none;
+  }
+  .floating-bar .bar-sound {
+    background: none; border: none; color: #fff; font-size: 16px;
+    cursor: pointer; padding: 2px 4px; line-height: 1; opacity: 0.9;
+  }
+  .floating-bar .bar-sound.muted { opacity: 0.4; }
 
-  .game-header {
-    text-align: center; padding: 8px 20px 16px;
-  }
-  .game-header h1 {
-    font-size: 30px; font-weight: 800; margin-bottom: 4px;
-    background: linear-gradient(135deg, #45c4a0, #4da6ff);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  }
-  .game-header .sub {
-    font-size: 15px; color: var(--text-muted);
-  }
-
-  .hud {
-    width: 100%; max-width: 560px; display: flex;
-    justify-content: center; gap: 16px; padding: 0 20px 12px;
-  }
-  .hud-item {
-    background: #fff; border-radius: 16px; padding: 10px 18px;
-    border: 2px solid #f0f0f5; text-align: center; min-width: 80px;
-  }
-  .hud-label { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
-  .hud-value { font-size: 22px; font-weight: 800; }
-  .hud-value.score { color: var(--orange); }
-  .hud-value.mazes { color: var(--green); }
-  .hud-value.time { color: var(--blue); }
-
-  .difficulty-selector {
-    display: flex; gap: 10px; justify-content: center;
-    padding: 8px 20px 16px; flex-wrap: wrap;
-  }
-  .diff-btn {
-    padding: 10px 22px; border-radius: 50px;
-    border: 2px solid #e0e0e8; background: #fff;
-    font-size: 15px; font-weight: 700; cursor: pointer;
-    transition: all 0.2s; color: var(--text-muted);
-  }
-  .diff-btn:hover { border-color: var(--green); color: var(--green); }
-  .diff-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
-
+  /* ── 游戏区域 ── */
   .game-wrapper {
-    width: 100%; max-width: 560px; padding: 0 20px;
-    display: flex; justify-content: center; flex-direction: column; align-items: center;
+    flex: 1; width: 100%; display: flex; align-items: center;
+    justify-content: center; padding: 50px 20px 20px;
   }
   .canvas-container {
     position: relative; width: 100%; max-width: 400px;
     border-radius: 24px; overflow: hidden;
     box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-    background: #fafbfc;
+    background: #e8e0d5;
     touch-action: none;
   }
   canvas {
@@ -87,10 +63,32 @@
     touch-action: none;
   }
 
-  .btn-row {
-    display: flex; gap: 12px; justify-content: center;
-    padding: 16px 20px 24px; flex-wrap: wrap;
+  /* ── 遮罩层 ── */
+  .overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    animation: fadeIn 0.2s ease-out;
   }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .overlay-card {
+    background: #fff; border-radius: 28px; padding: 32px 28px;
+    max-width: 400px; width: 90%; text-align: center;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+    animation: modalIn 0.3s ease-out;
+  }
+  @keyframes modalIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .overlay-card h2 { font-size: 24px; font-weight: 800; margin-bottom: 12px; }
+  .overlay-card p { font-size: 15px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6; }
+  .overlay-card .highlight {
+    background: #fff7e6; padding: 12px 16px; border-radius: 14px;
+    border: 2px solid #ffe066; margin-bottom: 20px;
+    font-size: 14px; color: #ba7517; font-weight: 600;
+  }
+
   .btn {
     padding: 14px 36px; border-radius: 50px; border: none;
     font-size: 17px; font-weight: 700; cursor: pointer;
@@ -102,49 +100,21 @@
     color: #fff; box-shadow: 0 4px 16px rgba(69,196,160,0.35);
   }
   .btn-start:hover { box-shadow: 0 6px 24px rgba(69,196,160,0.5); }
-  .btn-start:disabled {
-    background: #ccc; box-shadow: none; cursor: not-allowed; color: #888;
-  }
 
-  .progress-bar-outer {
-    width: 100%; max-width: 560px; height: 8px;
-    background: #f0f0f5; border-radius: 4px; margin: 0 auto 8px; overflow: hidden;
+  /* 难度选择器（在 startOverlay 内） */
+  .diff-selector-inline {
+    display: flex; gap: 8px; justify-content: center;
+    margin-bottom: 16px; flex-wrap: wrap;
   }
-  .progress-bar-inner {
-    height: 100%; border-radius: 4px;
-    background: linear-gradient(90deg, #45c4a0, #4da6ff);
-    transition: width 0.3s linear;
+  .diff-btn {
+    padding: 8px 18px; border-radius: 50px;
+    border: 2px solid #e0e0e8; background: #fff;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    transition: all 0.2s; color: var(--text-muted);
   }
-  .progress-text {
-    text-align: center; font-size: 13px; color: var(--text-muted);
-    margin-bottom: 8px;
-  }
+  .diff-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
 
-  .modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5); z-index: 200;
-    display: flex; align-items: center; justify-content: center;
-    animation: fadeIn 0.2s ease-out;
-  }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  .modal {
-    background: #fff; border-radius: 28px; padding: 32px 28px;
-    max-width: 400px; width: 90%; text-align: center;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
-    animation: modalIn 0.3s ease-out;
-  }
-  @keyframes modalIn {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-  .modal h2 { font-size: 24px; font-weight: 800; margin-bottom: 12px; }
-  .modal p { font-size: 15px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6; }
-  .modal .highlight {
-    background: #fff7e6; padding: 12px 16px; border-radius: 14px;
-    border: 2px solid #ffe066; margin-bottom: 20px;
-    font-size: 14px; color: #ba7517; font-weight: 600;
-  }
-
+  /* ── 结果弹窗 ── */
   .result-card {
     background: #fff; border-radius: 28px; padding: 32px 28px;
     max-width: 420px; width: 90%; text-align: center;
@@ -165,63 +135,63 @@
   }
 
   @media (max-width: 420px) {
-    .hud { gap: 8px; flex-wrap: wrap; }
-    .hud-item { padding: 8px 12px; min-width: 60px; }
-    .hud-value { font-size: 18px; }
-    .game-header h1 { font-size: 24px; }
+    .canvas-container { max-width: 320px; }
   }
 </style>
 </head>
 <body>
 
-<div class="top-bar">
-  <a href="index.html" class="back-link">&#8592; 返回科普站</a>
-  <a href="index.html#games" class="back-link">&#8592; 训练游戏</a>
-  <a href="progress.html" class="back-link">📊 训练进度</a>
-</div>
-
-<div class="game-header">
-  <h1>走迷宫</h1>
-  <p class="sub">精细目力与手眼协调训练 · 用手指引导小球穿过迷宫</p>
-</div>
-
-<div class="difficulty-selector" id="diffSelector">
-  <button class="diff-btn active" data-diff="easy">简单</button>
-  <button class="diff-btn" data-diff="medium">中等</button>
-  <button class="diff-btn" data-diff="hard">困难</button>
-</div>
-
-<div class="hud">
-  <div class="hud-item">
-    <div class="hud-label">得分</div>
-    <div class="hud-value score" id="scoreDisplay">0</div>
-  </div>
-  <div class="hud-item">
-    <div class="hud-label">通过</div>
-    <div class="hud-value mazes" id="mazeDisplay">0</div>
-  </div>
-  <div class="hud-item">
-    <div class="hud-label">时间</div>
-    <div class="hud-value time" id="timeDisplay">2:00</div>
+<!-- 浮动顶栏 -->
+<div class="floating-bar">
+  <a href="index.html#games" class="back-link">&#8592; 返回游戏</a>
+  <div class="bar-right">
+    <span class="bar-timer" id="barTimer">2:00</span>
+    <button class="bar-sound" id="barSound" onclick="toggleSound()" title="音效">&#x1f50a;</button>
+    <a href="contact.html" style="font-size:14px;text-decoration:none;color:var(--blue);margin-left:4px" title="联系我们">📬</a>
   </div>
 </div>
 
-<div class="progress-bar-outer">
-  <div class="progress-bar-inner" id="progressBar" style="width:0%"></div>
-</div>
-<p class="progress-text" id="progressText">准备开始 &mdash; 用手指拖动小球，从 起点 走到 终点</p>
-
-<div class="btn-row">
-  <button class="btn btn-start" id="btnStart" onclick="startGame()">开始训练</button>
-</div>
-
+<!-- 游戏区域 -->
 <div class="game-wrapper">
   <div class="canvas-container" id="canvasContainer">
     <canvas id="mazeCanvas"></canvas>
   </div>
 </div>
 
-<div id="modalContainer"></div>
+<!-- 开始遮罩（包含难度选择+遮盖提醒） -->
+<div class="overlay" id="startOverlay">
+  <div class="overlay-card">
+    <h2 style="font-size:28px;background:linear-gradient(135deg,#45c4a0,#4da6ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">走迷宫</h2>
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:14px;">手眼协调训练 · 空间定位 · 用手指拖动小球穿过迷宫</p>
+    <p>选择难度并确认准备事项：</p>
+    <div class="diff-selector-inline" id="diffSelector">
+      <button class="diff-btn active" data-diff="easy">简单</button>
+      <button class="diff-btn" data-diff="medium">中等</button>
+      <button class="diff-btn" data-diff="hard">困难</button>
+    </div>
+    <div class="highlight">
+      &#x1f6d1; 如果医生建议遮盖治疗，请先遮盖<strong>健眼（视力较好的眼睛）</strong><br>
+      让弱视眼独立完成本次训练
+    </div>
+    <p style="font-size:14px;" id="startDiffInfo">
+      难度：<strong>简单</strong> &nbsp; | &nbsp;
+      迷宫：<strong>8×6</strong> &nbsp; | &nbsp;
+      通道宽度：<strong>45px</strong><br>
+      训练时长：<strong>2 分钟</strong> ·
+      保持眼睛与屏幕 30~40cm 距离
+    </p>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">
+      &#x1f4a1; 用手指<strong>按住小球拖动</strong>，穿过迷宫到达终点<br>
+      碰到墙壁会有提示，耐心找到正确路线
+    </p>
+    <button class="btn btn-start" onclick="beginGame()" style="margin-right:8px;">准备好了，开始！</button>
+  </div>
+</div>
+
+<!-- 结束遮罩 -->
+<div class="overlay" id="endOverlay" style="display:none;">
+  <div class="result-card" id="endCard"></div>
+</div>
 
 <script>
   const PROGRESS_KEY='amblyopia_progress';
@@ -233,37 +203,23 @@
   function checkAch(p){const unlocked=new Set(p.achievements.map(a=>a.id));for(const ach of ACH){if(!unlocked.has(ach.id)&&ach.check(p)){p.achievements.push({id:ach.id,unlockedAt:getToday()});}}}
   const TOTAL_TIME = 120;
 
-  // 难度参数（基于精细目力训练临床标准：通道从宽到窄）
+  /* ── 游戏逻辑 ── */
+  /* 医学修正(PMC7764820): 墙壁统一深灰(明度对比优先) · 地板统一暖灰 · 墙-地C≈42% */
   const DIFFICULTY = {
     easy: {
-      label: '简单',
-      cols: 8, rows: 6,
-      cellSize: 48,
-      wallWidth: 3,
-      ballRadius: 15,
-      wallColor: '#7ec8a0',
-      floorColor: '#f5fdf8',
-      label_: 'easy'
+      label: '简单', cols: 8, rows: 6,
+      cellSize: 48, wallWidth: 3, ballRadius: 15,
+      wallColor: '#5a5a5a', floorColor: '#e8e0d5'
     },
     medium: {
-      label: '中等',
-      cols: 12, rows: 9,
-      cellSize: 34,
-      wallWidth: 2.5,
-      ballRadius: 11,
-      wallColor: '#4da6cc',
-      floorColor: '#f5fafe',
-      label_: 'medium'
+      label: '中等', cols: 12, rows: 9,
+      cellSize: 34, wallWidth: 2.5, ballRadius: 11,
+      wallColor: '#5a5a5a', floorColor: '#e8e0d5'
     },
     hard: {
-      label: '困难',
-      cols: 16, rows: 12,
-      cellSize: 26,
-      wallWidth: 2,
-      ballRadius: 8,
-      wallColor: '#9b7ec0',
-      floorColor: '#faf5ff',
-      label_: 'hard'
+      label: '困难', cols: 16, rows: 12,
+      cellSize: 26, wallWidth: 2, ballRadius: 9,
+      wallColor: '#5a5a5a', floorColor: '#e8e0d5'
     }
   };
 
@@ -273,28 +229,50 @@
   let gameRunning = false;
   let timerId = null;
   let audioCtx = null;
+  let soundEnabled = true;
 
-  // 迷宫数据结构
-  let maze = null;          // { rows, cols, cells[r][c] = { top,bottom,left,right } }
-  let ballX = 0, ballY = 0; // 球心在canvas上的绝对像素坐标
-  let goalX = 0, goalY = 0; // 终点格中心
+  let maze = null;
+  let ballX = 0, ballY = 0;
+  let goalX = 0, goalY = 0;
   let startX = 0, startY = 0;
   let cellSize = 0;
   let dragging = false;
-  let trailPoints = [];     // 走过的轨迹
-  let mazeStartTime = 0;    // 当前迷宫开始时的毫秒时间戳
+  let trailPoints = [];
+  let mazeStartTime = 0;
+  let bumpFlash = 0; // 碰壁红色反馈时间戳
 
-  // Canvas 相关
   let canvas, ctx;
   let canvasW = 0, canvasH = 0;
 
-  // ====== 迷宫生成（递归回溯）======
+  function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+  function playBeep(freq, dur, vol = 0.06, type = 'sine') {
+    if (!audioCtx || !soundEnabled) return;
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type; osc.frequency.value = freq;
+      gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + dur);
+    } catch(e) {}
+  }
+  function playBumpSound() { playBeep(150, 0.1, 0.04, 'square'); }
+  function playVictorySound() {
+    playBeep(523, 0.1, 0.06); setTimeout(() => playBeep(659, 0.1, 0.06), 100);
+    setTimeout(() => playBeep(784, 0.15, 0.07), 200); setTimeout(() => playBeep(1047, 0.2, 0.08), 300);
+  }
+  function toggleSound() {
+    soundEnabled = !soundEnabled;
+    document.getElementById('barSound').classList.toggle('muted', !soundEnabled);
+    document.getElementById('barSound').innerHTML = soundEnabled ? '&#x1f50a;' : '&#x1f507;';
+  }
+
   function generateMaze() {
     const diff = DIFFICULTY[currentDiff];
     const { cols, rows } = diff;
     maze = { rows, cols, cells: [] };
 
-    // 初始化：所有墙都存在
     for (let r = 0; r < rows; r++) {
       maze.cells[r] = [];
       for (let c = 0; c < cols; c++) {
@@ -302,7 +280,6 @@
       }
     }
 
-    // 递归回溯
     const stack = [];
     const startCell = { r: 0, c: 0 };
     maze.cells[0][0].visited = true;
@@ -321,13 +298,10 @@
       }
     }
 
-    // 起点：左上角 (0, 0)
     startX = 0; startY = 0;
-    // 终点：右下角 (rows-1, cols-1)
     const gr = rows - 1, gc = cols - 1;
     goalX = gc; goalY = gr;
 
-    // 重置球位置
     resetBallToStart();
     trailPoints = [];
     mazeStartTime = Date.now();
@@ -335,7 +309,7 @@
 
   function getUnvisitedNeighbors(r, c) {
     const neighbors = [];
-    const dirs = [[-1,0,'top','bottom'],[0,1,'right','left'],[1,0,'bottom','top'],[0,-1,'left','right']];
+    const dirs = [[-1,0],[0,1],[1,0],[0,-1]];
     for (const [dr, dc] of dirs) {
       const nr = r + dr, nc = c + dc;
       if (nr >= 0 && nr < maze.rows && nc >= 0 && nc < maze.cols && !maze.cells[nr][nc].visited) {
@@ -358,8 +332,7 @@
   function resetBallToStart() {
     const diff = DIFFICULTY[currentDiff];
     cellSize = diff.cellSize;
-    // 球心在起始格的中央
-    const pad = 2; // 小边距
+    const pad = 2;
     ballX = pad + cellSize / 2;
     ballY = pad + cellSize / 2;
   }
@@ -373,7 +346,6 @@
     return Math.sqrt(dx * dx + dy * dy) < diff.ballRadius + cellSize * 0.4;
   }
 
-  // ====== 渲染 ======
   function setupCanvas() {
     canvas = document.getElementById('mazeCanvas');
     ctx = canvas.getContext('2d');
@@ -394,39 +366,36 @@
 
     ctx.clearRect(0, 0, canvasW, canvasH);
 
-    // 地板
     ctx.fillStyle = floorColor;
     ctx.fillRect(0, 0, canvasW, canvasH);
 
-    // 绘制墙体（每格只画右墙和下墙，避免重复；边界画外框）
-    ctx.strokeStyle = wallColor;
-    ctx.lineWidth = wallWidth;
+    // 墙壁路径（构建一次，绘制两次：外暗描边+内本色）
     ctx.lineCap = 'round';
     ctx.beginPath();
-
-    // 外框
     ctx.rect(pad, pad, cs * cols, cs * rows);
-
-    // 内部墙
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const cell = maze.cells[r][c];
         const x = pad + c * cs, y = pad + r * cs;
         if (cell.right && c < cols - 1) {
-          ctx.moveTo(x + cs, y);
-          ctx.lineTo(x + cs, y + cs);
+          ctx.moveTo(x + cs, y); ctx.lineTo(x + cs, y + cs);
         }
         if (cell.bottom && r < rows - 1) {
-          ctx.moveTo(x, y + cs);
-          ctx.lineTo(x + cs, y + cs);
+          ctx.moveTo(x, y + cs); ctx.lineTo(x + cs, y + cs);
         }
       }
     }
+    // 外描边
+    ctx.strokeStyle = '#2a2a2a';
+    ctx.lineWidth = wallWidth + 2;
+    ctx.stroke();
+    // 墙壁本体
+    ctx.strokeStyle = wallColor;
+    ctx.lineWidth = wallWidth;
     ctx.stroke();
 
-    // 路径轨迹
     if (trailPoints.length > 1) {
-      ctx.strokeStyle = 'rgba(255,180,100,0.35)';
+      ctx.strokeStyle = 'rgba(77,166,255,0.4)';
       ctx.lineWidth = ballRadius * 1.2;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
@@ -438,7 +407,6 @@
       ctx.stroke();
     }
 
-    // 起点标记
     const sx = pad + startX * cs + cs / 2;
     const sy = pad + startY * cs + cs / 2;
     ctx.fillStyle = '#45c4a0';
@@ -451,31 +419,36 @@
     ctx.textBaseline = 'middle';
     ctx.fillText('入', sx, sy);
 
-    // 终点标记
     const gx = pad + goalX * cs + cs / 2;
     const gy = pad + goalY * cs + cs / 2;
-    // 光晕
-    const glowGrad = ctx.createRadialGradient(gx, gy, ballRadius * 0.5, gx, gy, ballRadius * 2);
-    glowGrad.addColorStop(0, 'rgba(255,212,59,0.6)');
-    glowGrad.addColorStop(1, 'rgba(255,212,59,0)');
+    // 医学修正: 终点光晕最小半径24px(困难档也能看见)
+    var glowR = Math.max(ballRadius * 2, 24);
+    const glowGrad = ctx.createRadialGradient(gx, gy, ballRadius * 0.5, gx, gy, glowR);
+    glowGrad.addColorStop(0, 'rgba(255,224,130,0.6)');
+    glowGrad.addColorStop(1, 'rgba(255,224,130,0)');
     ctx.fillStyle = glowGrad;
     ctx.beginPath();
-    ctx.arc(gx, gy, ballRadius * 2, 0, Math.PI * 2);
+    ctx.arc(gx, gy, glowR, 0, Math.PI * 2);
     ctx.fill();
-    // 星形
     drawStar(gx, gy, ballRadius * 1.3, '#ffa940');
 
-    // 小球
+    // 医学修正: 碰壁150ms红色反馈
+    var isFlash = bumpFlash && (performance.now() - bumpFlash < 150);
     const ballGrad = ctx.createRadialGradient(ballX - ballRadius*0.3, ballY - ballRadius*0.3, ballRadius*0.1, ballX, ballY, ballRadius);
-    ballGrad.addColorStop(0, '#ffd43b');
-    ballGrad.addColorStop(0.5, '#ffa940');
-    ballGrad.addColorStop(1, '#e67700');
+    if (isFlash) {
+      ballGrad.addColorStop(0, '#ff6b6d');
+      ballGrad.addColorStop(0.5, '#e53935');
+      ballGrad.addColorStop(1, '#b71c1c');
+    } else {
+      ballGrad.addColorStop(0, '#ffd43b');
+      ballGrad.addColorStop(0.5, '#ffa940');
+      ballGrad.addColorStop(1, '#e67700');
+    }
     ctx.fillStyle = ballGrad;
     ctx.beginPath();
     ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
     ctx.fill();
-    // 小球高光
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillStyle = isFlash ? 'rgba(255,180,180,0.4)' : 'rgba(255,255,255,0.35)';
     ctx.beginPath();
     ctx.arc(ballX - ballRadius*0.25, ballY - ballRadius*0.3, ballRadius*0.35, 0, Math.PI*2);
     ctx.fill();
@@ -497,20 +470,17 @@
     ctx.fill();
   }
 
-  // ====== 碰撞检测 ======
   function collidesWithWall(bx, by) {
     const diff = DIFFICULTY[currentDiff];
     const { cellSize: cs, ballRadius: br, wallWidth: ww } = diff;
     const pad = 2;
     const halfW = ww / 2 + br;
 
-    // 外框
     if (bx - br < pad - halfW) return true;
     if (bx + br > pad + maze.cols * cs + halfW) return true;
     if (by - br < pad - halfW) return true;
     if (by + br > pad + maze.rows * cs + halfW) return true;
 
-    // 判断球所在的格子
     const c = Math.floor((bx - pad) / cs);
     const r = Math.floor((by - pad) / cs);
     if (r < 0 || r >= maze.rows || c < 0 || c >= maze.cols) return false;
@@ -518,13 +488,11 @@
     const cell = maze.cells[r][c];
     const cx = pad + c * cs, cy = pad + r * cs;
 
-    // 检查四面墙（墙是一条线段，球到线段的距离 < halfW 则碰撞）
     if (cell.top    && distToSegment(bx, by, cx, cy, cx + cs, cy) < halfW) return true;
     if (cell.bottom && distToSegment(bx, by, cx, cy + cs, cx + cs, cy + cs) < halfW) return true;
     if (cell.left   && distToSegment(bx, by, cx, cy, cx, cy + cs) < halfW) return true;
     if (cell.right  && distToSegment(bx, by, cx + cs, cy, cx + cs, cy + cs) < halfW) return true;
 
-    // 也检查相邻格的墙（当前格的right就是右边格的left）
     if (c > 0 && maze.cells[r][c-1].right) {
       if (distToSegment(bx, by, cx, cy, cx, cy + cs) < halfW) return true;
     }
@@ -535,7 +503,6 @@
     return false;
   }
 
-  // 点到线段的最短距离
   function distToSegment(px, py, x1, y1, x2, y2) {
     const dx = x2 - x1, dy = y2 - y1;
     const lenSq = dx * dx + dy * dy;
@@ -545,7 +512,6 @@
     return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
   }
 
-  // ====== 交互处理 ======
   function getCanvasPos(e) {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvasW / rect.width;
@@ -573,7 +539,6 @@
     const diff = DIFFICULTY[currentDiff];
     const pos = getCanvasPos(e);
     const dist = Math.hypot(pos.x - ballX, pos.y - ballY);
-    // 触摸点必须在球附近（2倍球半径内）才能拖动
     if (dist < diff.ballRadius * 2.5) {
       dragging = true;
       canvas.style.cursor = 'grabbing';
@@ -601,7 +566,7 @@
 
   function moveBallToward(tx, ty) {
     const diff = DIFFICULTY[currentDiff];
-    const maxStep = diff.cellSize * 0.9; // 每帧最大移动距离
+    const maxStep = diff.cellSize * 0.9;
     const dx = tx - ballX, dy = ty - ballY;
     const dist = Math.hypot(dx, dy);
     if (dist < 0.5) return;
@@ -610,33 +575,24 @@
     const nx = ballX + (dx / dist) * step;
     const ny = ballY + (dy / dist) * step;
 
-    // 先试完整移动
     if (!collidesWithWall(nx, ny)) {
       ballX = nx;
       ballY = ny;
     } else if (!collidesWithWall(nx, ballY)) {
-      // 只水平
       ballX = nx;
-      wallTouches++;
-      playBumpSound();
+      wallTouches++; playBumpSound(); bumpFlash = performance.now();
     } else if (!collidesWithWall(ballX, ny)) {
-      // 只垂直
       ballY = ny;
-      wallTouches++;
-      playBumpSound();
+      wallTouches++; playBumpSound(); bumpFlash = performance.now();
     } else {
-      // 完全卡住 — 轻微反弹
-      wallTouches++;
-      playBumpSound();
+      wallTouches++; playBumpSound(); bumpFlash = performance.now();
     }
 
-    // 记录轨迹（每8px）
     if (trailPoints.length === 0 || 
         Math.hypot(ballX - trailPoints[trailPoints.length-1].x, ballY - trailPoints[trailPoints.length-1].y) > 6) {
       trailPoints.push({ x: ballX, y: ballY });
     }
 
-    // 检查终点
     if (isAtGoal()) {
       onMazeComplete();
     }
@@ -651,7 +607,6 @@
     playVictorySound();
     showMazeCompleteMsg(bonus);
 
-    // 延迟生成新迷宫
     setTimeout(() => {
       if (!gameRunning) return;
       generateMaze();
@@ -664,19 +619,18 @@
   function showMazeCompleteMsg(bonus) {
     const msg = document.createElement('div');
     msg.style.cssText = `
-      position:fixed; top:20%; left:50%; transform:translateX(-50%);
+      position:fixed; top:15%; left:50%; transform:translateX(-50%);
       background: linear-gradient(135deg, #45c4a0, #ffa940);
       color:#fff; padding:12px 28px; border-radius:50px;
       font-size:20px; font-weight:800; z-index:100; pointer-events:none;
       animation: popIn 0.4s ease-out, fadeOut 0.3s 1.2s ease-in forwards;
       white-space: nowrap;
     `;
-    msg.textContent = '🎉 通过！+' + bonus + '分 新迷宫来了';
+    msg.textContent = '通过！+' + bonus + '分 新迷宫来了';
     document.body.appendChild(msg);
     setTimeout(() => msg.remove(), 1600);
   }
 
-  // 注入动画
   const styleEl = document.createElement('style');
   styleEl.textContent = `
     @keyframes popIn { from{opacity:0;transform:translateX(-50%) scale(0.7)} to{opacity:1;transform:translateX(-50%) scale(1)} }
@@ -684,42 +638,17 @@
   `;
   document.head.appendChild(styleEl);
 
-  // ====== 音效 ======
-  function initAudio() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  function playBeep(freq, dur, vol = 0.06, type = 'sine') {
-    if (!audioCtx) return;
-    try {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = type; osc.frequency.value = freq;
-      gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
-      osc.connect(gain); gain.connect(audioCtx.destination);
-      osc.start(); osc.stop(audioCtx.currentTime + dur);
-    } catch(e) {}
-  }
-  function playBumpSound() { playBeep(150, 0.1, 0.04, 'square'); }
-  function playVictorySound() {
-    playBeep(523, 0.1, 0.06); setTimeout(() => playBeep(659, 0.1, 0.06), 100);
-    setTimeout(() => playBeep(784, 0.15, 0.07), 200); setTimeout(() => playBeep(1047, 0.2, 0.08), 300);
-  }
-
-  // ====== HUD ======
-  function updateHUD() {
-    document.getElementById('scoreDisplay').textContent = score;
-    document.getElementById('mazeDisplay').textContent = mazesCompleted;
-    document.getElementById('timeDisplay').textContent = formatTime(timeLeft);
-    document.getElementById('progressBar').style.width = ((TOTAL_TIME - timeLeft) / TOTAL_TIME * 100) + '%';
-  }
   function formatTime(s) {
     const m = Math.floor(s / 60);
     const sec = s % 60;
     return m + ':' + (sec < 10 ? '0' : '') + sec;
   }
 
-  // ====== 游戏控制 ======
+  function updateHUD() {
+    document.getElementById('barTimer').textContent = formatTime(timeLeft);
+  }
+
+  /* ── 游戏控制 ── */
   function startGame() {
     if (gameRunning) return;
     initAudio();
@@ -728,50 +657,34 @@
 
   function showPatchReminder() {
     const diff = DIFFICULTY[currentDiff];
-    const container = document.getElementById('modalContainer');
-    container.innerHTML = `
-      <div class="modal-overlay" id="patchModal">
-        <div class="modal">
-          <h2>开始训练前</h2>
-          <p>请确认以下准备事项：</p>
-          <div class="highlight">
-            &#x1f6d1; 如果医生建议遮盖治疗，请先遮盖<strong>健眼（视力较好的眼睛）</strong><br>
-            让弱视眼独立完成本次训练
-          </div>
-          <p style="font-size:14px;">
-            难度：<strong>${diff.label}</strong> &nbsp; | &nbsp;
-            迷宫：<strong>${diff.cols}×${diff.rows}</strong> &nbsp; | &nbsp;
-            通道宽度：<strong>${diff.cellSize - diff.wallWidth}px</strong><br>
-            训练时长：<strong>2 分钟</strong> ·
-            保持眼睛与屏幕 30~40cm 距离
-          </p>
-          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">
-            &#x1f4a1; 用手指<strong>按住小球拖动</strong>，穿过迷宫到达 ⭐ 终点<br>
-            碰到墙壁会有提示，耐心找到正确路线
-          </p>
-          <button class="btn btn-start" onclick="beginGame()" style="margin-right:8px;">准备好了，开始！</button>
-          <button class="btn" style="background:#fff;color:var(--green);border:2px solid var(--green);" onclick="document.getElementById('patchModal').remove()">返回</button>
-        </div>
-      </div>
+    document.getElementById('startDiffInfo').innerHTML = `
+      难度：<strong>${diff.label}</strong> &nbsp; | &nbsp;
+      迷宫：<strong>${diff.cols}×${diff.rows}</strong> &nbsp; | &nbsp;
+      通道宽度：<strong>${diff.cellSize - diff.wallWidth}px</strong><br>
+      训练时长：<strong>2 分钟</strong> ·
+      保持眼睛与屏幕 30~40cm 距离
     `;
+    document.getElementById('startOverlay').style.display = 'flex';
+  }
+
+  function hideStartOverlay() {
+    document.getElementById('startOverlay').style.display = 'none';
   }
 
   function beginGame() {
-    document.getElementById('modalContainer').innerHTML = '';
+    document.getElementById('startOverlay').style.display = 'none';
+    document.getElementById('endOverlay').style.display = 'none';
     gameRunning = true;
     score = 0; mazesCompleted = 0; wallTouches = 0;
     timeLeft = TOTAL_TIME;
     updateHUD();
-    document.getElementById('btnStart').disabled = true;
-    document.getElementById('btnStart').textContent = '训练中...';
-    document.getElementById('progressText').textContent = '难度：' + DIFFICULTY[currentDiff].label;
-    document.querySelectorAll('.diff-btn').forEach(b => b.style.pointerEvents = 'none');
+    document.getElementById('barTimer').style.display = 'inline-block';
+    document.querySelectorAll('#startOverlay .diff-btn').forEach(b => b.style.pointerEvents = 'auto');
 
     generateMaze();
     setupCanvas();
     render();
 
-    // 绑定事件
     canvas.addEventListener('pointerdown', onPointerDown, { passive: false });
     canvas.addEventListener('pointermove', onPointerMove, { passive: false });
     canvas.addEventListener('pointerup', onPointerUp, { passive: false });
@@ -779,7 +692,6 @@
     canvas.addEventListener('pointercancel', onPointerUp, { passive: false });
     canvas.style.cursor = 'grab';
 
-    // 动画循环
     function animLoop() {
       if (!gameRunning) return;
       render();
@@ -797,10 +709,7 @@
   function endGame() {
     gameRunning = false;
     if (timerId) { clearInterval(timerId); timerId = null; }
-    document.getElementById('btnStart').disabled = false;
-    document.getElementById('btnStart').textContent = '再来一局';
-    document.getElementById('progressText').textContent = '训练完成！';
-    document.querySelectorAll('.diff-btn').forEach(b => b.style.pointerEvents = 'auto');
+    document.getElementById('barTimer').style.display = 'none';
 
     let grade, gradeColor;
     if (mazesCompleted >= 8) { grade = '优秀'; gradeColor = '#45c4a0'; }
@@ -808,46 +717,55 @@
     else if (mazesCompleted >= 3) { grade = '继续加油'; gradeColor = '#ffa940'; }
     else { grade = '需要更多练习'; gradeColor = '#ff6b9d'; }
 
-    const container = document.getElementById('modalContainer');
-    container.innerHTML = `
-      <div class="modal-overlay">
-        <div class="result-card">
-          <div class="result-label">最终得分</div>
-          <div class="result-score">${score}</div>
-          <div style="font-size:18px;font-weight:700;color:${gradeColor};margin-top:8px;">${grade}</div>
-          <div class="result-stat">
-            <div class="result-stat-item">
-              <div class="result-stat-value" style="color:var(--green);">${mazesCompleted}</div>
-              <div class="result-stat-label">通过迷宫</div>
-            </div>
-            <div class="result-stat-item">
-              <div class="result-stat-value" style="color:var(--text);">${wallTouches}</div>
-              <div class="result-stat-label">碰壁次数</div>
-            </div>
-            <div class="result-stat-item">
-              <div class="result-stat-value" style="color:var(--orange);">${score}</div>
-              <div class="result-stat-label">总得分</div>
-            </div>
-          </div>
-          <div class="rest-reminder">
-            <strong>&#x23f0; 休息提醒</strong><br>
-            单次训练建议不超过 30 分钟。请让孩子休息 5~10 分钟后再继续。
-          </div>
-          <button class="btn btn-start" onclick="startGame()" style="margin-right:8px;">再来一局</button>
-          <button class="btn" style="background:#fff;color:var(--green);border:2px solid var(--green);" onclick="document.getElementById('modalContainer').innerHTML=''">关闭</button>
+    document.getElementById('endCard').innerHTML = `
+      <div class="result-label">最终得分</div>
+      <div class="result-score">${score}</div>
+      <div style="font-size:18px;font-weight:700;color:${gradeColor};margin-top:8px;">${grade}</div>
+      <div class="result-stat">
+        <div class="result-stat-item">
+          <div class="result-stat-value" style="color:var(--green);">${mazesCompleted}</div>
+          <div class="result-stat-label">通过迷宫</div>
+        </div>
+        <div class="result-stat-item">
+          <div class="result-stat-value" style="color:var(--text);">${wallTouches}</div>
+          <div class="result-stat-label">碰壁次数</div>
+        </div>
+        <div class="result-stat-item">
+          <div class="result-stat-value" style="color:var(--orange);">${score}</div>
+          <div class="result-stat-label">总得分</div>
         </div>
       </div>
+      <div class="rest-reminder">
+        <strong>&#x23f0; 休息提醒</strong><br>
+        单次训练建议不超过 30 分钟。请让孩子休息 5~10 分钟后再继续。
+      </div>
+      <button class="btn btn-start" onclick="startGame()" style="margin-right:8px;">再来一局</button>
+      <button class="btn" style="background:#fff;color:var(--green);border:2px solid var(--green);" onclick="hideEndOverlay()">关闭</button>
     `;
+    document.getElementById('endOverlay').style.display = 'flex';
+
     saveGameResult('maze-game', {score, mazes:mazesCompleted, difficulty:currentDiff, duration:120});
+  }
+
+  function hideEndOverlay() {
+    document.getElementById('endOverlay').style.display = 'none';
   }
 
   function setDifficulty(diff) {
     if (gameRunning) return;
     currentDiff = diff;
-    document.querySelectorAll('.diff-btn').forEach(b => {
+    document.querySelectorAll('#startOverlay .diff-btn').forEach(b => {
       b.classList.toggle('active', b.dataset.diff === diff);
     });
-    // 预览新难度迷宫
+    const d = DIFFICULTY[diff];
+    document.getElementById('startDiffInfo').innerHTML = `
+      难度：<strong>${d.label}</strong> &nbsp; | &nbsp;
+      迷宫：<strong>${d.cols}×${d.rows}</strong> &nbsp; | &nbsp;
+      通道宽度：<strong>${d.cellSize - d.wallWidth}px</strong><br>
+      训练时长：<strong>2 分钟</strong> ·
+      保持眼睛与屏幕 30~40cm 距离
+    `;
+    // 更新预览
     generateMaze();
     setupCanvas();
     render();
@@ -859,7 +777,7 @@
     }
   });
 
-  // ====== 初始预览 ======
+  // 初始预览
   generateMaze();
   setupCanvas();
   render();

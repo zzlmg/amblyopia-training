@@ -3,17 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>训练进度 · 弱视训练公益站</title>
+<title>训练进度 · 太阳花弱视训练</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root {
-  --blue: #4da6ff;    --blue-light: #e6f2ff;
-  --pink: #ff6b9d;    --pink-light: #fff0f5;
-  --green: #45c4a0;   --green-light: #e6faf5;
-  --orange: #ffa940;  --orange-light: #fff7e6;
-  --purple: #9b7ef0;  --purple-light: #f3efff;
-  --text: #3a3a4a;    --text-muted: #7a7a8a;
-  --bg: #fefdf8;      --card-bg: #ffffff;
+  --blue: #F9A825;    --blue-light: #FFF8E1;
+  --pink: #EF6C00;    --pink-light: #FFF3E0;
+  --green: #388E3C;   --green-light: #E8F5E9;
+  --orange: #F57C00;  --orange-light: #FFF3E0;
+  --purple: #1976D2;  --purple-light: #E3F2FD;
+  --yellow: #FFD54F;  --yellow-light: #FFFDE7;
+  --text: #3E2723;    --text-muted: #8D6E63;
+  --bg: #FFFBF0;      --card-bg: #ffffff;
   --radius: 24px;     --radius-sm: 16px;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -152,6 +153,10 @@ body {
 .empty-state .big-icon { font-size: 4rem; display: block; margin-bottom: 12px; }
 .empty-state p { font-size: 0.95rem; line-height: 1.6; }
 .empty-state a { color: var(--purple); font-weight: 700; }
+/* Accessibility */
+:focus-visible{outline:3px solid var(--blue);outline-offset:3px;border-radius:4px}
+a:focus-visible,button:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:8px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important}}
 </style>
 </head>
 <body>
@@ -159,6 +164,7 @@ body {
 <div class="top-bar">
   <a href="index.html" class="back-link">&#8592; 返回科普站</a>
   <a href="index.html#games" class="back-link">&#8592; 训练游戏</a>
+  <a href="contact.html" class="back-link" style="font-size:13px;color:var(--pink)">📬 联系我们</a>
 </div>
 
 <div class="container">
@@ -222,16 +228,31 @@ const GAME_INFO = {
   'spot-difference':  { name:'找不同',   icon:'🔍', color:'var(--pink)',   stats:['最佳得分','找对','找错'],           keys:['bestScore','totalCorrect','totalWrong'] },
   'matching-game':    { name:'连连看',   icon:'🔗', color:'var(--green)',  stats:['最佳得分','消除对','最高连消'],     keys:['bestScore','totalPairs','bestCombo'] },
   'maze-game':        { name:'走迷宫',   icon:'🌀', color:'var(--orange)', stats:['最佳得分','通过迷宫','最快单次'],   keys:['bestScore','totalMazes','fastestTime'] },
+  'vernier-line':     { name:'对齐大师', icon:'📏', color:'#5D4037',       stats:['最佳得分','正确题','对齐题数'],   keys:['bestScore','totalCorrect','totalClicks'] },
+  'flash-spotter':    { name:'闪烁侦探', icon:'💡', color:'#FFD54F',       stats:['最佳得分','正确题','闪题数'],     keys:['bestScore','totalCorrect','totalClicks'] },
   'chase-the-light':  { name:'追光点',   icon:'✨', color:'var(--purple)', stats:['最佳得分','捕获','最高连击'],       keys:['bestScore','totalCaptures','bestCombo'] },
   'fly-swatter':      { name:'打苍蝇',   icon:'🪰', color:'#FF6B35',       stats:['最佳得分','击杀','逃脱'],           keys:['bestScore','totalKills','totalEscapes'] },
   'zombie-whacker':   { name:'打僵尸',   icon:'🧟', color:'#76FF03',       stats:['最佳得分','击退','溜走'],           keys:['bestScore','totalKills','totalEscapes'] },
   'schulte-grid':     { name:'舒尔特方格', icon:'🔢', color:'#5C6BC0',       stats:['最佳得分','正确','用时(s)'],        keys:['bestScore','totalHits','fastestTime'] },
-  'zombie-schulte-grid':{name:'僵尸舒尔特', icon:'🧟', color:'#C62828',       stats:['最佳得分','准确率','用时(s)'],      keys:['bestScore','bestAcc','bestTime'] }
+  'zombie-schulte-grid':{name:'僵尸舒尔特', icon:'🧟', color:'#C62828',       stats:['最佳得分','准确率','用时(s)'],      keys:['bestScore','bestAcc','bestTime'] },
+  'dichoptic-dots':    { name:'双眼探点', icon:'🔴', color:'#1976D2',     stats:['最佳得分','命中率','点击数'],       keys:['bestScore','bestAcc','totalClicks'] },
+  'bubble-chase':      { name:'追光泡泡', icon:'🫧', color:'#0288D1',     stats:['最佳得分','命中率','点击数'],       keys:['bestScore','bestAcc','totalClicks'] },
+  'fusion-color':      { name:'融色大师', icon:'🧩', color:'#7B1FA2',     stats:['最佳得分','正确题','答题数'],       keys:['bestScore','totalCorrect','totalClicks'] },
+  'blueberry-flash':   { name:'电击蓝莓', icon:'⚡', color:'#7B1FA2',       stats:['最佳得分','击杀','逃脱'],           keys:['bestScore','totalKills','totalEscapes'] },
+  'crowding-breaker':  { name:'拥挤挑战', icon:'🏙', color:'#5D4037',     stats:['最佳得分','正确题','答题数'],       keys:['bestScore','totalCorrect','totalClicks'] },
+  'gabor-orientation': { name:'葵神辨向', icon:'🌻', color:'#E65100',       stats:['最佳得分','正确率','答题数'],       keys:['bestScore','bestAcc','totalCorrect'] },
+  'aloe-detective':    { name:'芦荟探踪', icon:'🔍', color:'#2E7D32',       stats:['最佳得分','命中率','找到数'],       keys:['bestScore','bestAcc','totalCorrect'] },
+  'C1-E-contrast':     { name:'辨E',       icon:'👁', color:'#555',          stats:['最佳得分','正确率','最低对比度'],   keys:['bestScore','bestAcc','bestContrast'] },
+  'find-fireflies':    { name:'寻找萤火虫', icon:'🔥', color:'#FFD54F',     stats:['最佳得分','命中率','找到数'],       keys:['bestScore','bestAcc','totalCaptures'] },
+  'depth-pop':         { name:'浮出来的形状', icon:'🎯', color:'#F9A825',   stats:['最佳得分','正确率','答题数'],       keys:['bestScore','bestAcc','totalCorrect'] },
+  'depth-order':       { name:'谁在前谁在后', icon:'🦋', color:'#EF6C00',   stats:['最佳得分','正确率','答题数'],       keys:['bestScore','bestAcc','totalCorrect'] },
+  'stereo-match':      { name:'玩具箱', icon:'🧸', color:'#F9A825',       stats:['最佳得分','答对','答错'],           keys:['bestScore','totalCorrect','totalWrong'] },
+  'binocular-puzzle':  { name:'双眼拼图', icon:'👓', color:'#1976D2',     stats:['最佳得分','答对','答错'],           keys:['bestScore','totalCorrect','totalWrong'] }
 };
 
 const ACHIEVEMENTS = [
   { id:'first_game',    name:'初次训练',   desc:'完成第一次训练',             icon:'🎯' },
-  { id:'five_games',    name:'广撒网',     desc:'玩过全部6个游戏',            icon:'🎪' },
+  { id:'five_games',    name:'广撒网',     desc:'玩过全部训练游戏',            icon:'🎪' },
   { id:'high_score_200',name:'高分选手',   desc:'任意游戏单次≥200分',         icon:'🏆' },
   { id:'streak_3',      name:'坚持三天',   desc:'连续训练3天',               icon:'🔥' },
   { id:'streak_7',      name:'一周达人',   desc:'连续训练7天',               icon:'💪' },

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>第一阶 · 太阳花弱视训练</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root{--blue:#F9A825;--blue-light:#FFF8E1;--pink:#EF6C00;--pink-light:#FFF3E0;--green:#388E3C;--green-light:#E8F5E9;--purple:#1976D2;--purple-light:#E3F2FD;--text:#3E2723;--text-muted:#8D6E63;--bg:#FFFBF0;--card-bg:#fff;--radius:24px;--radius-sm:16px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:var(--bg);min-height:100vh;line-height:1.7}
+nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.88);backdrop-filter:blur(20px);border-bottom:2px solid #F0E6C8}
+.nav-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:12px 20px}
+.nav-logo{font-size:18px;font-weight:700;color:var(--blue);display:flex;align-items:center;gap:8px}
+.logo-eye{width:36px;height:36px;border-radius:50%;background:url("logo.png") center/cover no-repeat;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.nav-links{display:flex;gap:28px;list-style:none}
+.nav-links a{text-decoration:none;color:var(--text-muted);font-size:15px;font-weight:500}
+.nav-links a:hover{color:var(--blue)}
+.container{max-width:600px;margin:40px auto;padding:0 20px}
+.header{text-align:center;padding:32px 24px;border-radius:var(--radius);margin-bottom:28px}
+.header .s-num{font-size:48px;font-weight:900}
+.header .s-title{font-size:24px;font-weight:800;margin:8px 0}
+.header .s-desc{font-size:14px;opacity:0.85}
+.header .s-explain{font-size:15px;line-height:1.8;margin-top:12px;opacity:0.9}
+.section{margin-bottom:24px}
+.section h3{font-size:16px;font-weight:700;margin-bottom:10px}
+.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.game-card{display:block;text-decoration:none;color:inherit;background:#fff;border-radius:var(--radius-sm);padding:20px 16px;text-align:center;border:2px solid #f0f0f5;transition:transform 0.2s,box-shadow 0.2s}
+.game-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,0.08)}
+.game-card .g-icon{font-size:32px;margin-bottom:8px;display:block}
+.game-card .g-name{font-size:16px;font-weight:700}
+.game-card .g-tag{display:inline-block;margin-top:6px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.info-box.patch{background:#FFF8E1;border-color:#FFE082;border:2px solid #FFE082;border-radius:var(--radius-sm);padding:16px;margin:12px 0;font-size:14px;line-height:1.7}
+.signals-box{background:#fff;border:2px solid #f0f0f5;border-radius:var(--radius-sm);padding:16px;font-size:14px;line-height:1.9}
+.btn-go{display:inline-block;padding:14px 40px;border-radius:50px;font-size:16px;font-weight:700;text-decoration:none;background:linear-gradient(135deg,var(--blue),var(--pink));color:#fff;box-shadow:0 4px 20px rgba(249,168,37,0.4);transition:transform 0.2s;margin:20px 0}
+.btn-go:hover{transform:translateY(-2px)}
+@media(max-width:500px){.games-grid{grid-template-columns:repeat(2,1fr)}.container{padding:0 16px}}
+</style>
+</head>
+<body>
+<nav><div class="nav-inner"><div class="nav-logo"><div class="logo-eye"></div>太阳花弱视训练</div><ul class="nav-links"><li><a href="index.html">首页</a></li><li><a href="index.html#games">训练游戏</a></li><li><a href="assessment.html">训练路径</a></li><li><a href="progress.html">训练进度</a></li><li><a href="contact.html">联系我们</a></li></ul></div></nav>
+<div class="container"><div class="header" style="background:#e6f2ff;border:2px solid #4da6ff"><div class="s-num" style="color:#4da6ff">🎯 第一阶</div><div class="s-title">单眼基础训练</div><div class="s-desc">遮盖健眼，弱视眼单独练</div><div class="s-explain">弱视眼需要单独"练肌肉"——看得准、追得上、分得清。本阶段所有训练<strong>必须遮盖健眼</strong>，仅用弱视眼操作。</div></div>
+<div class="section"><h3>📋 推荐游戏</h3><div class="games-grid">
+<a href="whack-a-mole.html" class="game-card"><span class="g-icon">🎯</span><span class="g-name">打地鼠</span><span class="g-tag" style="background:#e6f2ff;color:#4da6ff">视觉追踪</span></a>
+<a href="fly-swatter.html" class="game-card"><span class="g-icon">💥</span><span class="g-name">打苍蝇</span><span class="g-tag" style="background:#e6f2ff;color:#4da6ff">精细刺激</span></a>
+<a href="zombie-whacker.html" class="game-card"><span class="g-icon">🧟</span><span class="g-name">打僵尸</span><span class="g-tag" style="background:#e6f2ff;color:#4da6ff">精细刺激</span></a>
+<a href="matching-game.html" class="game-card"><span class="g-icon">🔗</span><span class="g-name">连连看</span><span class="g-tag" style="background:#e6f2ff;color:#4da6ff">精细目力</span></a>
+<a href="maze-game.html" class="game-card"><span class="g-icon">🌀</span><span class="g-name">走迷宫</span><span class="g-tag" style="background:#e6f2ff;color:#4da6ff">手眼协调</span></a>
+
+</div></div>
+<div class="section"><div class="info-box patch">⚠ ✅ 遵医嘱遮盖健眼 · 中度弱视建议每天2h · 重度建议每天6h<br>遮盖疗法是弱视治疗的金标准（2025中华医学会共识）</div></div>
+<div class="section"><div class="signals-box"><strong>⏱ 每天 10-15 分钟</strong> · 建议持续 2-4 周<br><br><strong>🔼 进下一阶信号：</strong><br>① 简单档命中率≥80%<br>② 连续3局得分不下降<br>③ 孩子自述"看得更清楚了"</div></div>
+<div style="text-align:center"><a href="index.html#games" class="btn-go">开始训练</a></div>
+<p style="text-align:center;font-size:12px;color:var(--text-muted);padding-bottom:40px">💡 每次训练结束建议休息1-2分钟，远眺窗外</p>
+</div>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js")}</script>
+</body>
+</html>

@@ -20,104 +20,57 @@
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
-    width: 100%; height: 100%;
+    height: 100vh; width: 100vw; overflow: hidden;
+    display: flex; flex-direction: column;
     background: var(--bg);
     font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    overflow: hidden;
     user-select: none;
     -webkit-user-select: none;
     touch-action: manipulation;
   }
-  body {
-    display: flex; flex-direction: column; align-items: center;
-    padding: 8px; gap: 8px;
-  }
 
-  /* ── Top Nav ── */
+  /* Floating Top Bar */
   .top-bar {
-    width: 100%; max-width: 700px; display: flex;
-    align-items: center; justify-content: space-between; padding: 16px 20px; flex-shrink: 0;
+    position: absolute; top: 0; left: 0; right: 0; height: 38px;
+    z-index: 10;
+    background: rgba(0,0,0,0.18); backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 12px;
   }
   .back-link {
-    text-decoration: none; color: var(--cyan); font-weight: 600; font-size: 15px;
-    display: flex; align-items: center; gap: 6px;
+    text-decoration: none; color: var(--cyan); font-weight: 600; font-size: 14px;
+    display: flex; align-items: center; gap: 4px;
   }
   .back-link:hover { opacity: 0.8; }
-
-  /* ── Header ── */
-  .header {
-    width: 100%; max-width: 700px;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 8px 16px;
-    background: var(--surface);
-    border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.08);
-    flex-shrink: 0;
-  }
-  .header h1 {
-    font-size: 1.15rem; font-weight: 700; color: var(--white);
+  .top-bar-right {
     display: flex; align-items: center; gap: 8px;
   }
-  .header h1 span { font-size: 1.4rem; }
-  .header-right {
-    display: flex; align-items: center; gap: 10px;
+  .top-bar-right .timer-ring { width: 28px; height: 28px; }
+  .sound-btn {
+    background: none; border: none; color: var(--white); font-size: 16px;
+    cursor: pointer; padding: 2px 4px; line-height: 1; opacity: 0.85;
   }
-  .diff-badge {
-    font-size: 0.78rem; font-weight: 600; padding: 3px 12px;
-    border-radius: 20px; color: #fff;
-  }
-  .diff-easy  { background: linear-gradient(135deg, #64ffda, #00bfa5); }
-  .diff-medium { background: linear-gradient(135deg, #ffd54f, #ff9800); }
-  .diff-hard   { background: linear-gradient(135deg, #ff6ec7, #e040fb); }
+  .sound-btn:hover { opacity: 1; }
 
-  /* ── HUD ── */
-  .hud {
-    width: 100%; max-width: 700px;
-    display: flex; gap: 8px; flex-shrink: 0;
-  }
-  .hud-item {
-    flex:1; background: var(--surface); border-radius: 12px;
-    padding: 8px 12px; text-align: center;
-    border: 1px solid rgba(255,255,255,0.06);
-  }
-  .hud-label { font-size: 0.7rem; color: var(--text); text-transform: uppercase; letter-spacing: 1px; }
-  .hud-value { font-size: 1.4rem; font-weight: 700; color: var(--white); margin-top: 2px; }
-  .hud-value.gold { color: var(--gold); }
-  .hud-value.cyan { color: var(--cyan); }
-
-  .timer-ring {
-    display: inline-block; width: 48px; height: 48px; flex-shrink: 0;
-  }
-
-  /* ── Canvas Wrapper ── */
+  /* Game Canvas Wrapper */
   .canvas-wrap {
-    flex:1; width: 100%; max-width: 700px;
-    min-height: 0;
-    background: var(--surface);
-    border-radius: 18px;
-    border: 1px solid rgba(255,255,255,0.08);
-    position: relative; overflow: hidden;
+    flex: 1; width: 100%; position: relative; overflow: hidden;
     cursor: crosshair;
   }
-  canvas {
-    display: block; width: 100%; height: 100%;
-  }
+  canvas { display: block; width: 100%; height: 100%; }
 
-  /* ── Overlays ── */
+  /* Overlays */
   .overlay {
-    position: absolute; inset: 0;
-    background: rgba(10,10,26,0.88);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    z-index: 10;
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200; padding: 16px;
   }
   .overlay.hidden { display: none; }
 
   .overlay-card {
-    background: var(--card); border-radius: 20px;
-    padding: 28px 22px; max-width: 400px; width: 90%;
+    background: var(--card); border-radius: 24px;
+    padding: 28px 24px; max-width: 400px; width: 100%;
     text-align: center;
     box-shadow: 0 8px 40px rgba(0,0,0,0.4);
     border: 1px solid rgba(255,255,255,0.1);
@@ -148,22 +101,19 @@
   .btn-go:hover { transform: scale(1.04); box-shadow: 0 6px 30px rgba(255,213,79,0.55); }
   .btn-go:active { transform: scale(0.96); }
 
-  /* ── Toast ── */
+  /* Toast — 医学修正: 右上角不遮挡游戏区 */
   .toast {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
-    font-size: 2rem; font-weight: 800; color: var(--gold);
-    pointer-events: none; z-index: 100;
+    position: fixed; top: 52px; right: 16px;
+    font-size: 1rem; font-weight: 700; color: var(--gold);
+    pointer-events: none; z-index: 300;
     opacity: 0; transition: opacity 0.15s;
     text-shadow: 0 0 30px rgba(255,213,79,0.7);
+    background: rgba(0,0,0,0.4); padding: 4px 12px;
+    border-radius: 16px;
   }
   .toast.show { opacity: 1; }
 
-  /* ── Responsive ── */
   @media (max-width: 500px) {
-    .header { padding: 6px 12px; }
-    .header h1 { font-size: 1rem; }
-    .hud-item { padding: 6px 8px; }
-    .hud-value { font-size: 1.1rem; }
     .overlay-card { padding: 22px 16px; }
     .overlay-card h2 { font-size: 1.25rem; }
   }
@@ -171,38 +121,12 @@
 </head>
 <body>
 
-  <!-- Top Nav -->
+<!-- Floating Top Bar -->
 <div class="top-bar">
-  <a href="index.html" class="back-link">&#8592; 返回科普站</a>
-  <a href="index.html#games" class="back-link">&#8592; 训练游戏</a>
-  <a href="progress.html" class="back-link">📊 训练进度</a>
-</div>
-
-<!-- ═══ In-game Header ═══ -->
-<div class="header">
-  <h1><span>✨</span>追光点</h1>
-  <div class="header-right">
-    <span class="diff-badge diff-easy" id="diffBadge">简单</span>
-    <span style="color:var(--text);font-size:0.8rem;" id="roundInfo">0 / 0</span>
-  </div>
-</div>
-
-<!-- HUD -->
-<div class="hud">
-  <div class="hud-item">
-    <div class="hud-label">⭐ 捕获</div>
-    <div class="hud-value gold" id="hudScore">0</div>
-  </div>
-  <div class="hud-item">
-    <div class="hud-label">🎯 连击</div>
-    <div class="hud-value cyan" id="hudCombo">0</div>
-  </div>
-  <div class="hud-item">
-    <div class="hud-label">💫 奖励星</div>
-    <div class="hud-value" style="color:var(--pink)" id="hudBonus">0</div>
-  </div>
-  <div class="hud-item" style="display:flex;align-items:center;justify-content:center;">
-    <canvas id="timerCanvas" width="48" height="48" class="timer-ring"></canvas>
+  <a href="index.html#games" class="back-link">&#8592; 返回游戏</a>
+  <div class="top-bar-right">
+    <canvas id="timerRing" width="28" height="28" class="timer-ring"></canvas>
+    <button class="sound-btn" id="soundToggle" title="音效">🔊</button><a href="contact.html" style="font-size:15px;text-decoration:none;margin-left:6px;color:var(--blue)" title="联系我们">📬</a>
   </div>
 </div>
 
@@ -217,11 +141,11 @@
       <h2>追光点训练</h2>
       <p>训练<b>平滑追随</b> + <b>周边视野</b><br>
       用眼睛追随移动的光点，<br>当光点<b>变大变亮</b>时点击捕获！<br>
-      偶尔有奖励星星在边缘一闪而过 👀</p>
+      偶尔有奖励星星在边缘一闪而过 </p>
       <div class="diff-select" id="diffSelect">
-        <button class="diff-btn active" data-diff="easy">⭐ 简单</button>
-        <button class="diff-btn" data-diff="medium">⭐⭐ 中等</button>
-        <button class="diff-btn" data-diff="hard">⭐⭐⭐ 困难</button>
+        <button class="diff-btn active" data-diff="easy"> 简单</button>
+        <button class="diff-btn" data-diff="medium"> 中等</button>
+        <button class="diff-btn" data-diff="hard"> 困难</button>
       </div>
       <button class="btn-go" id="btnStart">开始训练</button>
     </div>
@@ -230,7 +154,7 @@
   <!-- Cover Reminder Overlay -->
   <div class="overlay hidden" id="coverOverlay">
     <div class="overlay-card">
-      <span class="icon-large">🩺</span>
+      <span class="icon-large"></span>
       <h2>遮盖提醒</h2>
       <p>请<b>遮盖健眼（好眼）</b>，<br>仅用<b>弱视眼</b>进行训练。</p>
       <p style="font-size:0.78rem;color:#ff8a80;">遮盖不严会影响训练效果</p>
@@ -276,17 +200,17 @@ function checkAch(p){const unlocked=new Set(p.achievements.map(a=>a.id));for(con
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const wrap = document.getElementById('canvasWrap');
-const timerCanvas = document.getElementById('timerCanvas');
+const timerCanvas = document.getElementById('timerRing');
 const timerCtx = timerCanvas.getContext('2d');
 
-const TOTAL_TIME = 120; // 2分钟
+const TOTAL_TIME = 120; // 2
 let W, H;
 
 /* ── Difficulty ── */
 const DIFFICULTY = {
   easy:   { speed: 50,  radius: 28, trailLen: 18, bonusFreq: 0.012, spawnInterval: 1800, label: '简单' },
   medium: { speed: 80,  radius: 22, trailLen: 14, bonusFreq: 0.020, spawnInterval: 1500, label: '中等' },
-  hard:   { speed: 110, radius: 16, trailLen: 10, bonusFreq: 0.028, spawnInterval: 1200, label: '困难' }
+  hard:   { speed: 110, radius: 19, trailLen: 10, bonusFreq: 0.028, spawnInterval: 1200, label: '困难' }
 };
 let diff = 'easy';
 let cfg = DIFFICULTY[diff];
@@ -297,6 +221,13 @@ let timeLeft = TOTAL_TIME;
 let running = false, paused = false;
 let gameLoopId = null;
 
+/* ── Sound toggle ── */
+let soundEnabled = true;
+document.getElementById('soundToggle').addEventListener('click', function(){
+  soundEnabled = !soundEnabled;
+  this.textContent = soundEnabled ? '' : '';
+});
+
 /* ── Orb ── */
 let orb = { x: 0, y: 0, vx: 0, vy: 0, phase: 0, canCatch: false, catchTimer: 0,
             trail: [], catchableUntil: 0 };
@@ -306,6 +237,7 @@ let targetX = 0, targetY = 0;
 
 /* ── Audio ── */
 function playSfx(id) {
+  if (!soundEnabled) return;
   const a = document.getElementById(id);
   if (!a) return;
   a.currentTime = 0;
@@ -334,23 +266,24 @@ function resize() {
 }
 window.addEventListener('resize', ()=>{ if(running) resize(); });
 
-/* ── Timer ring ── */
+/* ── Timer ring (small, in top bar) ── */
 function drawTimer() {
-  const tw = 48, th = 48, cx = 24, cy = 24, r = 20;
+  const tw = 28, th = 28, cx = 14, cy = 14, r = 11;
+  timerCanvas.width = tw; timerCanvas.height = th;
   timerCtx.clearRect(0,0,tw,th);
   timerCtx.beginPath();
   timerCtx.arc(cx,cy,r,0,Math.PI*2);
-  timerCtx.strokeStyle = 'rgba(255,255,255,0.1)';
-  timerCtx.lineWidth = 3;
+  timerCtx.strokeStyle = 'rgba(255,255,255,0.15)';
+  timerCtx.lineWidth = 2;
   timerCtx.stroke();
   const pct = timeLeft / TOTAL_TIME;
   timerCtx.beginPath();
   timerCtx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*pct);
   timerCtx.strokeStyle = pct>0.3 ? '#ffd54f' : '#ff5252';
-  timerCtx.lineWidth = 3; timerCtx.lineCap = 'round';
+  timerCtx.lineWidth = 2; timerCtx.lineCap = 'round';
   timerCtx.stroke();
   timerCtx.fillStyle = '#f0f0ff';
-  timerCtx.font = 'bold 12px -apple-system, sans-serif';
+  timerCtx.font = 'bold 8px -apple-system, sans-serif';
   timerCtx.textAlign = 'center'; timerCtx.textBaseline = 'middle';
   timerCtx.fillText(Math.ceil(timeLeft)+'s', cx, cy);
 }
@@ -400,7 +333,7 @@ function newOrbTarget() {
 function makeCatchable() {
   orb.canCatch = true;
   orb.catchTimer = 0;
-  orb.catchableUntil = Date.now() + 2000; // 2秒窗口
+  orb.catchableUntil = Date.now() + 2000;
 }
 
 /* ── Reset orb ── */
@@ -423,20 +356,17 @@ function moveOrb() {
     newOrbTarget();
     return;
   }
-  // Smooth movement with easing
   const speed = cfg.speed;
   const step = Math.min(speed / 60, dist);
   orb.x += (dx/dist)*step;
   orb.y += (dy/dist)*step;
 
-  // Trail
   orb.trail.push({x:orb.x, y:orb.y, life:1});
   if (orb.trail.length > cfg.trailLen) orb.trail.shift();
   for (let t of orb.trail) t.life -= 0.03;
 
-  // Catchable timing
   if (!orb.canCatch) {
-    orb.catchTimer += 16.67; // ~60fps
+    orb.catchTimer += 16.67;
     const interval = diff==='easy' ? 2200 : diff==='medium' ? 1800 : 1400;
     if (orb.catchTimer >= interval) {
       makeCatchable();
@@ -454,18 +384,13 @@ function moveOrb() {
 /* ── Update ── */
 function update() {
   if (!running || paused) return;
-
   moveOrb();
-
-  // Particles
   for (let i=particles.length-1; i>=0; i--) {
     let p = particles[i];
     p.x += p.vx; p.y += p.vy;
     p.life -= p.decay;
     if (p.life<=0) particles.splice(i,1);
   }
-
-  // Bonuses
   for (let i=bonuses.length-1; i>=0; i--) {
     let b = bonuses[i];
     b.life -= b.decay;
@@ -478,15 +403,12 @@ function update() {
 /* ── Draw ── */
 function draw() {
   ctx.clearRect(0,0,W,H);
-
-  // Background grid
-  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
   ctx.lineWidth = 0.5;
   const gs = 40;
   for (let x=gs; x<W; x+=gs) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
   for (let y=gs; y<H; y+=gs) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
 
-  // Trail
   for (let t of orb.trail) {
     if (t.life <= 0) continue;
     ctx.beginPath();
@@ -495,26 +417,21 @@ function draw() {
     ctx.fill();
   }
 
-  // Bonus stars
   for (let b of bonuses) {
     const alpha = b.life*0.7;
     const r = b.radius*(0.8+0.2*Math.sin(b.pulse));
-    // Outer glow
     const glow = ctx.createRadialGradient(b.x,b.y,r*0.3,b.x,b.y,r*2.5);
-    glow.addColorStop(0,`rgba(255,110,199,${alpha})`);
-    glow.addColorStop(0.5,`rgba(255,110,199,${alpha*0.3})`);
-    glow.addColorStop(1,'rgba(255,110,199,0)');
+    glow.addColorStop(0,`rgba(240,240,255,${alpha})`);
+    glow.addColorStop(0.5,`rgba(240,240,255,${alpha*0.3})`);
+    glow.addColorStop(1,'rgba(240,240,255,0)');
     ctx.beginPath(); ctx.arc(b.x,b.y,r*2.5,0,Math.PI*2);
     ctx.fillStyle = glow; ctx.fill();
-    // Star shape
     drawStar(b.x, b.y, r, r*0.45, 5, alpha);
   }
 
-  // Orb glow layers
   const catchPulse = orb.canCatch ? (0.6+0.4*Math.sin(Date.now()*0.008)) : 1;
   const orbRadius = cfg.radius * catchPulse;
 
-  // Outer aura
   const aura = ctx.createRadialGradient(orb.x, orb.y, orbRadius*0.4, orb.x, orb.y, orbRadius*3);
   const auraColor = orb.canCatch ? 'rgba(255,213,79,' : 'rgba(255,255,255,';
   aura.addColorStop(0, auraColor+'0.4)');
@@ -523,7 +440,6 @@ function draw() {
   ctx.beginPath(); ctx.arc(orb.x, orb.y, orbRadius*3, 0, Math.PI*2);
   ctx.fillStyle = aura; ctx.fill();
 
-  // Core glow
   const core = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, orbRadius);
   if (orb.canCatch) {
     core.addColorStop(0, 'rgba(255,255,255,1)');
@@ -531,15 +447,14 @@ function draw() {
     core.addColorStop(0.6, 'rgba(255,180,40,0.7)');
     core.addColorStop(1, 'rgba(255,140,0,0)');
   } else {
-    core.addColorStop(0, 'rgba(255,255,255,0.85)');
-    core.addColorStop(0.3, 'rgba(200,210,255,0.6)');
-    core.addColorStop(0.7, 'rgba(100,140,255,0.25)');
-    core.addColorStop(1, 'rgba(60,80,200,0)');
+    core.addColorStop(0, 'rgba(255,255,255,0.75)');
+    core.addColorStop(0.3, 'rgba(255,220,140,0.55)');
+    core.addColorStop(0.7, 'rgba(230,170,40,0.2)');
+    core.addColorStop(1, 'rgba(180,120,20,0)');
   }
   ctx.beginPath(); ctx.arc(orb.x, orb.y, orbRadius, 0, Math.PI*2);
   ctx.fillStyle = core; ctx.fill();
 
-  // Catch ring (pulsing when catchable)
   if (orb.canCatch) {
     const ringR = orbRadius + 8 + 4*Math.sin(Date.now()*0.005);
     ctx.beginPath();
@@ -551,7 +466,6 @@ function draw() {
     ctx.setLineDash([]);
   }
 
-  // Particles
   for (let p of particles) {
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.radius*p.life, 0, Math.PI*2);
@@ -570,7 +484,7 @@ function drawStar(cx, cy, outerR, innerR, points, alpha) {
     if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
   }
   ctx.closePath();
-  ctx.fillStyle = `rgba(255,110,199,${alpha})`;
+  ctx.fillStyle = `rgba(240,240,255,${alpha})`;
   ctx.fill();
 }
 
@@ -578,7 +492,6 @@ function drawStar(cx, cy, outerR, innerR, points, alpha) {
 function handleTap(ex, ey) {
   if (!running || paused) return;
 
-  // Check bonus stars first
   for (let i=bonuses.length-1; i>=0; i--) {
     let b = bonuses[i];
     const dist = Math.hypot(ex-b.x, ey-b.y);
@@ -588,13 +501,12 @@ function handleTap(ex, ey) {
       score += 3;
       spawnParticles(b.x, b.y, 'rgba(255,110,199,1)', 12);
       playSfx('sfxBonus');
-      showToast('💫 +3', 500);
+      showToast(' +3', 500);
       updateHUD();
       return;
     }
   }
 
-  // Check orb
   const dist = Math.hypot(ex-orb.x, ey-orb.y);
   const catchRadius = orb.canCatch ? cfg.radius*1.8 : cfg.radius*0.7;
   if (dist < catchRadius && orb.canCatch) {
@@ -605,10 +517,9 @@ function handleTap(ex, ey) {
     const color = orb.canCatch ? 'rgba(255,213,79,1)' : 'rgba(100,140,255,1)';
     spawnParticles(orb.x, orb.y, color, 18);
     playSfx(combo>=5?'sfxCombo':'sfxCatch');
-    if (combo>=5) showToast('🔥 连击x'+combo, 800);
-    else if (combo>=3) showToast('✨ +'+bonus, 500);
+    if (combo>=5) showToast(' 连击x'+combo, 800);
+    else if (combo>=3) showToast(' +'+bonus, 500);
 
-    // Reset orb to new position
     orb.canCatch = false;
     orb.catchTimer = 0;
     orb.catchableUntil = 0;
@@ -618,7 +529,6 @@ function handleTap(ex, ey) {
     newOrbTarget();
     updateHUD();
   } else if (dist < catchRadius && !orb.canCatch) {
-    // Tapped but not catchable yet - small feedback
     spawnParticles(ex, ey, 'rgba(150,150,255,0.6)', 5);
   }
 }
@@ -643,11 +553,9 @@ function gameLoop(ts) {
   if (!running) return;
   const dt = lastTick ? ts-lastTick : 16.67;
   lastTick = ts;
-
   update();
   draw();
   drawTimer();
-
   gameLoopId = requestAnimationFrame(gameLoop);
 }
 
@@ -658,33 +566,25 @@ function startTimer() {
     if (!running || paused) return;
     timeLeft = Math.max(0, timeLeft-1);
     drawTimer();
-    document.getElementById('roundInfo').textContent =
-      Math.floor((TOTAL_TIME-timeLeft)/60)+':'+String(Math.floor((TOTAL_TIME-timeLeft)%60)).padStart(2,'0');
     if (timeLeft <= 0) endGame();
   }, 1000);
 }
 
-/* ── HUD ── */
+/* ── HUD (no-op, stats shown in end overlay) ── */
 function updateHUD() {
-  document.getElementById('hudScore').textContent = score;
-  document.getElementById('hudCombo').textContent = combo;
-  document.getElementById('hudBonus').textContent = bonusStars;
+  // Score/combo/bonus now only shown in end overlay
 }
 
 /* ── Start ── */
 function startGame() {
   diff = document.querySelector('.diff-btn.active')?.dataset?.diff || 'easy';
   cfg = DIFFICULTY[diff];
-  const badge = document.getElementById('diffBadge');
-  badge.textContent = cfg.label;
-  badge.className = 'diff-badge diff-'+diff;
 
   score = 0; combo = 0; maxCombo = 0; bonusStars = 0;
   timeLeft = TOTAL_TIME;
   particles = []; bonuses = [];
   updateHUD();
   drawTimer();
-  document.getElementById('roundInfo').textContent = '0:00';
 
   resize();
   resetOrb();
@@ -706,17 +606,15 @@ function endGame() {
   if (gameLoopId) cancelAnimationFrame(gameLoopId);
   if (timerInterval) clearInterval(timerInterval);
 
-  const hitRate = score > 0 ? Math.round((score/(score+Math.max(0,combo*0.3)))*100) : 0;
-  const accuracy = combo > 0 ? Math.min(100, Math.round((maxCombo/(maxCombo+3))*100)) : 0;
-  let grade = score >= 40 ? '🏆 太棒了！' : score >= 25 ? '🌟 非常优秀' : score >= 12 ? '👍 继续加油' : '💪 再来一次';
+  let grade = score >= 40 ? ' 太棒了！' : score >= 25 ? ' 非常优秀' : score >= 12 ? ' 继续加油' : ' 再来一次';
 
   document.getElementById('endCard').innerHTML = `
-    <span style="font-size:3rem;display:block;margin-bottom:8px;">${score>=25?'🎉':'✨'}</span>
+    <span style="font-size:3rem;display:block;margin-bottom:8px;">${score>=25?'':'✨'}</span>
     <h2>训练结束！</h2>
     <div style="margin:16px 0;line-height:2;font-size:0.95rem;color:var(--white);">
-      <div>⭐ 捕获光点：<b style="color:var(--gold)">${score} 次</b></div>
-      <div>🔥 最高连击：<b style="color:var(--cyan)">${maxCombo} 次</b></div>
-      <div>💫 奖励星星：<b style="color:var(--pink)">${bonusStars} 颗</b></div>
+      <div> 捕获光点：<b style="color:var(--gold)">${score} 次</b></div>
+      <div> 最高连击：<b style="color:var(--cyan)">${maxCombo} 次</b></div>
+      <div> 奖励星星：<b style="color:var(--pink)">${bonusStars} 颗</b></div>
       <div>⏱ 训练时长：<b>2 分钟</b></div>
     </div>
     <div style="font-size:1.3rem;font-weight:700;color:var(--gold);margin:12px 0;">${grade}</div>
@@ -735,7 +633,6 @@ function backToMenu() {
   score=0; combo=0; maxCombo=0; bonusStars=0;
   updateHUD();
   drawTimer();
-  document.getElementById('roundInfo').textContent = '0 / 0';
 }
 
 /* ── Event listeners ── */
@@ -745,7 +642,6 @@ document.getElementById('btnStart').addEventListener('click', ()=>{
 });
 document.getElementById('btnReady').addEventListener('click', startGame);
 
-// Difficulty buttons
 document.querySelectorAll('.diff-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));

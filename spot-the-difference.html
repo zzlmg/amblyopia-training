@@ -14,75 +14,42 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
-    background: linear-gradient(180deg, #e6f2ff 0%, #fefdf8 30%, #fff0f5 70%, #fefdf8 100%);
-    min-height: 100vh; color: var(--text); overflow-x: hidden;
-    display: flex; flex-direction: column; align-items: center;
-    user-select: none; -webkit-user-select: none;
+    background: #f5f3ed;
+    height: 100vh; width: 100vw; overflow: hidden;
+    display: flex; flex-direction: column;
+    color: var(--text); user-select: none; -webkit-user-select: none;
   }
 
-  .top-bar {
-    width: 100%; max-width: 520px; display: flex;
-    align-items: center; justify-content: space-between;
-    padding: 16px 20px;
+  /* ── 浮动顶栏 ── */
+  .floating-bar {
+    position: absolute; top: 0; left: 0; right: 0; height: 38px; z-index: 10;
+    background: rgba(0,0,0,0.18); backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 12px;
   }
-  .back-link {
-    text-decoration: none; color: var(--blue); font-weight: 600; font-size: 15px;
-    display: flex; align-items: center; gap: 6px;
+  .floating-bar .back-link {
+    text-decoration: none; color: #fff; font-weight: 600; font-size: 14px;
+    opacity: 0.9; display: flex; align-items: center; gap: 4px;
   }
-  .back-link:hover { opacity: 0.8; }
+  .floating-bar .bar-right {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .floating-bar .bar-timer {
+    color: #fff; font-size: 15px; font-weight: 700;
+    background: rgba(255,255,255,0.2); padding: 2px 10px;
+    border-radius: 10px; display: none;
+  }
+  .floating-bar .bar-sound {
+    background: none; border: none; color: #fff; font-size: 16px;
+    cursor: pointer; padding: 2px 4px; line-height: 1; opacity: 0.9;
+  }
+  .floating-bar .bar-sound.muted { opacity: 0.4; }
 
-  .game-header {
-    text-align: center; padding: 8px 20px 16px;
-  }
-  .game-header h1 {
-    font-size: 30px; font-weight: 800; margin-bottom: 4px;
-    background: linear-gradient(135deg, #45c4a0, #4da6ff);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  }
-  .game-header .sub {
-    font-size: 15px; color: var(--text-muted);
-  }
-
-  .hud {
-    width: 100%; max-width: 520px; display: flex;
-    justify-content: center; gap: 16px; padding: 0 20px 12px;
-  }
-  .hud-item {
-    background: #fff; border-radius: 16px; padding: 10px 18px;
-    border: 2px solid #f0f0f5; text-align: center; min-width: 80px;
-  }
-  .hud-label { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
-  .hud-value { font-size: 22px; font-weight: 800; }
-  .hud-value.score { color: var(--orange); }
-  .hud-value.rounds { color: var(--green); }
-  .hud-value.time { color: var(--blue); }
-
-  .difficulty-selector {
-    display: flex; gap: 10px; justify-content: center;
-    padding: 8px 20px 16px; flex-wrap: wrap;
-  }
-  .diff-btn {
-    padding: 10px 22px; border-radius: 50px;
-    border: 2px solid #e0e0e8; background: #fff;
-    font-size: 15px; font-weight: 700; cursor: pointer;
-    transition: all 0.2s; color: var(--text-muted);
-  }
-  .diff-btn:hover { border-color: var(--green); color: var(--green); }
-  .diff-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
-
-  .hint-bar {
-    width: 100%; max-width: 520px; padding: 0 20px 10px;
-    text-align: center;
-  }
-  .hint-text {
-    font-size: 17px; font-weight: 700; color: var(--text);
-    padding: 10px 20px; background: #fff; border-radius: 16px;
-    display: inline-block; border: 2px dashed #e0e0e8;
-  }
-
+  /* ── 游戏区域 ── */
   .game-wrapper {
-    width: 100%; max-width: 520px; padding: 0 20px;
-    display: flex; justify-content: center;
+    flex: 1; width: 100%; display: flex; align-items: center;
+    justify-content: center; flex-direction: column;
+    padding: 50px 20px 20px;
   }
   .game-area {
     display: grid; width: 100%; max-width: 440px;
@@ -95,6 +62,7 @@
     display: flex; align-items: center; justify-content: center;
     transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
     box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    aspect-ratio: 1;
   }
   .grid-cell:hover { transform: scale(1.04); border-color: var(--blue); box-shadow: 0 6px 20px rgba(77,166,255,0.2); }
   .grid-cell:active { transform: scale(0.94); }
@@ -117,27 +85,51 @@
   }
   @keyframes shake {
     0%,100% { transform: translateX(0); }
-    20% { transform: translateX(-6px); }
-    40% { transform: translateX(6px); }
-    60% { transform: translateX(-4px); }
-    80% { transform: translateX(4px); }
+    20% { transform: translateX(-6px); } 40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); } 80% { transform: translateX(4px); }
   }
 
-  .combo-pop {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    font-size: 36px; font-weight: 900; pointer-events: none; z-index: 150;
-    animation: comboBurst 0.7s ease-out forwards; white-space: nowrap;
+  /* ── 提示文字 ── */
+  .hint-bar {
+    width: 100%; max-width: 440px; text-align: center; padding: 0 0 12px;
   }
-  @keyframes comboBurst {
-    0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
-    40% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-    100% { opacity: 0; transform: translate(-50%, -70%) scale(1); }
+  .hint-text {
+    font-size: 17px; font-weight: 700; color: var(--text);
+    padding: 10px 20px; background: #faf8f5; border-radius: 16px;
+    display: inline-block; border: 2px dashed #d5d0c8;
   }
 
-  .btn-row {
-    display: flex; gap: 12px; justify-content: center;
-    padding: 16px 20px 24px; flex-wrap: wrap;
+  @keyframes toastIn {
+    0% { opacity: 0; transform: translateX(40px); }
+    100% { opacity: 1; transform: translateX(0); }
   }
+
+  /* ── 遮罩层 ── */
+  .overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    animation: fadeIn 0.2s ease-out;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .overlay-card {
+    background: #fff; border-radius: 28px; padding: 32px 28px;
+    max-width: 400px; width: 90%; text-align: center;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+    animation: modalIn 0.3s ease-out;
+  }
+  @keyframes modalIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .overlay-card h2 { font-size: 24px; font-weight: 800; margin-bottom: 12px; }
+  .overlay-card p { font-size: 15px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6; }
+  .overlay-card .highlight {
+    background: #fff7e6; padding: 12px 16px; border-radius: 14px;
+    border: 2px solid #ffe066; margin-bottom: 20px;
+    font-size: 14px; color: #ba7517; font-weight: 600;
+  }
+
   .btn {
     padding: 14px 36px; border-radius: 50px; border: none;
     font-size: 17px; font-weight: 700; cursor: pointer;
@@ -149,50 +141,21 @@
     color: #fff; box-shadow: 0 4px 16px rgba(69,196,160,0.35);
   }
   .btn-start:hover { box-shadow: 0 6px 24px rgba(69,196,160,0.5); }
-  .btn-start:disabled {
-    background: #ccc; box-shadow: none; cursor: not-allowed; color: #888;
-  }
 
-  .modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5); z-index: 200;
-    display: flex; align-items: center; justify-content: center;
-    animation: fadeIn 0.2s ease-out;
+  /* 难度选择器（在 startOverlay 内） */
+  .diff-selector-inline {
+    display: flex; gap: 8px; justify-content: center;
+    margin-bottom: 16px; flex-wrap: wrap;
   }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  .modal {
-    background: #fff; border-radius: 28px; padding: 32px 28px;
-    max-width: 400px; width: 90%; text-align: center;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
-    animation: modalIn 0.3s ease-out;
+  .diff-btn {
+    padding: 8px 18px; border-radius: 50px;
+    border: 2px solid #e0e0e8; background: #fff;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    transition: all 0.2s; color: var(--text-muted);
   }
-  @keyframes modalIn {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-  .modal h2 { font-size: 24px; font-weight: 800; margin-bottom: 12px; }
-  .modal p { font-size: 15px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6; }
-  .modal .highlight {
-    background: #fff7e6; padding: 12px 16px; border-radius: 14px;
-    border: 2px solid #ffe066; margin-bottom: 20px;
-    font-size: 14px; color: #ba7517; font-weight: 600;
-  }
+  .diff-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
 
-  .progress-bar-outer {
-    width: 100%; max-width: 520px; height: 8px;
-    background: #f0f0f5; border-radius: 4px;
-    margin: 0 auto 8px; overflow: hidden;
-  }
-  .progress-bar-inner {
-    height: 100%; border-radius: 4px;
-    background: linear-gradient(90deg, #45c4a0, #4da6ff, #9b7ef0);
-    transition: width 0.3s linear;
-  }
-  .progress-text {
-    text-align: center; font-size: 13px; color: var(--text-muted);
-    margin-bottom: 8px;
-  }
-
+  /* ── 结果弹窗 ── */
   .result-card {
     background: #fff; border-radius: 28px; padding: 32px 28px;
     max-width: 420px; width: 90%; text-align: center;
@@ -201,8 +164,7 @@
   .result-score { font-size: 56px; font-weight: 900; color: var(--orange); }
   .result-label { font-size: 14px; color: var(--text-muted); margin-bottom: 4px; }
   .result-stat {
-    display: flex; justify-content: center; gap: 28px;
-    margin: 18px 0;
+    display: flex; justify-content: center; gap: 28px; margin: 18px 0;
   }
   .result-stat-item { text-align: center; }
   .result-stat-value { font-size: 28px; font-weight: 800; }
@@ -215,65 +177,61 @@
 
   @media (max-width: 420px) {
     .game-area { gap: 10px; }
-    .hud { gap: 8px; }
-    .hud-item { padding: 8px 12px; min-width: 60px; }
-    .hud-value { font-size: 18px; }
-    .game-header h1 { font-size: 24px; }
   }
 </style>
 </head>
 <body>
 
-<div class="top-bar">
-  <a href="index.html" class="back-link">&#8592; 返回科普站</a>
-  <a href="index.html#games" class="back-link">&#8592; 训练游戏</a>
-  <a href="progress.html" class="back-link">📊 训练进度</a>
-</div>
-
-<div class="game-header">
-  <h1>找不同</h1>
-  <p class="sub">对比敏感度训练 · 锻炼辨别细微颜色与形状差异的能力</p>
-</div>
-
-<div class="difficulty-selector" id="diffSelector">
-  <button class="diff-btn active" data-diff="easy">简单</button>
-  <button class="diff-btn" data-diff="medium">中等</button>
-  <button class="diff-btn" data-diff="hard">困难</button>
-</div>
-
-<div class="hud">
-  <div class="hud-item">
-    <div class="hud-label">得分</div>
-    <div class="hud-value score" id="scoreDisplay">0</div>
-  </div>
-  <div class="hud-item">
-    <div class="hud-label">轮次</div>
-    <div class="hud-value rounds" id="roundsDisplay">0</div>
-  </div>
-  <div class="hud-item">
-    <div class="hud-label">时间</div>
-    <div class="hud-value time" id="timeDisplay">2:00</div>
+<!-- 浮动顶栏 -->
+<div class="floating-bar">
+  <a href="index.html#games" class="back-link">&#8592; 返回游戏</a>
+  <div class="bar-right">
+    <span class="bar-timer" id="barTimer">2:00</span>
+    <button class="bar-sound" id="barSound" onclick="toggleSound()" title="音效">&#x1f50a;</button>
+    <a href="contact.html" style="font-size:14px;text-decoration:none;color:var(--blue);margin-left:4px" title="联系我们">📬</a>
   </div>
 </div>
 
-<div class="progress-bar-outer">
-  <div class="progress-bar-inner" id="progressBar" style="width:0%"></div>
-</div>
-<p class="progress-text" id="progressText">准备开始</p>
-
-<div class="hint-bar">
-  <span class="hint-text" id="hintText">找出颜色不同的那个！</span>
-</div>
-
-<div class="btn-row">
-  <button class="btn btn-start" id="btnStart" onclick="startGame()">开始训练</button>
-</div>
-
+<!-- 游戏区域 -->
 <div class="game-wrapper">
+  <div class="hint-bar">
+    <span class="hint-text" id="hintText">找出颜色不同的那个！</span>
+  </div>
   <div class="game-area" id="gameArea"></div>
 </div>
 
-<div id="modalContainer"></div>
+<!-- 开始遮罩（包含难度选择+遮盖提醒） -->
+<div class="overlay" id="startOverlay">
+  <div class="overlay-card">
+    <h2 style="font-size:28px;background:linear-gradient(135deg,#45c4a0,#4da6ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">找不同</h2>
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:14px;">对比敏感度训练 · 找出颜色、形状或大小不同的那一个</p>
+    <div class="diff-selector-inline" id="diffSelector">
+      <button class="diff-btn active" data-diff="easy">简单</button>
+      <button class="diff-btn" data-diff="medium">中等</button>
+      <button class="diff-btn" data-diff="hard">困难</button>
+    </div>
+    <div class="highlight">
+      &#x1f6d1; 如果医生建议遮盖治疗，请先遮盖<strong>健眼（视力较好的眼睛）</strong><br>
+      让弱视眼独立完成本次训练
+    </div>
+    <p style="font-size:14px;" id="startDiffInfo">
+      难度：<strong>简单</strong> &nbsp; | &nbsp;
+      网格：<strong>2×2</strong> &nbsp; | &nbsp;
+      训练时长：<strong>2 分钟</strong><br>
+      保持眼睛与屏幕 30~40cm 距离
+    </p>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">
+      &#x1f4a1; 找出颜色、形状或大小不同的那一个<br>
+      没有时间限制，慢慢观察，仔细辨别
+    </p>
+    <button class="btn btn-start" onclick="beginGame()" style="margin-right:8px;">准备好了，开始！</button>
+  </div>
+</div>
+
+<!-- 结束遮罩 -->
+<div class="overlay" id="endOverlay" style="display:none;">
+  <div class="result-card" id="endCard"></div>
+</div>
 
 <script>
   /* ── localStorage 进度系统 ── */
@@ -286,7 +244,6 @@
   function checkAch(p){const unlocked=new Set(p.achievements.map(a=>a.id));for(const ach of ACH){if(!unlocked.has(ach.id)&&ach.check(p)){p.achievements.push({id:ach.id,unlockedAt:getToday()});}}}
   /* ── 游戏逻辑 ── */
   const TOTAL_TIME = 120;
-  // ---- 形状 — 作为SVG数据路径以供Canvas渲染 ----
   const SHAPES = {
     circle:    { name:'圆形',   draw: function(ctx,sz,clr){ ctx.fillStyle=clr; ctx.beginPath(); ctx.arc(0,0,sz*0.42,0,Math.PI*2); ctx.fill(); }},
     triangle:  { name:'三角形', draw: function(ctx,sz,clr){ ctx.fillStyle=clr; ctx.beginPath(); const r=sz*0.45; ctx.moveTo(0,-r); ctx.lineTo(r*0.866,r*0.5); ctx.lineTo(-r*0.866,r*0.5); ctx.closePath(); ctx.fill(); }},
@@ -297,36 +254,21 @@
   };
   const SHAPE_KEYS = ['circle','triangle','square','star','diamond','heart'];
 
-  // ---- 难度参数（基于临床研究数据）----
-  // 参考文献：
-  // 1. ARVO 2021: 弱视儿童视觉搜索慢32%，视觉处理慢1.75倍
-  // 2. 知觉学习训练刺激视觉辨别范式（临床1s基准）
-  // 3. 对比敏感度训练中颜色/形状辨别难度分级
   const DIFFICULTY = {
     easy: {
       label: '简单',
-      grid: {cols:2, rows:2},          // 2×2 仅4个，符合3-5岁儿童起点
-      itemSize: 100,                   // 大目标(100px) ≈ 100 arcmin
-      diffTypeChance: {                 // 差异类型的随机概率
-        hue: 0.55,                     // 55% 色相差异≥60°（最明显）
-        shape: 0.35,                   // 35% 形状差异
-        size: 0.10                     // 10% 大小差异
-      },
-      hueDiffMin: 60, hueDiffMax: 80,  // 色相差60°~80°
-      shapeDiff: 'any',               // 任意形状差
-      sizeDiffPct: 0.35               // 大小差35%（非常明显）
+      grid: {cols:2, rows:2},
+      itemSize: 100,
+      diffTypeChance: { hue: 0.55, shape: 0.35, size: 0.10 },
+      hueDiffMin: 60, hueDiffMax: 80,
+      shapeDiff: 'any',
+      sizeDiffPct: 0.35
     },
     medium: {
       label: '中等',
-      grid: {cols:3, rows:2},          // 3×2 6个，符合5-8岁
+      grid: {cols:3, rows:2},
       itemSize: 76,
-      diffTypeChance: {
-        hue: 0.40,                     // 40% 色相差异30°~60°
-        shape: 0.25,                   // 25% 形状差异
-        size: 0.15,                    // 15% 大小差异
-        sat: 0.10,                     // 10% 饱和度差异（新维度）
-        luma: 0.10                     // 10% 亮度差异（新维度）
-      },
+      diffTypeChance: { hue: 0.40, shape: 0.25, size: 0.15, sat: 0.10, luma: 0.10 },
       hueDiffMin: 30, hueDiffMax: 60,
       shapeDiff: 'different',
       sizeDiffPct: 0.25,
@@ -334,50 +276,32 @@
     },
     hard: {
       label: '困难',
-      grid: {cols:3, rows:3},          // 3×3 9个，视觉搜索负荷最大化
+      grid: {cols:3, rows:3},
       itemSize: 56,
-      diffTypeChance: {
-        hue: 0.25,                     // 25% 小色相差异10°~30°
-        shape: 0.10,                   // 10% 形状差异
-        size: 0.15,                    // 15% 大小差异
-        sat: 0.25,                     // 25% 饱和度差异
-        luma: 0.25                     // 25% 亮度差异
-      },
-      hueDiffMin: 10, hueDiffMax: 30,
-      shapeDiff: 'similar',           // 相似形状（如圆形vs椭圆）
+      diffTypeChance: { hue: 0.25, shape: 0.10, size: 0.15, sat: 0.25, luma: 0.25 },
+      hueDiffMin: 20, hueDiffMax: 30,
+      shapeDiff: 'similar',
       sizeDiffPct: 0.15,
-      satDiffMin: 10, satDiffMax: 25
+      satDiffMin: 15, satDiffMax: 25
     }
   };
 
-  let currentDiff = 'easy';
-  let score = 0, rounds = 0, correctCount = 0, wrongCount = 0;
-  let timeLeft = TOTAL_TIME;
-  let gameRunning = false;
-  let timerId = null;
-  let currentRoundCorrect = -1;
-  let roundActive = false;
-  let audioCtx = null;
-
-  // 预定义的高、中、低饱和度色彩
+  /* 医学依据(PMC7764820): 弱视眼R/G信号下降，移除红(0°)/绿(120°)/青(180°) */
   const BASE_COLORS = [
-    {h:0,   s:{hi:90, mid:60, lo:35}, l:55, name:'红色'},
     {h:30,  s:{hi:90, mid:55, lo:30}, l:55, name:'橙色'},
-    {h:60,  s:{hi:85, mid:55, lo:30}, l:55, name:'黄色'},
-    {h:120, s:{hi:75, mid:50, lo:25}, l:45, name:'绿色'},
-    {h:180, s:{hi:80, mid:55, lo:30}, l:45, name:'青色'},
+    {h:50,  s:{hi:85, mid:55, lo:30}, l:55, name:'金色'},
     {h:210, s:{hi:85, mid:55, lo:30}, l:50, name:'蓝色'},
     {h:270, s:{hi:80, mid:50, lo:25}, l:55, name:'紫色'},
-    {h:300, s:{hi:85, mid:55, lo:30}, l:50, name:'粉色'},
+    {h:320, s:{hi:85, mid:55, lo:30}, l:52, name:'品红'},
   ];
 
   function hsl(h,s,l){ return `hsl(${h},${s}%,${l}%)`; }
 
-  function initAudio() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
+  let audioCtx = null;
+  let soundEnabled = true;
+  function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
   function playBeep(freq, dur, vol = 0.08) {
-    if (!audioCtx) return;
+    if (!audioCtx || !soundEnabled) return;
     try {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
@@ -390,15 +314,26 @@
   }
   function playCorrectSound() { playBeep(660, 0.08, 0.08); playBeep(880, 0.12, 0.06); }
   function playWrongSound() { playBeep(220, 0.2, 0.05); }
+  function toggleSound() {
+    soundEnabled = !soundEnabled;
+    document.getElementById('barSound').classList.toggle('muted', !soundEnabled);
+    document.getElementById('barSound').innerHTML = soundEnabled ? '&#x1f50a;' : '&#x1f507;';
+  }
 
-  // ---- 生成一轮"找不同"数据 ----
+  let currentDiff = 'easy';
+  let score = 0, rounds = 0, correctCount = 0, wrongCount = 0;
+  let timeLeft = TOTAL_TIME;
+  let gameRunning = false;
+  let timerId = null;
+  let currentRoundCorrect = -1;
+  let roundActive = false;
+
   function generateRound() {
     const diff = DIFFICULTY[currentDiff];
     const {cols, rows} = diff.grid;
     const total = cols * rows;
     const correctIdx = Math.floor(Math.random() * total);
 
-    // 决定差异类型
     const r = Math.random();
     let type = 'hue';
     let cum = 0;
@@ -407,7 +342,6 @@
       if (r < cum) { type = t; break; }
     }
 
-    // 基础属性：随机选形状和颜色
     const baseShapeKey = SHAPE_KEYS[Math.floor(Math.random() * SHAPE_KEYS.length)];
     const baseColor = BASE_COLORS[Math.floor(Math.random() * BASE_COLORS.length)];
 
@@ -416,7 +350,6 @@
 
     for (let i = 0; i < total; i++) {
       if (i === correctIdx) {
-        // --- 生成差异项 ---
         let oddShapeKey = baseShapeKey;
         let oddColorH = baseColor.h;
         let oddColorS = baseColor.s.hi;
@@ -430,7 +363,6 @@
         } else if (type === 'shape') {
           let pool = SHAPE_KEYS.filter(k => k !== baseShapeKey);
           if (diff.shapeDiff === 'similar') {
-            // 困难模式：圆形→椭圆（用三角形近似）、方形→菱形
             const similar = {
               circle: ['diamond'], triangle: ['star'],
               square: ['diamond'], star: ['triangle'],
@@ -450,30 +382,27 @@
           oddColorS = baseColor.s.hi - sd;
           if (oddColorS < 10) oddColorS = 10;
           oddColorL = baseColor.l;
-          hintText = '找出颜色饱和度不同的那个！';
+          hintText = '找出颜色最鲜艳的那个！';
         } else if (type === 'luma') {
-          oddColorL = baseColor.l - 20;
-          if (oddColorL < 20) oddColorL = 20;
-          hintText = '找出亮度不同的那个！';
+          // 医学修正: 弱视眼对比敏感度下降 → 亮度差随难度递减（简单-38→困难-15）
+          var lumaDrops = {easy:38, medium:22, hard:15};
+          oddColorL = baseColor.l - (lumaDrops[currentDiff]||20);
+          if (oddColorL < 18) oddColorL = 18;
+          hintText = '找出颜色最暗的那个！';
         }
 
         items.push({
-          idx: i,
-          shapeKey: oddShapeKey,
+          idx: i, shapeKey: oddShapeKey,
           color: hsl(oddColorH, oddColorS, oddColorL),
-          size: oddSize,
-          isCorrect: true,
+          size: oddSize, isCorrect: true,
           colorH: oddColorH, colorS: oddColorS, colorL: oddColorL
         });
       } else {
-        // --- 普通项 ---
         const sat = baseColor.s.hi;
         items.push({
-          idx: i,
-          shapeKey: baseShapeKey,
+          idx: i, shapeKey: baseShapeKey,
           color: hsl(baseColor.h, sat, baseColor.l),
-          size: diff.itemSize,
-          isCorrect: false,
+          size: diff.itemSize, isCorrect: false,
           colorH: baseColor.h, colorS: sat, colorL: baseColor.l
         });
       }
@@ -492,9 +421,7 @@
       cell.className = 'grid-cell';
       cell.dataset.idx = item.idx;
       cell.style.width = '100%';
-      cell.style.aspectRatio = '1';
 
-      // 用 Canvas 渲染单个图形（保证缩放质量）
       const canvas = document.createElement('canvas');
       canvas.className = 'item';
       const sz = item.size;
@@ -532,7 +459,7 @@
     cell.classList.add('correct');
     highlightAllCell(true, parseInt(cell.dataset.idx));
 
-    if (rounds % 5 === 0) showComboPop(rounds, '&#x1f31f; 连续' + rounds + '次 &#x1f31f;', '#45c4a0');
+    if (rounds % 5 === 0) showToast('🎯 连续'+rounds+'轮正确！', '#45c4a0');
 
     setTimeout(() => nextRound(), 1000);
   }
@@ -567,26 +494,25 @@
     buildGrid(items, cols, rows);
   }
 
-  function showComboPop(n, text, color) {
+  function showToast(text, color) {
     const el = document.createElement('div');
-    el.className = 'combo-pop';
-    el.style.color = color;
-    el.innerHTML = text;
+    el.style.cssText = 'position:fixed;top:52px;right:16px;z-index:150;'+
+      'background:'+color+';color:#fff;padding:6px 14px;border-radius:20px;'+
+      'font-size:13px;font-weight:700;animation:toastIn 0.3s ease-out;pointer-events:none';
+    el.textContent = text;
     document.body.appendChild(el);
-    setTimeout(() => el.remove(), 700);
-  }
-
-  function updateHUD() {
-    document.getElementById('scoreDisplay').textContent = score;
-    document.getElementById('roundsDisplay').textContent = rounds;
-    document.getElementById('timeDisplay').textContent = formatTime(timeLeft);
-    document.getElementById('progressBar').style.width = ((TOTAL_TIME - timeLeft) / TOTAL_TIME * 100) + '%';
+    setTimeout(function(){el.style.opacity='0';el.style.transition='opacity 0.5s';},3000);
+    setTimeout(function(){el.remove();},3500);
   }
 
   function formatTime(s) {
     const m = Math.floor(s / 60);
     const sec = s % 60;
     return m + ':' + (sec < 10 ? '0' : '') + sec;
+  }
+
+  function updateHUD() {
+    document.getElementById('barTimer').textContent = formatTime(timeLeft);
   }
 
   function startGame() {
@@ -597,43 +523,29 @@
 
   function showPatchReminder() {
     const diff = DIFFICULTY[currentDiff];
-    const container = document.getElementById('modalContainer');
-    container.innerHTML = `
-      <div class="modal-overlay" id="patchModal">
-        <div class="modal">
-          <h2>开始训练前</h2>
-          <p>请确认以下准备事项：</p>
-          <div class="highlight">
-            &#x1f6d1; 如果医生建议遮盖治疗，请先遮盖<strong>健眼（视力较好的眼睛）</strong><br>
-            让弱视眼独立完成本次训练
-          </div>
-          <p style="font-size:14px;">
-            难度：<strong>${diff.label}</strong> &nbsp; | &nbsp;
-            网格：<strong>${diff.grid.cols}×${diff.grid.rows}</strong> &nbsp; | &nbsp;
-            训练时长：<strong>2 分钟</strong><br>
-            保持眼睛与屏幕 30~40cm 距离
-          </p>
-          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">
-            &#x1f4a1; 找出颜色、形状或大小不同的那一个<br>
-            没有时间限制，慢慢观察，仔细辨别
-          </p>
-          <button class="btn btn-start" onclick="beginGame()" style="margin-right:8px;">准备好了，开始！</button>
-          <button class="btn" style="background:#fff;color:var(--green);border:2px solid var(--green);" onclick="document.getElementById('patchModal').remove()">返回</button>
-        </div>
-      </div>
+    document.getElementById('startDiffInfo').innerHTML = `
+      难度：<strong>${diff.label}</strong> &nbsp; | &nbsp;
+      网格：<strong>${diff.grid.cols}×${diff.grid.rows}</strong> &nbsp; | &nbsp;
+      训练时长：<strong>2 分钟</strong><br>
+      保持眼睛与屏幕 30~40cm 距离
     `;
+    document.getElementById('startOverlay').style.display = 'flex';
+  }
+
+  function hideStartOverlay() {
+    document.getElementById('startOverlay').style.display = 'none';
   }
 
   function beginGame() {
-    document.getElementById('modalContainer').innerHTML = '';
+    document.getElementById('startOverlay').style.display = 'none';
+    document.getElementById('endOverlay').style.display = 'none';
     gameRunning = true;
     score = 0; rounds = 0; correctCount = 0; wrongCount = 0;
     timeLeft = TOTAL_TIME;
     updateHUD();
-    document.getElementById('btnStart').disabled = true;
-    document.getElementById('btnStart').textContent = '训练中...';
-    document.getElementById('progressText').textContent = '难度：' + DIFFICULTY[currentDiff].label;
-    document.querySelectorAll('.diff-btn').forEach(b => b.style.pointerEvents = 'none');
+    document.getElementById('barTimer').style.display = 'inline-block';
+    // 隐藏开始遮罩中的难度选择器功能（游戏进行中不可切换）
+    document.querySelectorAll('#startOverlay .diff-btn').forEach(b => b.style.pointerEvents = 'auto');
 
     nextRound();
 
@@ -650,59 +562,80 @@
     if (timerId) { clearInterval(timerId); timerId = null; }
     const area = document.getElementById('gameArea');
     area.innerHTML = '';
-    document.getElementById('btnStart').disabled = false;
-    document.getElementById('btnStart').textContent = '再来一局';
-    document.getElementById('progressText').textContent = '训练完成！';
     document.getElementById('hintText').textContent = '太棒了！训练结束';
-    document.querySelectorAll('.diff-btn').forEach(b => b.style.pointerEvents = 'auto');
+    document.getElementById('barTimer').style.display = 'none';
 
     const total = correctCount + wrongCount;
     const accuracy = total > 0 ? Math.round(correctCount / total * 100) : 0;
     let grade = accuracy >= 90 ? '优秀' : accuracy >= 70 ? '良好' : accuracy >= 50 ? '继续加油' : '需要更多练习';
     let gradeColor = accuracy >= 90 ? '#45c4a0' : accuracy >= 70 ? '#4da6ff' : accuracy >= 50 ? '#ffa940' : '#ff6b9d';
 
-    const container = document.getElementById('modalContainer');
-    container.innerHTML = `
-      <div class="modal-overlay">
-        <div class="result-card">
-          <div class="result-label">最终得分</div>
-          <div class="result-score">${score}</div>
-          <div style="font-size:18px;font-weight:700;color:${gradeColor};margin-top:8px;">${grade}</div>
-          <div class="result-stat">
-            <div class="result-stat-item">
-              <div class="result-stat-value" style="color:var(--green);">${correctCount}</div>
-              <div class="result-stat-label">正确</div>
-            </div>
-            <div class="result-stat-item">
-              <div class="result-stat-value" style="color:var(--text);">${wrongCount}</div>
-              <div class="result-stat-label">误点</div>
-            </div>
-            <div class="result-stat-item">
-              <div class="result-stat-value" style="color:var(--pink);">${accuracy}%</div>
-              <div class="result-stat-label">准确率</div>
-            </div>
-            <div class="result-stat-item">
-              <div class="result-stat-value" style="color:var(--blue);">${rounds}</div>
-              <div class="result-stat-label">完成轮次</div>
-            </div>
-          </div>
-          <div class="rest-reminder">
-            <strong>&#x23f0; 休息提醒</strong><br>
-            单次训练建议不超过 30 分钟。请让孩子休息 5~10 分钟后再继续。
-          </div>
-          <button class="btn btn-start" onclick="startGame()" style="margin-right:8px;">再来一局</button>
-          <button class="btn" style="background:#fff;color:var(--green);border:2px solid var(--green);" onclick="document.getElementById('modalContainer').innerHTML=''">关闭</button>
+    document.getElementById('endCard').innerHTML = `
+      <div class="result-label">最终得分</div>
+      <div class="result-score">${score}</div>
+      <div style="font-size:18px;font-weight:700;color:${gradeColor};margin-top:8px;">${grade}</div>
+      <div class="result-stat">
+        <div class="result-stat-item">
+          <div class="result-stat-value" style="color:var(--green);">${correctCount}</div>
+          <div class="result-stat-label">正确</div>
+        </div>
+        <div class="result-stat-item">
+          <div class="result-stat-value" style="color:var(--text);">${wrongCount}</div>
+          <div class="result-stat-label">误点</div>
+        </div>
+        <div class="result-stat-item">
+          <div class="result-stat-value" style="color:var(--pink);">${accuracy}%</div>
+          <div class="result-stat-label">准确率</div>
+        </div>
+        <div class="result-stat-item">
+          <div class="result-stat-value" style="color:var(--blue);">${rounds}</div>
+          <div class="result-stat-label">完成轮次</div>
         </div>
       </div>
+      <div class="rest-reminder">
+        <strong>&#x23f0; 休息提醒</strong><br>
+        单次训练建议不超过 30 分钟。请让孩子休息 5~10 分钟后再继续。
+      </div>
+      <button class="btn btn-start" onclick="startGame()" style="margin-right:8px;">再来一局</button>
+      <button class="btn" style="background:#fff;color:var(--green);border:2px solid var(--green);" onclick="hideEndOverlay()">关闭</button>
     `;
+    document.getElementById('endOverlay').style.display = 'flex';
+
     saveGameResult('spot-difference', {score, correct:correctCount, wrong:wrongCount, difficulty:currentDiff, duration:120});
   }
 
+  function hideEndOverlay() {
+    document.getElementById('endOverlay').style.display = 'none';
+  }
+
   function setDifficulty(diff) {
+    if (gameRunning) return;
     currentDiff = diff;
-    document.querySelectorAll('.diff-btn').forEach(b => {
+    document.querySelectorAll('#startOverlay .diff-btn').forEach(b => {
       b.classList.toggle('active', b.dataset.diff === diff);
     });
+    // 同时更新预览网格
+    const d = DIFFICULTY[diff];
+    const previewTotal = d.grid.cols * d.grid.rows;
+    const previewItems = [];
+    const baseColor = BASE_COLORS[2]; // 黄色
+    const baseShapeKey = 'circle';
+    for (let i = 0; i < previewTotal; i++) {
+      previewItems.push({
+        idx: i, shapeKey: baseShapeKey,
+        color: hsl(baseColor.h, baseColor.s.hi, baseColor.l),
+        size: d.itemSize, isCorrect: false
+      });
+    }
+    buildGrid(previewItems, d.grid.cols, d.grid.rows);
+    document.getElementById('hintText').textContent = '找出颜色、形状或大小不同的那个！';
+    // 更新开始遮罩难度信息
+    document.getElementById('startDiffInfo').innerHTML = `
+      难度：<strong>${d.label}</strong> &nbsp; | &nbsp;
+      网格：<strong>${d.grid.cols}×${d.grid.rows}</strong> &nbsp; | &nbsp;
+      训练时长：<strong>2 分钟</strong><br>
+      保持眼睛与屏幕 30~40cm 距离
+    `;
   }
 
   document.getElementById('diffSelector').addEventListener('click', function(e) {
@@ -711,6 +644,7 @@
     }
   });
 
+  // 初始预览
   let initialRound = generateRound();
   currentRoundCorrect = initialRound.correctIdx;
   document.getElementById('hintText').textContent = initialRound.hintText;

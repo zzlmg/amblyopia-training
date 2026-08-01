@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>追光泡泡 · 弱视脱抑制训练</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root { --blue:#F9A825; --blue-light:#FFF8E1; --pink:#EF6C00; --pink-light:#FFF3E0;
+  --green:#388E3C; --green-light:#E8F5E9; --purple:#1976D2; --purple-light:#E3F2FD;
+  --text:#3E2723; --text-muted:#8D6E63; --bg:#FFFBF0; --card-bg:#fff; --radius:24px; --radius-sm:16px; }
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--text);height:100vh;width:100vw;overflow:hidden;
+  display:flex;flex-direction:column;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+
+.top-bar{position:absolute;top:0;left:0;right:0;height:38px;z-index:11;
+  background:rgba(0,0,0,0.18);backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:space-between;padding:0 12px}
+.back-link{text-decoration:none;color:#FFD54F;font-weight:600;font-size:13px;display:flex;align-items:center;gap:3px}
+.hud{display:flex;align-items:center;gap:8px;color:#fff;font-size:13px;font-weight:700}
+.hud-timer{background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:8px;display:none;min-width:42px;text-align:center}
+.hud-score{background:rgba(255,215,79,0.3);padding:2px 8px;border-radius:8px;display:none}
+.hud-label{font-size:11px;color:rgba(255,255,255,0.6);display:none}
+.sound-btn{background:none;border:none;color:#fff;font-size:14px;cursor:pointer;padding:1px 3px;line-height:1}
+
+.canvas-wrap{flex:1;width:100%;position:relative;overflow:hidden;background:#3a3a3a;display:flex;align-items:center;justify-content:center}
+canvas{position:absolute;display:block;max-width:100%;max-height:100%;touch-action:manipulation}
+#cL{z-index:1}#cR{z-index:2}
+
+.mascot{position:absolute;right:10px;bottom:10px;z-index:10;transition:all 0.4s}
+.mascot img{width:56px;height:56px;animation:mascot-float 3s ease-in-out infinite}
+.mascot.celebrate img{animation:mascot-pop 0.6s ease-out}
+@keyframes mascot-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes mascot-pop{0%{transform:scale(0.8);opacity:0}50%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+
+.mode-hint{position:absolute;top:50px;left:50%;transform:translateX(-50%);z-index:12;
+  background:rgba(0,0,0,0.4);color:#FFD54F;padding:3px 12px;border-radius:10px;font-size:11px;font-weight:600;display:none}
+
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
+.overlay.hidden{display:none}
+.overlay-card{background:var(--card-bg);border-radius:var(--radius);padding:28px 24px;max-width:440px;width:100%;text-align:center;border:2px solid #f0f0f5;box-shadow:0 6px 30px rgba(0,0,0,0.12)}
+.overlay-card h2{font-size:22px;margin-bottom:6px}
+.overlay-card p{font-size:13px;color:var(--text-muted);line-height:1.7;margin:6px 0}
+
+.setting-row{display:flex;gap:10px;margin:12px 0;justify-content:center;flex-wrap:wrap}
+.setting-label{font-size:12px;color:var(--text-muted);margin-right:2px}
+.setting-select{padding:6px 10px;border-radius:12px;border:2px solid #e0e0e0;font-size:13px;font-weight:600;background:#fff;color:var(--text);cursor:pointer;font-family:inherit}
+.setting-select:focus{border-color:var(--blue);outline:none}
+
+.diff-select{display:flex;gap:6px;margin:14px 0;justify-content:center;flex-wrap:wrap}
+.diff-btn{padding:7px 16px;border-radius:24px;border:2px solid #e0e0e0;background:transparent;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;color:var(--text-muted);font-family:inherit}
+.diff-btn:hover{border-color:var(--blue);color:var(--blue)}
+.diff-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.glasses-box{background:#FFF8E1;border:2px solid #FFE082;border-radius:14px;padding:12px 14px;margin:12px 0;font-size:12px;color:#F57C00;font-weight:600;line-height:1.7;text-align:left}
+.btn-go{display:inline-block;padding:12px 36px;border-radius:30px;font-size:16px;font-weight:700;cursor:pointer;border:none;background:linear-gradient(135deg,var(--blue),var(--pink));color:#fff;box-shadow:0 4px 20px rgba(249,168,37,0.4);transition:transform 0.15s;font-family:inherit;margin-top:8px}
+.btn-go:hover{transform:translateY(-2px)}.btn-go:active{transform:scale(0.96)}
+.result-score{font-size:44px;font-weight:900;color:var(--blue);margin:6px 0}
+@media(max-width:500px){.overlay-card{padding:22px 16px}}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="index.html#games" class="back-link">&#8592; 返回游戏</a>
+  <div class="hud">
+    <span class="hud-score" id="scoreHud">⭐0</span>
+    <span class="hud-timer" id="timerHud">2:00</span>
+    <span class="hud-label" id="hudModeLabel"></span>
+    <button class="sound-btn" id="soundBtn" onclick="toggleSound()">🔊</button><a href="contact.html" style="font-size:15px;text-decoration:none;margin-left:6px;color:var(--blue)" title="联系我们">📬</a>
+  </div>
+</div>
+
+<div class="canvas-wrap" id="canvasWrap">
+  <canvas id="cL"></canvas>
+  <canvas id="cR"></canvas>
+  <div class="mode-hint" id="modeHint"></div>
+  <div class="mascot" id="mascot"><img src="mascot/sunflower-smile.png" alt="小葵" id="mascotImg"></div>
+</div>
+
+<!-- Start Overlay -->
+<div class="overlay" id="startOverlay">
+  <div class="overlay-card">
+    <h2>🫧 追光泡泡</h2>
+    <p>双眼追踪训练 · 分清左右眼的泡泡</p>
+    <div class="glasses-box">
+      <strong>⚠ 必须佩戴红蓝眼镜（左蓝滤/右红滤）</strong><br>
+      ① 先戴矫正眼镜 → 再叠戴红蓝眼镜<br>
+      ② 左眼蓝滤片：只看到青色泡泡（左Canvas）<br>
+      ③ 右眼红滤片：只看到红色泡泡（右Canvas）<br>
+      ④ 灰色泡泡双眼都可见（干扰，不扣分）<br>
+      ⑤ 泡泡漂到中间时点击才计分
+    </div>
+    <div class="setting-row">
+      <span><span class="setting-label">弱视眼：</span>
+      <select class="setting-select" id="weakEyeSelect">
+        <option value="right">右眼（戴红滤片）</option>
+        <option value="left">左眼（戴蓝滤片）</option>
+      </select></span>
+      <span><span class="setting-label">模式：</span>
+      <select class="setting-select" id="modeSelect">
+        <option value="mixed">一起追</option>
+        <option value="red">右眼先练练</option>
+        <option value="cyan">左眼先练练</option>
+      </select></span>
+    </div>
+    <div class="diff-select" id="diffSelect">
+      <button class="diff-btn active" data-diff="easy">简单</button>
+      <button class="diff-btn" data-diff="medium">中等</button>
+      <button class="diff-btn" data-diff="hard">困难</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted)">屏距30-40cm · 2分钟/局 · 全天≤15分钟</p>
+    <button class="btn-go" onclick="startGame()">准备好了，开始！</button>
+  </div>
+</div>
+
+<!-- End Overlay -->
+<div class="overlay hidden" id="endOverlay">
+  <div class="overlay-card" id="endCard"></div>
+</div>
+
+<script>
+/* ── Config ── */
+var BASE_W=560, BASE_H=400, G_BASE=200;
+var DIFFICULTY_ORIG={
+  easy:{label:'简单',interval:1800,pairs:1,gray:0,winPct:[30,70],speed:60,radius:45,g:200},
+  medium:{label:'中等',interval:1200,pairs:2,gray:1,winPct:[35,65],speed:90,radius:30,g:170},
+  hard:{label:'困难',interval:800,pairs:3,gray:2,winPct:[40,60],speed:130,radius:18,g:140}
+};
+var currentDiff='easy', cfg={};
+resetCfg();
+function resetCfg(){var o=DIFFICULTY_ORIG[currentDiff];for(var k in o)cfg[k]=o[k]}
+
+var weakEye='right', mode='mixed', score=0, hitCount=0, totalCount=0;
+var running=false, timeLeft=120, timerId=null, spawnTimer=null, loopId=null;
+var bubbles=[], audioCtx=null, soundOn=true;
+var streak=0, leakStreak=0, fixFrame=0;
+
+/* ── Canvas ── */
+var cL,cR,ctxL,ctxR;
+function resizeCanvas(){
+  var wrap=document.getElementById('canvasWrap');
+  var rect=wrap.getBoundingClientRect(), w=rect.width, h=rect.height;
+  var dpr=window.devicePixelRatio||1;
+  [['cL','ctxL'],['cR','ctxR']].forEach(function(p){
+    var c=document.getElementById(p[0]);c.width=w*dpr;c.height=h*dpr;c.style.width=w+'px';c.style.height=h+'px';
+    window[p[1]]=c.getContext('2d');window[p[1]].setTransform(1,0,0,1,0,0);
+    var s=Math.min(dpr*w/BASE_W,dpr*h/BASE_H);
+    window[p[1]].translate((dpr*w-s*BASE_W)/2,(dpr*h-s*BASE_H)/2);window[p[1]].scale(s,s);
+  });
+  cL=document.getElementById('cL');cR=document.getElementById('cR');ctxL=cL.getContext('2d');ctxR=cR.getContext('2d');
+}
+resizeCanvas();window.addEventListener('resize',function(){resizeCanvas();if(running)drawAll()});
+
+/* ── Audio ── */
+function initAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)()}
+function playPop(){if(!audioCtx||!soundOn)return;try{var o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.setValueAtTime(800,audioCtx.currentTime);o.frequency.exponentialRampToValueAtTime(1100,audioCtx.currentTime+0.1);g.gain.setValueAtTime(0.07,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.1);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+0.1)}catch(e){}}
+function playBad(){if(!audioCtx||!soundOn)return;try{var o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='square';o.frequency.value=170;g.gain.setValueAtTime(0.04,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.12);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+0.12)}catch(e){}}
+function playMiss(){if(!audioCtx||!soundOn)return;try{var o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.value=350;g.gain.setValueAtTime(0.04,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.2);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+0.2)}catch(e){}}
+function toggleSound(){soundOn=!soundOn;document.getElementById('soundBtn').textContent=soundOn?'🔊':'🔇';if(soundOn)initAudio()}
+
+/* ── Settings ── */
+function loadSettings(){
+  var we=localStorage.getItem('dichoptic_weakEye'),m=localStorage.getItem('dichoptic_mode');
+  if(we)weakEye=we;if(m)mode=m;
+  document.getElementById('weakEyeSelect').value=weakEye;
+  document.getElementById('modeSelect').value=mode;
+}
+loadSettings();
+
+function updateHint(){
+  var h=document.getElementById('modeHint'),lbl=document.getElementById('hudModeLabel');
+  if(mode==='red'){h.textContent='🔴 右眼练练 · 只追红泡泡';h.style.display='block';lbl.textContent='右眼';lbl.style.display='inline'}
+  else if(mode==='cyan'){h.textContent='🔵 左眼练练 · 只追青泡泡';h.style.display='block';lbl.textContent='左眼';lbl.style.display='inline'}
+  else{h.style.display='none';lbl.style.display='none'}
+}
+
+/* ── Window zone ── */
+function getWin(){return[Math.round(BASE_W*cfg.winPct[0]/100),Math.round(BASE_W*cfg.winPct[1]/100)]}
+
+/* ── Bubble spawn ── */
+function spawnBubble(){
+  var types=[];
+  if(mode==='red')types=['red'];else if(mode==='cyan')types=['cyan'];else types=['red','cyan'];
+  for(var i=0;i<cfg.gray;i++)types.push('gray');
+
+  var alive=bubbles.filter(function(b){return b.alive}).length;
+  if(alive>=cfg.pairs*2+cfg.gray)return;
+
+  var type=types[Math.floor(Math.random()*types.length)],g=cfg.g;
+  if(mode==='mixed'&&type!=='gray'){
+    var isDom=(weakEye==='right'&&type==='cyan')||(weakEye==='left'&&type==='red');
+    if(isDom)g=Math.max(80,cfg.g-40);
+  }
+
+  var r=cfg.radius, y=r*1.5+Math.random()*(BASE_H-r*3);
+  var x, vx;
+  if(type==='cyan'||(type==='gray'&&Math.random()<0.5)){
+    x=-r;vx=cfg.speed;
+  }else{
+    x=BASE_W+r;vx=-cfg.speed;
+  }
+  bubbles.push({x:x,y:y,r:r,vx:vx,vy:0,type:type,g:g,alive:true,anim:0,phase:Math.random()*Math.PI*2});
+}
+
+/* ── Draw ── */
+function drawBackground(){
+  var w=getWin();
+  // Zone edge lines only (no fill tints — they create red/cyan residue)
+  ctxL.strokeStyle='rgba(180,180,180,0.06)';ctxL.lineWidth=1.5;ctxL.setLineDash([4,20]);
+  ctxL.beginPath();ctxL.moveTo(w[0],0);ctxL.lineTo(w[0],BASE_H);ctxL.stroke();
+  ctxL.beginPath();ctxL.moveTo(w[1],0);ctxL.lineTo(w[1],BASE_H);ctxL.stroke();
+  ctxR.strokeStyle='rgba(180,180,180,0.06)';ctxR.lineWidth=1.5;ctxR.setLineDash([4,20]);
+  ctxR.beginPath();ctxR.moveTo(w[0],0);ctxR.lineTo(w[0],BASE_H);ctxR.stroke();
+  ctxR.beginPath();ctxR.moveTo(w[1],0);ctxR.lineTo(w[1],BASE_H);ctxR.stroke();
+  ctxL.setLineDash([]);ctxR.setLineDash([]);
+}
+
+function drawAll(){
+  ctxL.clearRect(0,0,BASE_W,BASE_H);ctxL.fillStyle='#3a3a3a';ctxL.fillRect(0,0,BASE_W,BASE_H);
+  ctxR.clearRect(0,0,BASE_W,BASE_H);
+  drawBackground();
+  // Intermittent fixation cross
+  if(fixFrame>0){
+    [ctxL,ctxR].forEach(function(c){
+      c.strokeStyle='rgba(200,200,200,0.25)';c.lineWidth=1.5;c.setLineDash([]);
+      c.beginPath();c.moveTo(BASE_W/2-10,BASE_H/2);c.lineTo(BASE_W/2+10,BASE_H/2);c.stroke();
+      c.beginPath();c.moveTo(BASE_W/2,BASE_H/2-10);c.lineTo(BASE_W/2,BASE_H/2+10);c.stroke();
+    });
+    fixFrame--;
+  }
+
+  bubbles.forEach(function(b){
+    if(!b.alive&&b.anim<=0)return;
+    var a=1,s=1,rr=b.r;
+    if(b.anim>0){var t=b.anim;if(t>0.15){s=1+0.4*((b.anim-0.15)/0.15);a=1-(b.anim-0.15)/0.15}else{s=1-0.8*(t/0.15);a=t/0.15*0.5}rr=b.r*s;if(b.anim>0.3){b.alive=false;b.anim=0}}
+    if(b.type==='cyan'){
+      ctxL.fillStyle='rgba(20,210,225,'+a+')';ctxL.beginPath();ctxL.arc(b.x,b.y,rr,0,Math.PI*2);ctxL.fill();
+    }else if(b.type==='red'){
+      ctxR.fillStyle='rgba(220,60,60,'+a+')';ctxR.beginPath();ctxR.arc(b.x,b.y,rr,0,Math.PI*2);ctxR.fill();
+    }else{
+      ctxL.fillStyle='rgba(180,180,180,'+a+')';ctxL.beginPath();ctxL.arc(b.x,b.y,rr,0,Math.PI*2);ctxL.fill();
+      ctxR.fillStyle='rgba(180,180,180,'+a+')';ctxR.beginPath();ctxR.arc(b.x,b.y,rr,0,Math.PI*2);ctxR.fill();
+    }
+  });
+}
+
+/* ── Game loop ── */
+var lastTs=0;
+function gameLoop(ts){
+  if(!running)return;
+  var dt=Math.min((ts-lastTs)/1000,0.05);lastTs=ts;
+  // Fixation cross every 4s (240 frames at 60fps)
+  if(Math.floor(ts/4000)>Math.floor((ts-dt*1000)/4000))fixFrame=24;
+  bubbles.forEach(function(b){
+    if(!b.alive)return;if(b.anim>0){b.anim-=dt;return}
+    b.vy=Math.sin(ts*0.003+b.phase)*4; // micro wobble
+    b.x+=b.vx*dt;b.y+=b.vy*dt;
+
+    // Check if bubble left screen
+    if((b.vx>0&&b.x>b.r+BASE_W)||(b.vx<0&&b.x<-b.r)){
+      // Passed through window without being clicked
+      var w=getWin();
+      // Bubble fully off-screen: remove instantly, no animation outside canvas
+      if(b.x>b.r+BASE_W&&b.vx>0){if(b.x-b.vx*dt<w[1]){totalCount++;leakStreak++;if(leakStreak>=3){leakStreak=0;adaptUp()}playMiss()}b.alive=false;b.anim=0}
+      else if(b.x<-b.r&&b.vx<0){if(b.x-b.vx*dt>w[0]){totalCount++;leakStreak++;if(leakStreak>=3){leakStreak=0;adaptUp()}playMiss()}b.alive=false;b.anim=0}
+    }
+  });
+  // Clean completely dead
+  bubbles=bubbles.filter(function(b){return b.alive||b.anim>0});
+  drawAll();loopId=requestAnimationFrame(gameLoop);
+}
+
+/* ── Spawn timer ── */
+function spawnLoop(){if(!running)return;spawnBubble();spawnBubble();spawnTimer=setTimeout(spawnLoop,cfg.interval)}
+
+/* ── Click ── */
+function handleClick(clientX,clientY){
+  if(!running)return;
+  var rect=cL.getBoundingClientRect();
+  var lx=(clientX-rect.left)/rect.width*BASE_W, ly=(clientY-rect.top)/rect.height*BASE_H;
+  if(lx<0||lx>BASE_W||ly<0||ly>BASE_H)return;
+
+  var w=getWin();
+  // Find nearest alive bubble IN window zone
+  var hit=-1,bestDist=60;
+  for(var i=bubbles.length-1;i>=0;i--){
+    if(!bubbles[i].alive)continue;
+    if(bubbles[i].x<w[0]||bubbles[i].x>w[1])continue;
+    var dist=Math.hypot(lx-bubbles[i].x,ly-bubbles[i].y);
+    if(dist<bubbles[i].r+12&&dist<bestDist){hit=i;bestDist=dist}
+  }
+  if(hit<0)return;
+
+  var b=bubbles[hit];b.alive=false;b.anim=0.3;totalCount++;
+  if(b.type==='gray'){
+    playBad();setMascot('worry');streak=0;
+  }else{
+    hitCount++;score+=10;playPop();setMascot('celebrate');
+    document.getElementById('scoreHud').textContent='⭐'+score;
+    streak++;
+    if(streak>=5){streak=0;adaptDown()}
+  }
+  setTimeout(function(){b.anim=0},320);
+}
+
+cR.addEventListener('pointerdown',function(e){e.preventDefault();handleClick(e.clientX,e.clientY)});
+cR.addEventListener('touchstart',function(e){e.preventDefault();for(var t of e.changedTouches)handleClick(t.clientX,t.clientY)},{passive:false});
+
+/* ── Adaptive ── */
+var leakStreak=0;
+function adaptDown(){
+  leakStreak=0;
+  cfg.interval=Math.max(400,cfg.interval-120);
+  cfg.pairs=Math.min(4,cfg.pairs+1);
+  cfg.speed=Math.min(200,cfg.speed+8);
+  cfg.winPct[0]=Math.max(10,cfg.winPct[0]-3);cfg.winPct[1]=Math.min(90,cfg.winPct[1]+3);
+}
+function adaptUp(){
+  cfg.interval=Math.min(2000,cfg.interval+120);
+  cfg.pairs=Math.max(1,cfg.pairs-1);
+  cfg.speed=Math.max(40,cfg.speed-8);
+  cfg.winPct[0]=Math.min(cfg.winPct[1]-15,cfg.winPct[0]+3);cfg.winPct[1]=Math.max(cfg.winPct[0]+15,cfg.winPct[1]-3);
+}
+
+/* ── Mascot ── */
+function setMascot(emotion){
+  var img=document.getElementById('mascotImg'),el=document.getElementById('mascot');
+  el.classList.remove('celebrate');img.src='mascot/sunflower-'+emotion+'.png';
+  img.onerror=function(){img.style.display='none'};img.onload=function(){img.style.display='block'};
+  if(emotion==='celebrate'){el.classList.add('celebrate');setTimeout(function(){el.classList.remove('celebrate')},800)}
+}
+
+/* ── Timer ── */
+function fmtTm(s){var m=Math.floor(s/60),sec=s%60;return m+':'+(sec<10?'0':'')+sec}
+function tick(){if(!running)return;timeLeft--;document.getElementById('timerHud').textContent=fmtTm(timeLeft);if(timeLeft<=30)document.getElementById('timerHud').style.color='#FFD54F';if(timeLeft<=0)endGame()}
+
+/* ── Start / End ── */
+function startGame(){
+  initAudio();if(!audioCtx){var a=new(window.AudioContext||window.webkitAudioContext)();a.resume();audioCtx=a}
+  weakEye=document.getElementById('weakEyeSelect').value;mode=document.getElementById('modeSelect').value;
+  localStorage.setItem('dichoptic_weakEye',weakEye);localStorage.setItem('dichoptic_mode',mode);
+  resetCfg();score=0;hitCount=0;totalCount=0;streak=0;leakStreak=0;
+  bubbles=[];running=true;timeLeft=120;
+  document.getElementById('startOverlay').classList.add('hidden');
+  document.getElementById('endOverlay').classList.add('hidden');
+  document.getElementById('scoreHud').textContent='⭐0';document.getElementById('scoreHud').style.display='inline';
+  document.getElementById('timerHud').textContent='2:00';document.getElementById('timerHud').style.display='inline';
+  document.getElementById('timerHud').style.color='#fff';
+  updateHint();setMascot('smile');
+  drawAll();lastTs=performance.now();
+  loopId=requestAnimationFrame(gameLoop);spawnTimer=setTimeout(spawnLoop,200);timerId=setInterval(tick,1000);
+}
+function endGame(){
+  running=false;if(timerId){clearInterval(timerId);timerId=null}if(spawnTimer){clearTimeout(spawnTimer)}
+  if(loopId)cancelAnimationFrame(loopId);
+  document.getElementById('scoreHud').style.display='none';document.getElementById('timerHud').style.display='none';
+  document.getElementById('modeHint').style.display='none';document.getElementById('hudModeLabel').style.display='none';
+  var acc=totalCount>0?Math.round(hitCount/totalCount*100):0;
+  var grade=acc>=80?'🌻 太棒了！双眼在配合！':acc>=50?'💪 不错，继续追！':'🌱 刚起步，多练练！';
+  document.getElementById('endCard').innerHTML='<h2>训练结束</h2><div class="result-score">'+score+'</div><p>分</p><p>命中 '+hitCount+' / '+totalCount+' 次 · 准确率 '+acc+'%</p><p style="font-size:16px;margin:8px 0">'+grade+'</p><div style="background:#FFF8E1;border:2px solid #FFE082;border-radius:14px;padding:12px;margin:12px 0;font-size:12px;color:#F57C00;line-height:1.6">👁 远眺窗外2-5分钟休息<br>红蓝眼镜训练每次≤15分钟<br>结束需远眺放松</div><button class="btn-go" onclick="startGame()">再来一局</button><p style="margin-top:12px"><a href="index.html#games" style="color:var(--blue);font-size:13px;font-weight:600;text-decoration:none">← 返回游戏</a></p>';
+  document.getElementById('endOverlay').classList.remove('hidden');
+  setMascot(acc>=80?'celebrate':acc>=50?'cheer':'smile');
+  ctxL.fillStyle='#808080';ctxL.fillRect(0,0,BASE_W,BASE_H);ctxR.clearRect(0,0,BASE_W,BASE_H);
+}
+
+document.querySelectorAll('#diffSelect .diff-btn').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('#diffSelect .diff-btn').forEach(function(x){x.classList.remove('active')});
+    b.classList.add('active');currentDiff=b.dataset.diff;resetCfg();
+  });
+});
+drawAll();
+</script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}</script>
+</body>
+</html>

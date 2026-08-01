@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>浮出来的形状 · 弱视立体视训练</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root { --blue:#F9A825; --blue-light:#FFF8E1; --pink:#EF6C00; --pink-light:#FFF3E0;
+  --green:#388E3C; --green-light:#E8F5E9; --purple:#1976D2; --purple-light:#E3F2FD;
+  --text:#3E2723; --text-muted:#8D6E63; --bg:#FFFBF0; --card-bg:#fff; --radius:24px; --radius-sm:16px; }
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--text);height:100vh;width:100vw;overflow:hidden;
+  display:flex;flex-direction:column;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+
+.top-bar{position:absolute;top:0;left:0;right:0;height:38px;z-index:10;
+  background:rgba(0,0,0,0.18);backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:space-between;padding:0 12px}
+.back-link{text-decoration:none;color:#FFD54F;font-weight:600;font-size:14px;display:flex;align-items:center;gap:4px}
+.hud{display:flex;align-items:center;gap:10px;color:#fff;font-size:14px;font-weight:700}
+.hud-timer{background:rgba(255,255,255,0.2);padding:2px 10px;border-radius:10px;display:none}
+.sound-btn{background:none;border:none;color:#fff;font-size:16px;cursor:pointer;padding:2px 4px;line-height:1;opacity:0.9}
+
+.canvas-wrap{flex:1;width:100%;position:relative;overflow:hidden;background:#1a1a1a;display:flex;align-items:center;justify-content:center}
+canvas{display:block;max-width:100%;max-height:100%;touch-action:manipulation}
+
+/* Overlays */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
+.overlay.hidden{display:none}
+.overlay-card{background:var(--card-bg);border-radius:var(--radius);padding:28px 24px;max-width:420px;width:100%;text-align:center;border:2px solid #f0f0f5;box-shadow:0 6px 30px rgba(0,0,0,0.12)}
+.overlay-card h2{font-size:22px;margin-bottom:6px}
+.overlay-card p{font-size:14px;color:var(--text-muted);line-height:1.7;margin:8px 0}
+
+.diff-select{display:flex;gap:8px;margin:16px 0;justify-content:center;flex-wrap:wrap}
+.diff-btn{padding:8px 18px;border-radius:24px;border:2px solid #e0e0e0;background:transparent;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;color:var(--text-muted);font-family:inherit}
+.diff-btn:hover{border-color:var(--blue);color:var(--blue)}
+.diff-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+.highlight{background:var(--blue-light);padding:12px 16px;border-radius:14px;border:2px solid #FFE082;margin:16px 0;font-size:14px;color:#F57C00;font-weight:600;line-height:1.6}
+.btn-go{display:inline-block;padding:12px 36px;border-radius:30px;font-size:16px;font-weight:700;cursor:pointer;border:none;background:linear-gradient(135deg,var(--blue),var(--pink));color:#fff;box-shadow:0 4px 20px rgba(249,168,37,0.4);transition:transform 0.15s,box-shadow 0.15s;font-family:inherit;margin-top:12px}
+.btn-go:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(249,168,37,0.55)}
+.btn-go:active{transform:scale(0.96)}
+.btn-outline{display:inline-block;padding:10px 28px;border-radius:30px;font-size:14px;font-weight:700;cursor:pointer;border:2px solid var(--blue);background:#fff;color:var(--blue);font-family:inherit;margin-left:8px;transition:all 0.2s}
+.btn-outline:hover{background:var(--blue-light)}
+
+/* ── Shape buttons (removed — direct canvas click) ── */
+.mascot{position:absolute;right:10px;bottom:80px;z-index:6;transition:all 0.4s}
+.mascot img{width:72px;height:72px;animation:mascot-float 3s ease-in-out infinite}
+.mascot.celebrate img{animation:mascot-pop 0.6s ease-out}
+@keyframes mascot-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes mascot-pop{0%{transform:scale(0.8);opacity:0}50%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+
+.result-score{font-size:48px;font-weight:900;color:var(--blue);margin:8px 0}
+.result-label{font-size:14px;color:var(--text-muted)}
+.rest-reminder{background:#FFF8E1;border:2px solid #FFE082;border-radius:14px;padding:14px;margin:14px 0;font-size:13px;color:#F57C00;line-height:1.6}
+
+@media(max-width:500px){
+  .overlay-card{padding:22px 16px}
+  .shape-btn{width:50px;height:50px;font-size:22px}
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="index.html#games" class="back-link">&#8592; 返回游戏</a>
+  <div class="hud">
+    <span class="hud-timer" id="hudTimer">2:00</span>
+    <button class="sound-btn" id="soundBtn" onclick="toggleSound()">🔊</button><a href="contact.html" style="font-size:15px;text-decoration:none;margin-left:6px;color:var(--blue)" title="联系我们">📬</a>
+  </div>
+</div>
+
+<div class="canvas-wrap" id="canvasWrap">
+  <canvas id="gameCanvas"></canvas>
+
+  <div class="score-hud" id="scoreHud">⭐ 0分</div>
+
+  <!-- Mascot -->
+  <div class="mascot" id="mascot">
+    <img src="mascot/sunflower-smile.png" alt="小葵" id="mascotImg">
+  </div>
+</div>
+
+<!-- Start Overlay -->
+<div class="overlay" id="startOverlay">
+  <div class="overlay-card">
+    <h2>🎯 浮出来的形状</h2>
+    <p>戴上<strong>红蓝眼镜</strong>（左蓝右红）<br>双眼睁开看屏幕上的形状<br><strong>直接点击浮起来的形状</strong>！</p>
+    <div class="diff-select" id="diffSelect">
+      <button class="diff-btn active" data-diff="easy">简单</button>
+      <button class="diff-btn" data-diff="medium">中等</button>
+      <button class="diff-btn" data-diff="hard">困难</button>
+    </div>
+    <div class="highlight">&#x1f6d1; 双眼睁开，左蓝右红眼镜<br>红蓝眼镜训练每次不超过15分钟</div>
+    <p style="font-size:13px;color:var(--text-muted)">
+      训练时长：<strong>2 分钟</strong> · 距离屏幕30-40cm
+    </p>
+    <button class="btn-go" onclick="startGame()">准备好了，开始！</button>
+  </div>
+</div>
+
+<!-- End Overlay -->
+<div class="overlay hidden" id="endOverlay">
+  <div class="overlay-card" id="endCard"></div>
+</div>
+
+<script>
+/* ── Config ── */
+var BASE_W=560, BASE_H=400;
+var DIFFICULTY={
+  easy:{label:'简单',disparityPx:24,dotSize:3.0,dotDensity:0.06,shapeRadius:80,dualShape:false,
+        desc:'600 arcsec · 1个形状 · 点击它'},
+  medium:{label:'中等',disparityPx:18,dotSize:2.6,dotDensity:0.09,shapeRadius:68,dualShape:true,
+        desc:'450 arcsec · 2个同形 · 点浮起来的'},
+  hard:{label:'困难',disparityPx:10,dotSize:2.2,dotDensity:0.13,shapeRadius:54,dualShape:true,
+        desc:'250 arcsec · 2个同形 · 细微深度差'}
+};
+var currentDiff='easy', cfg=DIFFICULTY[currentDiff];
+var score=0, correctCount=0, totalRounds=0, running=false, timeLeft=120, timerId=null;
+var items=[], frontIdx=0, answered=false, fixationActive=false;
+var audioCtx=null, soundOn=true;
+
+/* ── Canvas ── */
+var canvas, ctx;
+function resizeCanvas(){
+  canvas=document.getElementById('gameCanvas');
+  ctx=canvas.getContext('2d');
+  var wrap=document.getElementById('canvasWrap');
+  var rect=wrap.getBoundingClientRect(), w=rect.width, h=rect.height;
+  var dpr=window.devicePixelRatio||1;
+  canvas.width=w*dpr;canvas.height=h*dpr;
+  canvas.style.width=w+'px';canvas.style.height=h+'px';
+  ctx.setTransform(1,0,0,1,0,0);
+  var s=Math.min(dpr*w/BASE_W,dpr*h/BASE_H);
+  var ox=(dpr*w-s*BASE_W)/2, oy=(dpr*h-s*BASE_H)/2;
+  ctx.translate(ox,oy);ctx.scale(s,s);
+}
+resizeCanvas();window.addEventListener('resize',function(){resizeCanvas();if(running)renderRDS();});
+
+/* ── Audio ── */
+function initAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)()}
+function playBeep(f,d,v,t){if(!audioCtx||!soundOn)return;try{var o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=t||'sine';o.frequency.value=f;g.gain.setValueAtTime(v,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+d);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+d)}catch(e){}}
+function playCorrect(){playBeep(660,0.08,0.06);setTimeout(function(){playBeep(880,0.1,0.06)},80)}
+function playWrong(){playBeep(200,0.12,0.04,'square')}
+function toggleSound(){soundOn=!soundOn;document.getElementById('soundBtn').textContent=soundOn?'🔊':'🔇';if(soundOn)initAudio()}
+
+/* ── Shape mask (circle only — all shapes identical per round) ── */
+function inShape(px,py,cx,cy,r){return (px-cx)*(px-cx)+(py-cy)*(py-cy)<r*r}
+
+/* ── RDS Render ── */
+function renderRDS(){
+  var r=cfg.shapeRadius, disp=cfg.disparityPx, dsize=cfg.dotSize, density=cfg.dotDensity;
+  ctx.fillStyle='#1a1a1a';ctx.fillRect(0,0,BASE_W,BASE_H);
+  var totalDots=Math.floor(BASE_W*BASE_H*density);
+
+  for(var i=0;i<totalDots;i++){
+    var x=Math.random()*BASE_W, y=Math.random()*BASE_H;
+    // Left eye (cyan) — always native (医学修正: 与红点亮度拉平 ΔL≤15)
+    ctx.fillStyle='rgba(20,210,225,0.88)';
+    ctx.fillRect(x-dsize/2, y-dsize/2, dsize, dsize);
+    // Right eye (red)
+    var rx=x, ry=y;
+    for(var j=0;j<items.length;j++){
+      if(inShape(x,y,items[j].cx,items[j].cy,r)){
+        rx=x-items[j].disparity;break;
+      }
+    }
+    if(rx<0||rx>BASE_W||ry<0||ry>BASE_H){rx=x;ry=y;}
+    ctx.fillStyle='rgba(220,60,60,0.88)';
+    ctx.fillRect(rx-dsize/2, ry-dsize/2, dsize, dsize);
+  }
+
+  // Subtle boundary hints
+  for(var j=0;j<items.length;j++){
+    ctx.beginPath();ctx.arc(items[j].cx,items[j].cy,r+8,0,Math.PI*2);
+    ctx.strokeStyle='rgba(255,255,255,0.03)';ctx.lineWidth=2;ctx.setLineDash([6,14]);ctx.stroke();ctx.setLineDash([]);
+  }
+}
+
+/* ── Mascot ── */
+function setMascot(emotion){
+  var img=document.getElementById('mascotImg'), el=document.getElementById('mascot');
+  el.classList.remove('celebrate');
+  img.src='mascot/sunflower-'+emotion+'.png';
+  img.onerror=function(){img.style.display='none'};
+  img.onload=function(){img.style.display='block'};
+  if(emotion==='celebrate'){el.classList.add('celebrate');setTimeout(function(){el.classList.remove('celebrate')},800)}
+}
+
+/* ── Generate round ── */
+function newRound(){
+  answered=false;
+  var r=cfg.shapeRadius, disp=cfg.disparityPx, margin=r+disp+14, dual=cfg.dualShape;
+  var n=dual?2:1;
+  items=[]; frontIdx=0;
+  for(var i=0;i<n;i++){
+    var cx,cy,placed=false;
+    for(var a=0;a<100;a++){
+      cx=margin+Math.random()*(BASE_W-margin*2);
+      cy=margin+Math.random()*(BASE_H-margin*2);
+      var ok=true;
+      for(var k=0;k<items.length;k++){if(Math.hypot(cx-items[k].cx,cy-items[k].cy)<r*3){ok=false;break}}
+      if(ok){placed=true;break}
+    }
+    if(!placed){cx=margin+Math.random()*(BASE_W-margin*2);cy=margin+Math.random()*(BASE_H-margin*2)}
+    items.push({cx:cx,cy:cy,disparity:0});
+  }
+  if(dual){
+    // Random which one is front
+    frontIdx=Math.random()<0.5?0:1;
+    items[frontIdx].disparity=disp;         // pops front
+    items[1-frontIdx].disparity=-disp*0.7;  // sinks back (opposite disparity, slightly smaller)
+  }else{
+    items[0].disparity=disp;
+  }
+  renderRDS();
+  // 注视十字引导（医学：600ms 中心凹对齐）
+  if(!answered){
+    fixationActive=true;
+    var fcx=items[0].cx, fcy=items[0].cy, cl=16;
+    ctx.strokeStyle='rgba(200,200,200,0.5)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(fcx-cl,fcy);ctx.lineTo(fcx+cl,fcy);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(fcx,fcy-cl);ctx.lineTo(fcx,fcy+cl);ctx.stroke();
+    setTimeout(function(){fixationActive=false;renderRDS()},600);
+  }
+  document.getElementById('scoreHud').style.display='block';
+  document.getElementById('scoreHud').textContent='⭐ '+score+'分';
+}
+
+/* ── Click handler (direct on canvas) ── */
+function handleClick(clientX,clientY){
+  if(!running||answered||fixationActive)return;
+  var rect=canvas.getBoundingClientRect();
+  var lx=(clientX-rect.left)/rect.width*BASE_W;
+  var ly=(clientY-rect.top)/rect.height*BASE_H;
+  if(lx<0||lx>BASE_W||ly<0||ly>BASE_H)return;
+
+  // Find which item was clicked
+  var r=cfg.shapeRadius, hitIdx=-1;
+  for(var i=0;i<items.length;i++){if(inShape(lx,ly,items[i].cx,items[i].cy,r+10)){hitIdx=i;break}}
+  if(hitIdx<0)return; // missed all
+
+  answered=true; totalRounds++;
+  var correct=(hitIdx===frontIdx);
+
+  if(correct){
+    correctCount++; score+=10;
+    document.getElementById('scoreHud').textContent='⭐ '+score+'分 · ✓';
+    playCorrect(); setMascot('celebrate');
+    // Gold pulse on target
+    ctx.beginPath();ctx.arc(items[frontIdx].cx,items[frontIdx].cy,r+14,0,Math.PI*2);
+    ctx.strokeStyle='rgba(255,215,79,0.8)';ctx.lineWidth=5;ctx.setLineDash([]);ctx.stroke();
+  }else{
+    document.getElementById('scoreHud').textContent='⭐ '+score+'分 · ✗';
+    playWrong(); setMascot('worry');
+    // Mark wrong click red
+    ctx.beginPath();ctx.arc(items[hitIdx].cx,items[hitIdx].cy,r+14,0,Math.PI*2);
+    ctx.strokeStyle='rgba(239,108,0,0.7)';ctx.lineWidth=5;ctx.setLineDash([]);ctx.stroke();
+    // After 700ms, re-render + show correct
+    setTimeout(function(){
+      renderRDS();
+      ctx.beginPath();ctx.arc(items[frontIdx].cx,items[frontIdx].cy,r+14,0,Math.PI*2);
+      ctx.strokeStyle='rgba(56,142,60,0.8)';ctx.lineWidth=5;ctx.setLineDash([]);ctx.stroke();
+    },700);
+  }
+  setTimeout(newRound, 1800);
+}
+
+canvas.addEventListener('pointerdown',function(e){e.preventDefault();handleClick(e.clientX,e.clientY)});
+canvas.addEventListener('touchstart',function(e){e.preventDefault();for(var t of e.changedTouches)handleClick(t.clientX,t.clientY)},{passive:false});
+
+/* ── Timer ── */
+function formatTime(s){var m=Math.floor(s/60),sec=s%60;return m+':'+(sec<10?'0':'')+sec}
+function updateTimer(){if(!running)return;timeLeft--;document.getElementById('hudTimer').textContent=formatTime(timeLeft);if(timeLeft<=30)document.getElementById('hudTimer').style.color='#FFD54F';if(timeLeft<=0)endGame()}
+function startTimer(){timeLeft=120;document.getElementById('hudTimer').textContent='2:00';document.getElementById('hudTimer').style.display='inline-block';timerId=setInterval(updateTimer,1000)}
+
+/* ── Start / End ── */
+function startGame(){
+  initAudio();if(!audioCtx){var a=new(window.AudioContext||window.webkitAudioContext)();a.resume();audioCtx=a}
+  cfg=DIFFICULTY[currentDiff];score=0;correctCount=0;totalRounds=0;answered=false;
+  document.getElementById('startOverlay').classList.add('hidden');
+  document.getElementById('endOverlay').classList.add('hidden');
+  document.getElementById('scoreHud').style.display='block';
+  document.getElementById('scoreHud').textContent='⭐ 0分';
+  setMascot('smile');running=true;startTimer();newRound();
+}
+function endGame(){
+  running=false;if(timerId){clearInterval(timerId);timerId=null}
+  document.getElementById('scoreHud').style.display='none';document.getElementById('hudTimer').style.display='none';
+  var acc=totalRounds>0?Math.round(correctCount/totalRounds*100):0;
+  var grade=acc>=80?'🌻 太棒了！立体视在进步！':acc>=50?'💪 不错，继续加油！':'🌱 刚开始没关系，多练练！';
+  document.getElementById('endCard').innerHTML=
+    '<h2>训练结束</h2><div class="result-score">'+score+'</div><div class="result-label">分</div>'+
+    '<p>正确 '+correctCount+' / '+totalRounds+' 题 · 正确率 '+acc+'%</p>'+
+    '<p style="font-size:18px;margin:8px 0">'+grade+'</p>'+
+    '<div class="rest-reminder">👁 休息一下，远眺窗外1-2分钟<br>红蓝眼镜训练每次不超过15分钟</div>'+
+    '<button class="btn-go" onclick="startGame()">再来一局</button>'+
+    '<p style="margin-top:12px"><a href="index.html" style="color:var(--blue);font-size:14px;font-weight:600;text-decoration:none">← 返回首页</a></p>';
+  document.getElementById('endOverlay').classList.remove('hidden');
+  setMascot(acc>=80?'celebrate':acc>=50?'cheer':'smile');
+  ctx.fillStyle='#1a1a1a';ctx.fillRect(0,0,BASE_W,BASE_H);
+}
+
+document.querySelectorAll('#diffSelect .diff-btn').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('#diffSelect .diff-btn').forEach(function(x){x.classList.remove('active')});
+    b.classList.add('active');currentDiff=b.dataset.diff;cfg=DIFFICULTY[currentDiff];
+  });
+});
+ctx.fillStyle='#1a1a1a';ctx.fillRect(0,0,BASE_W,BASE_H);
+</script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}</script>
+</body>
+</html>

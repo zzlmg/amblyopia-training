@@ -17,82 +17,53 @@
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 html, body {
-  width:100%; height:100%; background:var(--bg);
+  height:100vh; width:100vw; overflow:hidden;
+  display:flex; flex-direction:column;
+  background:var(--bg);
   font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
-  overflow:hidden; user-select:none; -webkit-user-select:none;
+  user-select:none; -webkit-user-select:none;
   touch-action:manipulation;
 }
-body {
-  display:flex; flex-direction:column; align-items:center;
-  padding:6px; gap:6px;
-}
 
-/* header */
-.header {
-  width:100%; max-width:980px; display:flex; align-items:center;
-  justify-content:space-between; padding:8px 16px;
-  background:var(--card); border-radius:14px;
-  border:1.5px solid var(--border); flex-shrink:0;
-}
-.header h1 { font-size:1.1rem; color:var(--text); display:flex; align-items:center; gap:6px; }
-.header h1 span { font-size:1.4rem; }
-.header-right { display:flex; align-items:center; gap:10px; }
-.diff-badge {
-  font-size:0.75rem; font-weight:700; padding:3px 12px;
-  border-radius:20px; color:#fff;
-}
-.diff-easy   { background:linear-gradient(135deg,#66BB6A,#43A047); }
-.diff-medium { background:linear-gradient(135deg,#FFA726,#F57C00); }
-.diff-hard   { background:linear-gradient(135deg,#EF5350,#D32F2F); }
-
-/* top nav */
+/* Floating Top Bar */
 .top-bar {
-  width:100%; max-width:980px; display:flex;
-  align-items:center; justify-content:space-between; padding:16px 20px; flex-shrink:0;
+  position:absolute; top:0; left:0; right:0; height:38px;
+  z-index:10;
+  background:rgba(0,0,0,0.18); backdrop-filter:blur(6px);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 12px;
 }
 .back-link {
-  text-decoration:none; color:var(--accent); font-weight:600; font-size:15px;
-  display:flex; align-items:center; gap:6px;
+  text-decoration:none; color:var(--accent); font-weight:600; font-size:14px;
+  display:flex; align-items:center; gap:4px;
 }
 .back-link:hover { opacity:0.8; }
-
-/* HUD */
-.hud {
-  width:100%; max-width:980px; display:flex; gap:8px; flex-shrink:0;
+.top-bar-right { display:flex; align-items:center; gap:8px; }
+.timer-ring { width:28px; height:28px; }
+.sound-btn {
+  background:none; border:none; color:#5D4037; font-size:16px;
+  cursor:pointer; padding:2px 4px; line-height:1; opacity:0.85;
 }
-.hud-item {
-  flex:1; background:var(--card); border-radius:12px;
-  padding:6px 10px; text-align:center;
-  border:1.5px solid var(--border);
-}
-.hud-label { font-size:0.68rem; color:var(--muted); letter-spacing:1px; }
-.hud-value { font-size:1.3rem; font-weight:800; color:#FFF; margin-top:2px; display:inline-block; padding:1px 10px; border-radius:8px; background:rgba(0,0,0,0.45); }
-.hud-value.green { background:#33691E; }
-.hud-value.red   { background:#B71C1C; }
-.hud-value.gold  { background:#E65100; }
-
-.timer-ring { display:inline-block; width:44px; height:44px; flex-shrink:0; }
+.sound-btn:hover { opacity:1; }
 
 /* canvas wrapper */
 .canvas-wrap {
-  flex:1; width:100%; max-width:980px; min-height:0;
-  background:var(--card); border-radius:16px;
-  border:1.5px solid var(--border); position:relative;
-  overflow:hidden; cursor:crosshair;
+  flex:1; width:100%; position:relative; overflow:hidden;
+  cursor:crosshair;
   display:flex; align-items:center; justify-content:center;
 }
-canvas { display:block; max-width:100%; max-height:100%; border-radius:14px; }
+canvas { display:block; max-width:100%; max-height:100%; }
 
 /* Overlays */
 .overlay {
-  position:absolute; inset:0; background:rgba(255,248,231,0.92);
+  position:fixed; inset:0; z-index:200; padding:16px;
+  background:rgba(0,0,0,0.45);
   display:flex; align-items:center; justify-content:center;
-  z-index:10; backdrop-filter:blur(4px);
 }
 .overlay.hidden { display:none; }
 .overlay-card {
-  background:var(--card); border-radius:20px; padding:24px 20px;
-  max-width:420px; width:90%; text-align:center;
+  background:var(--card); border-radius:24px; padding:28px 24px;
+  max-width:400px; width:100%; text-align:center;
   box-shadow:0 6px 30px rgba(0,0,0,0.1);
   border:2px solid var(--border);
 }
@@ -122,56 +93,30 @@ canvas { display:block; max-width:100%; max-height:100%; border-radius:14px; }
 
 /* Toast */
 .toast {
-  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
-  font-size:2rem; font-weight:900; color:var(--text);
-  pointer-events:none; z-index:100; opacity:0;
+  position:fixed; top:52px; right:16px;
+  font-size:0.95rem; font-weight:700; color:var(--text);
+  pointer-events:none; z-index:300; opacity:0;
   transition:opacity 0.12s;
+  background:rgba(255,255,255,0.7); padding:4px 12px;
+  border-radius:16px;
 }
 .toast.show { opacity:1; }
 
 @media (max-width:500px) {
-  .header { padding:5px 10px; }
-  .header h1 { font-size:0.95rem; }
-  .hud-item { padding:5px 7px; }
-  .hud-value { font-size:1.05rem; }
   .overlay-card { padding:18px 14px; }
+  .overlay-card h2 { font-size:1.05rem; }
+  .overlay-card p { font-size:0.78rem; }
 }
 </style>
 </head>
 <body>
 
-<!-- Top Nav -->
+<!-- Floating Top Bar -->
 <div class="top-bar">
-  <a href="index.html" class="back-link">&#8592; 返回科普站</a>
-  <a href="index.html#games" class="back-link">&#8592; 训练游戏</a>
-  <a href="progress.html" class="back-link">📊 训练进度</a>
-</div>
-
-<!-- ═══ In-game Header ═══ -->
-
-<div class="header">
-  <h1><span>🪰</span>打苍蝇</h1>
-  <div class="header-right">
-    <span class="diff-badge diff-easy" id="diffBadge">简单</span>
-    <span style="color:#5D4037;font-weight:700;font-size:0.82rem;" id="roundInfo">0:00</span>
-  </div>
-</div>
-
-<div class="hud">
-  <div class="hud-item">
-    <div class="hud-label">🎯 得分</div>
-    <div class="hud-value green" id="hudScore">0</div>
-  </div>
-  <div class="hud-item">
-    <div class="hud-label">💥 击杀</div>
-    <div class="hud-value gold" id="hudKills">0</div>
-  </div>
-  <div class="hud-item">
-    <div class="hud-label">❌ 逃脱</div>
-    <div class="hud-value red" id="hudEscapes">0</div>
-  </div>
-  <div class="hud-item" style="display:flex;align-items:center;justify-content:center;">
-    <canvas id="timerCanvas" width="44" height="44" class="timer-ring"></canvas>
+  <a href="index.html#games" class="back-link">&#8592; 返回游戏</a>
+  <div class="top-bar-right">
+    <canvas id="timerRing" width="28" height="28" class="timer-ring"></canvas>
+    <button class="sound-btn" id="soundToggle" title="音效">&#128264;</button><a href="contact.html" style="font-size:15px;text-decoration:none;margin-left:6px;color:var(--blue)" title="联系我们">📬</a>
   </div>
 </div>
 
@@ -180,13 +125,13 @@ canvas { display:block; max-width:100%; max-height:100%; border-radius:14px; }
 
   <div class="overlay" id="startOverlay">
     <div class="overlay-card">
-      <span class="icon-big">🪰</span>
+      <span class="icon-big">&#129439;</span>
       <h2>消灭小苍蝇！</h2>
-      <p>快速点击飞过的<b>小苍蝇</b>来得分<br>让它们飞走就太可惜啦！<br>手眼协调 + 快速反应训练 🎯</p>
+      <p>快速点击飞过的<b>小苍蝇</b>来得分<br>让它们飞走就太可惜啦！<br>手眼协调 + 快速反应训练 &#127919;</p>
       <div class="diff-select" id="diffSelect">
-        <button class="diff-btn active" data-diff="easy">⭐ 简单</button>
-        <button class="diff-btn" data-diff="medium">⭐⭐ 中等</button>
-        <button class="diff-btn" data-diff="hard">⭐⭐⭐ 困难</button>
+        <button class="diff-btn active" data-diff="easy">&#11088; 简单</button>
+        <button class="diff-btn" data-diff="medium">&#11088;&#11088; 中等</button>
+        <button class="diff-btn" data-diff="hard">&#11088;&#11088;&#11088; 困难</button>
       </div>
       <button class="btn-go" id="btnStart">开始训练</button>
     </div>
@@ -194,7 +139,7 @@ canvas { display:block; max-width:100%; max-height:100%; border-radius:14px; }
 
   <div class="overlay hidden" id="coverOverlay">
     <div class="overlay-card">
-      <span class="icon-big">🩺</span>
+      <span class="icon-big">&#129657;</span>
       <h2>遮盖提醒</h2>
       <p>请<b>遮盖健眼（好眼）</b>，<br>仅用<b>弱视眼</b>进行训练。</p>
       <p style="font-size:0.78rem;color:#EF5350;">遮盖不严会影响训练效果</p>
@@ -208,7 +153,7 @@ canvas { display:block; max-width:100%; max-height:100%; border-radius:14px; }
 
   <div class="overlay hidden" id="pauseOverlay">
     <div class="overlay-card">
-      <span style="font-size:3rem;display:block;">⏸</span>
+      <span style="font-size:3rem;display:block;">&#9208;</span>
       <h2>已暂停</h2>
       <button class="btn-go" id="btnResume">继续训练</button>
     </div>
@@ -220,11 +165,11 @@ canvas { display:block; max-width:100%; max-height:100%; border-radius:14px; }
 <script>
 /* ============================================================
    打苍蝇 - 精细刺激 + 手眼协调训练游戏
-   Canvas 960×540 base, responsive scaling
+   Canvas 960x540 base, responsive scaling
    临床依据：精细刺激训练通过高精度视觉任务
    刺激视网膜和视皮层发育，提升弱视眼视力
    ============================================================ */
-/* ── localStorage 进度系统 ── */
+/* localStorage 进度系统 */
 const PROGRESS_KEY='amblyopia_progress';
 function initProgress(){let r=localStorage.getItem(PROGRESS_KEY);if(!r){const p={version:1,totalPoints:0,streak:{current:0,best:0,lastDate:''},games:{'whack-a-mole':{plays:0,bestScore:0,totalHits:0,totalMisses:0,bestCombo:0},'spot-difference':{plays:0,bestScore:0,totalCorrect:0,totalWrong:0},'matching-game':{plays:0,bestScore:0,totalPairs:0,bestCombo:0},'maze-game':{plays:0,bestScore:0,totalMazes:0,fastestTime:null},'chase-the-light':{plays:0,bestScore:0,totalCaptures:0,bestCombo:0},'fly-swatter':{plays:0,bestScore:0,totalKills:0,totalEscapes:0}},calendar:{},achievements:[],settings:{difficulties:{}}};localStorage.setItem(PROGRESS_KEY,JSON.stringify(p));return p;}try{return JSON.parse(r);}catch(e){return null;}}
 function getToday(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
@@ -236,17 +181,17 @@ function checkAch(p){const unlocked=new Set(p.achievements.map(a=>a.id));for(con
 const canvas  = document.getElementById('gameCanvas');
 const ctx     = canvas.getContext('2d');
 const wrap    = document.getElementById('canvasWrap');
-const timerCanvas = document.getElementById('timerCanvas');
+const timerCanvas = document.getElementById('timerRing');
 const timerCtx    = timerCanvas.getContext('2d');
 
-/* ── Constants ── */
+/* Constants */
 const BASE_W = 960, BASE_H = 540;
 let scale = 1, offsetX = 0, offsetY = 0;
 
-const TOTAL_TIME = 120; // 2分钟
+const TOTAL_TIME = 120;
 const MAX_FAILS  = 3;
 
-/* ── Difficulty ── */
+/* Difficulty */
 const DIFFICULTY = {
   easy: {
     label:'简单', sizeMin:48, sizeMax:56, speedMin:80, speedMax:120,
@@ -267,24 +212,31 @@ const DIFFICULTY = {
 let diff = 'easy';
 let cfg  = DIFFICULTY[diff];
 
-/* ── CAM Background Stimulation State ── */
-let stimType = 0;        // 0=棋盘格, 1=黑白条栅, 2=红蓝条栅
-let stimCycleStart = 0;  // performance.now() when current pattern started
-const STIM_CYCLE = 30000; // 30s per pattern (CAM clinical rotation interval)
+/* CAM Background Stimulation State */
+let stimType = 0;
+let stimCycleStart = 0;
+const STIM_CYCLE = 30000;
 
-/* ── State ── */
+/* State */
 let score=0, kills=0, escapes=0, timeLeft=TOTAL_TIME;
 let running=false, paused=false;
 let flies=[], particles=[], splats=[];
 let spawnTimer=null, timerInterval=null;
 let animId=null, lastTime=0;
 
-/* ── Audio: programmatic "啪" sound ── */
+/* Sound toggle */
+let soundEnabled = true;
+document.getElementById('soundToggle').addEventListener('click', function(){
+  soundEnabled = !soundEnabled;
+  this.textContent = soundEnabled ? '\uD83D\uDD0A' : '\uD83D\uDD07';
+});
+
+/* Audio: programmatic "啪" sound */
 function playSwat() {
+  if (!soundEnabled) return;
   try {
     const ac = new (window.AudioContext||window.webkitAudioContext)();
     const now = ac.currentTime;
-    // noise burst for swat
     const buf = ac.createBuffer(1, ac.sampleRate*0.15, ac.sampleRate);
     const data = buf.getChannelData(0);
     for (let i=0; i<data.length; i++) {
@@ -304,6 +256,7 @@ function playSwat() {
 }
 
 function playFail() {
+  if (!soundEnabled) return;
   try {
     const ac = new (window.AudioContext||window.webkitAudioContext)();
     const osc = ac.createOscillator();
@@ -320,11 +273,10 @@ function playFail() {
 }
 
 function playVictory() {
+  if (!soundEnabled) return;
   try {
     const ac = new (window.AudioContext||window.webkitAudioContext)();
     const now = ac.currentTime;
-
-    // 欢乐上行音阶 (square wave, brighter)
     const melody = [
       {f:523.25,d:0.10},{f:659.25,d:0.10},{f:783.99,d:0.10},
       {f:880,d:0.10},{f:1046.5,d:0.18},
@@ -338,8 +290,6 @@ function playVictory() {
       o.connect(g).connect(ac.destination);
       o.start(t);o.stop(t+n.d);
     });
-
-    // 第二遍加和声 (triangle wave softer)
     const harm=[659.25,783.99,1046.5,1318.5];
     harm.forEach((f,i)=>{
       const o=ac.createOscillator(),g=ac.createGain();
@@ -350,8 +300,6 @@ function playVictory() {
       o.connect(g).connect(ac.destination);
       o.start(t);o.stop(t+0.3);
     });
-
-    // 结尾大和弦 (rich C major chord)
     const chord=[523.25,659.25,783.99,1046.5,1318.5];
     chord.forEach(f=>{
       const o=ac.createOscillator(),g=ac.createGain();
@@ -362,8 +310,6 @@ function playVictory() {
       o.connect(g).connect(ac.destination);
       o.start(t);o.stop(t+0.55);
     });
-
-    // 铃铛闪烁音 (quick bell-like tinkles)
     for(let i=0;i<10;i++){
       const o=ac.createOscillator(),g=ac.createGain();
       o.type='sine';
@@ -374,33 +320,33 @@ function playVictory() {
       o.connect(g).connect(ac.destination);
       o.start(t);o.stop(t+0.15);
     }
-
     setTimeout(()=>ac.close(),1800);
   } catch(e) {}
 }
 
-/* ── Toast ── */
+/* Toast */
 const toast=document.getElementById('toast');
 let toastT=null;
 function showToast(msg,d=600){toast.textContent=msg;toast.classList.add('show');
   clearTimeout(toastT);toastT=setTimeout(()=>toast.classList.remove('show'),d);}
 
-/* ── Timer ring ── */
+/* Timer ring (small, in top bar) */
 function drawTimerRing(){
-  const tw=44,th=44,cx=22,cy=22,r=19;
+  const tw=28,th=28,cx=14,cy=14,r=11;
+  timerCanvas.width=tw;timerCanvas.height=th;
   timerCtx.clearRect(0,0,tw,th);
   timerCtx.beginPath();timerCtx.arc(cx,cy,r,0,Math.PI*2);
-  timerCtx.strokeStyle='rgba(93,64,55,0.1)';timerCtx.lineWidth=3;timerCtx.stroke();
+  timerCtx.strokeStyle='rgba(93,64,55,0.15)';timerCtx.lineWidth=2;timerCtx.stroke();
   const pct=timeLeft/TOTAL_TIME;
   timerCtx.beginPath();timerCtx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*pct);
-  timerCtx.strokeStyle=pct>0.3?'#FF6B35':'#EF5350';timerCtx.lineWidth=3;timerCtx.lineCap='round';
+  timerCtx.strokeStyle=pct>0.3?'#FF6B35':'#EF5350';timerCtx.lineWidth=2;timerCtx.lineCap='round';
   timerCtx.stroke();
-  timerCtx.fillStyle='#5D4037';timerCtx.font='bold 11px -apple-system,sans-serif';
+  timerCtx.fillStyle='#5D4037';timerCtx.font='bold 8px -apple-system,sans-serif';
   timerCtx.textAlign='center';timerCtx.textBaseline='middle';
   timerCtx.fillText(Math.ceil(timeLeft)+'s',cx,cy);
 }
 
-/* ── Scaling ── */
+/* Scaling */
 function resizeCanvas() {
   const rect = wrap.getBoundingClientRect();
   const availW = rect.width - 16;
@@ -424,7 +370,7 @@ function resizeCanvas() {
 }
 window.addEventListener('resize',resizeCanvas);
 
-/* ── Fly class ── */
+/* Fly class */
 class Fly {
   constructor() {
     this.reset();
@@ -435,7 +381,7 @@ class Fly {
     this.y     = this.size*1.2 + Math.random()*(BASE_H-this.size*2.4);
     this.speed = cfg.speedMin + Math.random()*(cfg.speedMax-cfg.speedMin);
     if (cfg.flightType==='zigzag' && Math.random()>0.5) {
-      this.speed *= (0.7 + Math.random()*0.6); // variable speed
+      this.speed *= (0.7 + Math.random()*0.6);
     }
     this.alive    = true;
     this.hitAnim  = 0;
@@ -465,10 +411,7 @@ class Fly {
     }
     this.wingPhase += dtSec*18;
     if (this.warningAnim>0) { this.warningAnim-=dtSec; return; }
-
-    // Movement
     this.x += this.speed*dtSec;
-
     if (cfg.flightType==='sine' && this.sineAmp>0) {
       this.y = this.baseY + Math.sin(this.x*this.sineFreq)*this.sineAmp;
     } else if (cfg.flightType==='zigzag' && this.zigPoints.length>0) {
@@ -501,43 +444,36 @@ class Fly {
     }
     const s=this.size, x=this.x, y=this.y;
     const wingFlap=Math.sin(this.wingPhase);
-
     ctx.save();
     ctx.translate(x,y);
-    // Shadow
     ctx.beginPath();ctx.ellipse(0,s*0.45,s*0.12,s*0.05,0,0,Math.PI*2);
     ctx.fillStyle='rgba(0,0,0,0.08)';ctx.fill();
-
-    // Legs
     ctx.strokeStyle='#3E2723';ctx.lineWidth=s*0.05;ctx.lineCap='round';
-    for (let i=-1;i<=1;i++){
-      ctx.beginPath();ctx.moveTo(i*s*0.15,s*0.25);
-      ctx.lineTo(i*s*0.25,s*0.45);ctx.stroke();
+    // 医学修正: 困难档(小苍蝇)省略腿/触角细节，避免视觉噪声
+    if (s >= 30) {
+      for (let i=-1;i<=1;i++){
+        ctx.beginPath();ctx.moveTo(i*s*0.15,s*0.25);
+        ctx.lineTo(i*s*0.25,s*0.45);ctx.stroke();
+      }
+      for (let i=-1;i<=1;i++){
+        ctx.beginPath();ctx.moveTo(i*s*0.15,s*0.05);
+        ctx.lineTo(i*s*0.3,-s*0.2-Math.abs(i)*s*0.08);ctx.stroke();
+      }
     }
-    for (let i=-1;i<=1;i++){
-      ctx.beginPath();ctx.moveTo(i*s*0.15,s*0.05);
-      ctx.lineTo(i*s*0.3,-s*0.2-Math.abs(i)*s*0.08);ctx.stroke();
-    }
-
-    // Wings
     ctx.save();
     const wTilt=wingFlap*0.3;
     ctx.rotate(-0.3+wTilt);
     ctx.beginPath();ctx.ellipse(s*0.08,-s*0.35,s*0.45,s*0.2,0.2,0,Math.PI*2);
     ctx.fillStyle='rgba(240,245,255,0.85)';ctx.fill();
     ctx.strokeStyle='rgba(180,200,230,0.6)';ctx.lineWidth=0.8;ctx.stroke();
-    // wing veins
     ctx.strokeStyle='rgba(180,200,230,0.4)';ctx.lineWidth=0.4;
     ctx.beginPath();ctx.moveTo(s*0.08,-s*0.35);ctx.lineTo(s*0.4,-s*0.25);ctx.stroke();
     ctx.beginPath();ctx.moveTo(s*0.08,-s*0.35);ctx.lineTo(-s*0.2,-s*0.3);ctx.stroke();
-
     ctx.rotate(0.6-wTilt);
     ctx.beginPath();ctx.ellipse(s*0.08,-s*0.35,s*0.45,s*0.2,0.2,0,Math.PI*2);
     ctx.fillStyle='rgba(240,245,255,0.75)';ctx.fill();
     ctx.strokeStyle='rgba(180,200,230,0.5)';ctx.lineWidth=0.8;ctx.stroke();
     ctx.restore();
-
-    // Body — bright bumblebee yellow for high contrast against CAM backgrounds
     const bodyGrad=ctx.createLinearGradient(0,-s*0.2,0,s*0.3);
     bodyGrad.addColorStop(0,'#FDD835');
     bodyGrad.addColorStop(0.4,'#FBC02D');
@@ -545,47 +481,34 @@ class Fly {
     bodyGrad.addColorStop(1,'#F57F17');
     ctx.beginPath();ctx.ellipse(0,s*0.08,s*0.2,s*0.3,0,0,Math.PI*2);
     ctx.fillStyle=bodyGrad;ctx.fill();
-    // Stripes — dark bee stripes for contrast
     ctx.strokeStyle='rgba(62,39,35,0.35)';ctx.lineWidth=s*0.045;
     for (let i=-1;i<=1;i++){
       ctx.beginPath();ctx.moveTo(-s*0.18,i*s*0.06);ctx.lineTo(s*0.18,i*s*0.06);ctx.stroke();
     }
-
-    // Head — warm amber
     const headGrad=ctx.createRadialGradient(0,-s*0.22,0,0,-s*0.22,s*0.18);
     headGrad.addColorStop(0,'#FFF176');
     headGrad.addColorStop(1,'#F9A825');
     ctx.beginPath();ctx.arc(0,-s*0.22,s*0.18,0,Math.PI*2);
     ctx.fillStyle=headGrad;ctx.fill();
-
-    // Eyes
     const eyeR=s*0.09;
-    // Left eye
     ctx.beginPath();ctx.arc(-s*0.09,-s*0.25,eyeR,0,Math.PI*2);
     ctx.fillStyle='#FFFFFF';ctx.fill();
     ctx.beginPath();ctx.arc(-s*0.09,-s*0.25,eyeR,0,Math.PI*2);
     ctx.strokeStyle='#3E2723';ctx.lineWidth=s*0.03;ctx.stroke();
-    // Right eye
     ctx.beginPath();ctx.arc(s*0.09,-s*0.25,eyeR,0,Math.PI*2);
     ctx.fillStyle='#FFFFFF';ctx.fill();
     ctx.beginPath();ctx.arc(s*0.09,-s*0.25,eyeR,0,Math.PI*2);
     ctx.strokeStyle='#3E2723';ctx.lineWidth=s*0.03;ctx.stroke();
-    // Pupils (looking slightly down/forward)
     ctx.beginPath();ctx.arc(-s*0.07,-s*0.24,eyeR*0.45,0,Math.PI*2);
     ctx.fillStyle='#1a1a1a';ctx.fill();
     ctx.beginPath();ctx.arc(s*0.11,-s*0.24,eyeR*0.45,0,Math.PI*2);
     ctx.fillStyle='#1a1a1a';ctx.fill();
-    // Eye highlights
     ctx.beginPath();ctx.arc(-s*0.1,-s*0.27,eyeR*0.22,0,Math.PI*2);
     ctx.fillStyle='rgba(255,255,255,0.8)';ctx.fill();
     ctx.beginPath();ctx.arc(s*0.08,-s*0.27,eyeR*0.22,0,Math.PI*2);
     ctx.fillStyle='rgba(255,255,255,0.8)';ctx.fill();
-
-    // Smile — darker for contrast
     ctx.beginPath();ctx.arc(0,-s*0.18,s*0.06,0.2,Math.PI-0.2);
     ctx.strokeStyle='#3E2723';ctx.lineWidth=s*0.03;ctx.stroke();
-
-    // Antennae
     ctx.strokeStyle='#5D4037';ctx.lineWidth=s*0.03;ctx.lineCap='round';
     ctx.beginPath();ctx.moveTo(-s*0.05,-s*0.38);
     ctx.quadraticCurveTo(-s*0.15,-s*0.5,-s*0.2,-s*0.48);
@@ -593,12 +516,10 @@ class Fly {
     ctx.beginPath();ctx.moveTo(s*0.05,-s*0.38);
     ctx.quadraticCurveTo(s*0.15,-s*0.5,s*0.2,-s*0.48);
     ctx.stroke();
-    // Antennae tips
     ctx.beginPath();ctx.arc(-s*0.2,-s*0.48,s*0.03,0,Math.PI*2);
     ctx.fillStyle='#5D4037';ctx.fill();
     ctx.beginPath();ctx.arc(s*0.2,-s*0.48,s*0.03,0,Math.PI*2);
     ctx.fill();
-
     ctx.restore();
     return false;
   }
@@ -620,14 +541,13 @@ class Fly {
   }
 }
 
-/* ── Splat ── */
+/* Splat */
 function spawnSplat(x,y,s){ splats.push({x,y,life:0.5,r:s*0.8}); }
 function drawSplat(ctx,x,y,s,age){
   const alpha=1-(age/0.5);
   ctx.save();ctx.translate(x,y);
   ctx.beginPath();ctx.ellipse(0,0,s*0.7*(1+age),s*0.3*(1+age),0.1,0,Math.PI*2);
   ctx.fillStyle=`rgba(255,200,50,${alpha*0.35})`;ctx.fill();
-  // radial burst lines
   for (let i=0;i<6;i++){
     const a=(Math.PI*2*i)/6+age;
     const len=s*0.4*(1+age);
@@ -637,7 +557,7 @@ function drawSplat(ctx,x,y,s,age){
   ctx.restore();
 }
 
-/* ── Particles ── */
+/* Particles */
 function spawnParticles(x,y,s){
   for (let i=0;i<14;i++){
     const angle=Math.random()*Math.PI*2;
@@ -648,21 +568,20 @@ function spawnParticles(x,y,s){
       vy:Math.sin(angle)*speed,
       life:0.5+Math.random()*0.3,
       r:2+Math.random()*(s*0.12),
-      color:['#FFD54F','#FFAB40','#FF8A65','#8D6E63'][Math.floor(Math.random()*4)]
+      color:['#FFD54F','#FFAB40','#8D6E63','#5D4037'][Math.floor(Math.random()*4)]
     });
   }
 }
 
-/* ── Spawn fly ── */
+/* Spawn fly */
 function trySpawnFly() {
   const aliveCount = flies.filter(f=>f.alive).length;
   if (aliveCount >= cfg.maxFlies) return;
   flies.push(new Fly());
 }
 
-/* ── Update ── */
+/* Update */
 function update(dtSec) {
-  // Flies
   for (let i=flies.length-1;i>=0;i--) {
     const f=flies[i];
     f.update(dtSec);
@@ -671,62 +590,44 @@ function update(dtSec) {
       escapes++;
       playFail();
       updateHUD();
-      showToast('❌ 飞走了！',500);
+      showToast('\u274C 飞走了！',500);
       if (escapes>=MAX_FAILS) {
         endGame();
         return;
       }
     }
   }
-
-  // Splats
   for (let i=splats.length-1;i>=0;i--) {
     splats[i].life-=dtSec; if(splats[i].life<=0)splats.splice(i,1);
   }
-
-  // Particles
   for (let i=particles.length-1;i>=0;i--) {
     const p=particles[i];
     p.x+=p.vx*dtSec; p.y+=p.vy*dtSec;
     p.life-=dtSec; if(p.life<=0)particles.splice(i,1);
   }
-
-  // Clean dead flies
   for (let i=flies.length-1;i>=0;i--) {
     const f=flies[i];
     if (!f.alive && f.hitAnim>0.5) flies.splice(i,1);
   }
 }
 
-/* ── CAM Background Stimulation Patterns ──
-   临床依据（Cambridge Stimulator, 1980s-至今）：
-   ① 黑白棋盘格 —— 高对比度象限交替刺激，激活 V1 视皮层方位选择性神经元
-   ② 黑白方波条栅 —— CAM仪标准配置，空间频率~3-5 cycle/cm，~1rpm旋转
-   ③ 红蓝方波条栅 —— 红蓝对立色刺激，训练色觉通路+双眼抗抑制
-   全部铺满960×540画布（非圆形裁切），绕画布中心缓慢旋转，半透明叠加
-   参考：龙达LD-H、华亚CAM仪、Springer Graefe's 2023系统综述
-   ─────────────────────────────────────────── */
+/* CAM Background Stimulation Patterns */
 
 const CAM_CX = BASE_W / 2;
 const CAM_CY = BASE_H / 2;
-const CAM_RPM = 1.0;            // 旋转速度 rpm (全屏铺满用稍慢旋转)
-const CAM_OPACITY = 0.80;       // 整体透明度
-
-// 旋转安全半径：画布对角半长 + 小余量，确保旋转后覆盖四个角
+const CAM_RPM = 1.0;
+const CAM_OPACITY = 0.80;
 const CAM_SAFE_R = Math.ceil(Math.sqrt(BASE_W*BASE_W + BASE_H*BASE_H) / 2) + 4;
 
-/* 模式1: 黑白棋盘格 —— 全屏铺满 */
 function drawStimCheckerboard(ctx, elapsed) {
-  const sq = 20;  // 每格20px
+  const sq = 20;
   const angle = (elapsed / 60000) * Math.PI * 2 * CAM_RPM;
   const cover = CAM_SAFE_R * 2;
-
   ctx.save();
   ctx.globalAlpha = CAM_OPACITY + 0.02;
   ctx.translate(CAM_CX, CAM_CY);
   ctx.rotate(angle);
   ctx.translate(-CAM_CX, -CAM_CY);
-
   const sx = CAM_CX - cover;
   const sy = CAM_CY - cover;
   const cols = Math.ceil(cover * 2 / sq);
@@ -742,18 +643,15 @@ function drawStimCheckerboard(ctx, elapsed) {
   ctx.restore();
 }
 
-/* 模式2: 黑白方波条栅 —— 全屏铺满 */
 function drawStimBWGrating(ctx, elapsed) {
-  const barW = 14;  // 条宽14px
+  const barW = 14;
   const angle = (elapsed / 50000) * Math.PI * 2 * CAM_RPM;
   const cover = CAM_SAFE_R;
-
   ctx.save();
   ctx.globalAlpha = CAM_OPACITY;
   ctx.translate(CAM_CX, CAM_CY);
   ctx.rotate(angle);
   ctx.translate(-CAM_CX, -CAM_CY);
-
   const totalBars = Math.ceil(cover * 2 / barW);
   for (let i = -totalBars; i < totalBars; i++) {
     const x = CAM_CX + i * barW;
@@ -763,18 +661,15 @@ function drawStimBWGrating(ctx, elapsed) {
   ctx.restore();
 }
 
-/* 模式3: 红蓝方波条栅 —— 全屏铺满 */
 function drawStimRBGrating(ctx, elapsed) {
-  const barW = 14;  // 条宽14px
+  const barW = 14;
   const angle = (elapsed / 48000) * Math.PI * 2 * CAM_RPM;
   const cover = CAM_SAFE_R;
-
   ctx.save();
   ctx.globalAlpha = CAM_OPACITY;
   ctx.translate(CAM_CX, CAM_CY);
   ctx.rotate(angle);
   ctx.translate(-CAM_CX, -CAM_CY);
-
   const totalBars = Math.ceil(cover * 2 / barW);
   for (let i = -totalBars; i < totalBars; i++) {
     const x = CAM_CX + i * barW;
@@ -800,16 +695,13 @@ function drawStimulationBackground(ctx, elapsed) {
 
 function drawStimLabel(ctx, elapsed) {
   if (!running || paused) return;
-  const labels = ['◈ 黑白棋盘格', '▥ 黑白方波条栅', '🔴🔵 红蓝条栅'];
-  const text = labels[stimType] + ' · 旋转';
+  const labels = ['\u25C8 黑白棋盘格', '\u25A5 黑白方波条栅', '\uD83D\uDD34\uD83D\uDD35 红蓝条栅'];
+  const text = labels[stimType] + ' \u00B7 旋转';
   const remain = Math.ceil((STIM_CYCLE - (elapsed % STIM_CYCLE)) / 1000);
-
   ctx.save();
   ctx.font = '11px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif';
   const tw = ctx.measureText(text).width + 14;
   const tx = BASE_W - tw - 16, ty = 14, th = 22, r = 11;
-
-  // Manual rounded rect for compatibility
   ctx.fillStyle = 'rgba(255,248,231,0.85)';
   ctx.beginPath();
   ctx.moveTo(tx + r, ty);
@@ -825,12 +717,9 @@ function drawStimLabel(ctx, elapsed) {
   ctx.fill();
   ctx.strokeStyle = 'rgba(161,136,127,0.35)'; ctx.lineWidth = 0.8;
   ctx.stroke();
-
   ctx.fillStyle = '#8D6E63';
   ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
   ctx.fillText(text, tx + 7, ty + 11);
-
-  // Countdown
   ctx.fillStyle = '#A1887F';
   ctx.font = '9px -apple-system, "PingFang SC", sans-serif';
   ctx.textAlign = 'right';
@@ -838,37 +727,25 @@ function drawStimLabel(ctx, elapsed) {
   ctx.restore();
 }
 
-/* ── Draw ── */
+/* Draw */
 function draw() {
   ctx.clearRect(0,0,BASE_W,BASE_H);
-
-  // Background
   ctx.fillStyle='#FFF8E7';ctx.fillRect(0,0,BASE_W,BASE_H);
-
-  // Subtle wall/floor lines
-  ctx.strokeStyle='rgba(200,180,160,0.25)';ctx.lineWidth=0.5;
+  // 医学修正: 网格α从0.25→0.12，降低CAM背景上的纹理干扰
+  ctx.strokeStyle='rgba(200,180,160,0.12)';ctx.lineWidth=0.5;
   for (let x=0;x<BASE_W;x+=30){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,BASE_H);ctx.stroke();}
   for (let y=0;y<BASE_H;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(BASE_W,y);ctx.stroke();}
-
-  // Hard mode: gray overlay to reduce contrast
   if (cfg.contrastOverlay) {
     ctx.fillStyle='rgba(180,175,165,0.12)';ctx.fillRect(0,0,BASE_W,BASE_H);
   }
-
-  // CAM Background Stimulation (clinical rotating patterns at 10-18% opacity)
   const stimElapsed = running ? performance.now() - stimCycleStart : 0;
-  // Check if need to rotate pattern
   if (running && stimElapsed >= STIM_CYCLE) {
     stimType = (stimType + 1) % 3;
     stimCycleStart = performance.now();
   }
   const stimCurrElapsed = running ? performance.now() - stimCycleStart : 0;
   drawStimulationBackground(ctx, stimCurrElapsed);
-
-  // Splats
   for (const s of splats) drawSplat(ctx,s.x,s.y,s.r,s.life);
-
-  // Particles
   for (const p of particles) {
     ctx.beginPath();ctx.arc(p.x,p.y,p.r*p.life*2,0,Math.PI*2);
     const alpha=Math.max(0,Math.min(1,p.life*0.8));
@@ -882,33 +759,25 @@ function draw() {
     }
     ctx.fill();
   }
-
-  // Flies
   for (const f of flies) f.draw(ctx);
-
-  // Stimulation label overlay
   drawStimLabel(ctx, stimCurrElapsed);
-
-  // Danger zone indicator (right edge, when esc >=2)
   if (escapes>=2) {
     const pulse=0.3+0.3*Math.sin(Date.now()*0.004);
     const grad=ctx.createLinearGradient(BASE_W-40,0,BASE_W,0);
-    grad.addColorStop(0,'rgba(239,83,80,0)');
-    grad.addColorStop(0.5,`rgba(239,83,80,${pulse})`);
-    grad.addColorStop(1,'rgba(239,83,80,0)');
+    grad.addColorStop(0,'rgba(255,171,64,0)');
+    grad.addColorStop(0.5,`rgba(255,171,64,${pulse})`);
+    grad.addColorStop(1,'rgba(255,171,64,0)');
     ctx.fillStyle=grad;ctx.fillRect(BASE_W-40,0,40,BASE_H);
   }
 }
 
-/* ── Handle click ── */
+/* Handle click */
 function handleClick(clientX, clientY) {
   if (!running || paused) return;
   const rect=canvas.getBoundingClientRect();
   const cx=(clientX-rect.left)/rect.width*BASE_W;
   const cy=(clientY-rect.top)/rect.height*BASE_H;
   if (cx<0||cx>BASE_W||cy<0||cy>BASE_H) return;
-
-  // Check flies (hit topmost/most clickable first - those with warning over)
   let hit=false;
   for (let i=flies.length-1;i>=0;i--) {
     const f=flies[i];
@@ -917,7 +786,7 @@ function handleClick(clientX, clientY) {
         kills++; score+=10;
         playSwat();
         updateHUD();
-        if (kills%5===0) showToast('🔥 '+score+'分！',600);
+        if (kills%5===0) showToast('\uD83D\uDD25 '+score+'\u5206\uFF01',600);
       }
       hit=true; break;
     }
@@ -936,30 +805,27 @@ canvas.addEventListener('touchstart', e=>{
   }
 },{passive:false});
 
-/* ── Game loop ── */
+/* Game loop */
 let lastFrameTime=0;
 function gameLoop(ts) {
   if (!running) return;
   let dt = lastFrameTime ? (ts-lastFrameTime)/1000 : 0.016;
   if (dt>0.1) dt=0.1;
   lastFrameTime=ts;
-
   if (!paused) update(dt);
   draw();
   drawTimerRing();
   animId=requestAnimationFrame(gameLoop);
 }
 
-/* ── Spawn timer ── */
+/* Spawn timer */
 function startSpawnTimer() {
   spawnTimer=setInterval(()=>{
     if (!running||paused) return;
     trySpawnFly();
   }, cfg.intervalMin+100);
-  /* We need dynamic intervals that match config. Actually let me redo this as a recursive setTimeout approach. */
 }
 
-/* Better spawn scheduling */
 let nextSpawnAt=0;
 function scheduleSpawn() {
   const interval=cfg.intervalMin+Math.random()*(cfg.intervalMax-cfg.intervalMin);
@@ -976,39 +842,28 @@ function spawnLoop(ts) {
   spawnCheckId=requestAnimationFrame(spawnLoop);
 }
 
-/* ── Timer ── */
+/* Timer */
 function startTimer() {
   timerInterval=setInterval(()=>{
     if (!running||paused) return;
     timeLeft=Math.max(0,timeLeft-1);
     drawTimerRing();
-    const m=Math.floor((TOTAL_TIME-timeLeft)/60);
-    const s=Math.floor((TOTAL_TIME-timeLeft)%60);
-    document.getElementById('roundInfo').textContent=m+':'+String(s).padStart(2,'0');
     if (timeLeft<=0) endGame();
   },1000);
 }
 
-/* ── HUD ── */
+/* HUD (no-op, stats shown in end overlay) */
 function updateHUD() {
-  document.getElementById('hudScore').textContent=score;
-  document.getElementById('hudKills').textContent=kills;
-  document.getElementById('hudEscapes').textContent=escapes+'/3';
+  // Score/kills/escapes now only shown in end overlay
 }
 
-/* ── Start ── */
+/* Start */
 function startGame() {
   diff=document.querySelector('.diff-btn.active')?.dataset?.diff||'easy';
   cfg=DIFFICULTY[diff];
-  const badge=document.getElementById('diffBadge');
-  badge.textContent=cfg.label;
-  badge.className='diff-badge diff-'+diff;
-
   score=0;kills=0;escapes=0;timeLeft=TOTAL_TIME;
   flies=[];particles=[];splats=[];
   updateHUD();drawTimerRing();
-  document.getElementById('roundInfo').textContent='0:00';
-
   resizeCanvas();
   stimCycleStart = performance.now();
   stimType = 0;
@@ -1016,7 +871,6 @@ function startGame() {
   document.getElementById('coverOverlay').classList.add('hidden');
   document.getElementById('endOverlay').classList.add('hidden');
   document.getElementById('pauseOverlay').classList.add('hidden');
-
   running=true;paused=false;
   lastFrameTime=0;lastTime=performance.now();
   animId=requestAnimationFrame(gameLoop);
@@ -1025,31 +879,26 @@ function startGame() {
   if (!spawnCheckId||spawnCheckId<=0) spawnCheckId=requestAnimationFrame(spawnLoop);
 }
 
-/* ── End ── */
+/* End */
 function endGame() {
   running=false;
   if (animId) cancelAnimationFrame(animId);
   if (timerInterval) clearInterval(timerInterval);
   if (spawnTimer) clearInterval(spawnTimer);
   if (spawnCheckId) { cancelAnimationFrame(spawnCheckId); spawnCheckId=0; }
-
-  const reason=escapes>=MAX_FAILS?'苍蝇逃走了3只！':timeLeft<=0?'时间到！':'';
-  let grade=score>=200?'🏆 太厉害了！':score>=120?'🌟 非常优秀':score>=60?'👍 不错哦':score>=20?'💪 继续加油':'🐣 慢慢来';
-  if (escapes===0) grade='🎯 完美无逃脱！';
-
-  // Victory or defeat sound
-  if (escapes < MAX_FAILS) {
-    playVictory();
-  }
+  const reason=escapes>=MAX_FAILS?'\uD83D\uDC1D 苍蝇逃走了3只！':timeLeft<=0?'\u23F0 时间到！':'';
+  let grade=score>=200?'\uD83C\uDFC6 太厉害了！':score>=120?'\uD83C\uDF1F 非常优秀':score>=60?'\uD83D\uDC4D 不错哦':score>=20?'\uD83D\uDCAA 继续加油':'\uD83D\uDC23 慢慢来';
+  if (escapes===0) grade='\uD83C\uDFAF 完美无逃脱！';
+  if (escapes < MAX_FAILS) { playVictory(); }
 
   document.getElementById('endCard').innerHTML=`
-    <span style="font-size:3rem;display:block;margin-bottom:6px;">${escapes>=MAX_FAILS?'🪰':'🎉'}</span>
-    <h2>${reason||'训练结束！'}</h2>
+    <span style="font-size:3rem;display:block;margin-bottom:6px;">${escapes>=MAX_FAILS?'\uD83D\uDC1D':'\uD83C\uDF89'}</span>
+    <h2>${reason||'\u8BAD\u7EC3\u7ED3\u675F\uFF01'}</h2>
     <div style="margin:14px 0;line-height:2;font-size:0.92rem;color:var(--text);">
-      <div>🎯 得分：<b style="color:#43A047">${score}</b></div>
-      <div>💥 击杀：<b style="color:#FF8F00">${kills} 只</b></div>
-      <div>❌ 逃脱：<b style="color:#EF5350">${escapes} 只</b></div>
-      <div>⏱ 时长：<b>2 分钟</b></div>
+      <div>\uD83C\uDFAF 得分：<b style="color:#43A047">${score}</b></div>
+      <div>\uD83D\uDCA5 击杀：<b style="color:#FF8F00">${kills} 只</b></div>
+      <div>\u274C 逃脱：<b style="color:#EF5350">${escapes} 只</b></div>
+      <div>\u23F1 时长：<b>2 分钟</b></div>
     </div>
     <div style="font-size:1.2rem;font-weight:700;color:var(--accent);margin:10px 0;">${grade}</div>
     <p style="font-size:0.78rem;color:var(--muted);">遮盖健眼休息5分钟后再继续</p>
@@ -1065,10 +914,9 @@ function backToMenu(){
   document.getElementById('startOverlay').classList.remove('hidden');
   score=0;kills=0;escapes=0;timeLeft=TOTAL_TIME;flies=[];particles=[];splats=[];
   updateHUD();drawTimerRing();
-  document.getElementById('roundInfo').textContent='0:00';
 }
 
-/* ── Event listeners ── */
+/* Event listeners */
 document.getElementById('btnStart').addEventListener('click',()=>{
   document.getElementById('startOverlay').classList.add('hidden');
   document.getElementById('coverOverlay').classList.remove('hidden');
@@ -1087,7 +935,6 @@ document.querySelectorAll('.diff-btn').forEach(btn=>{
   });
 });
 
-// Keyboard: Space to pause
 window.addEventListener('keydown',e=>{
   if (e.code==='Space' && running) {
     e.preventDefault();
@@ -1101,7 +948,7 @@ window.addEventListener('keydown',e=>{
   }
 });
 
-/* ── Init ── */
+/* Init */
 resizeCanvas();
 drawTimerRing();
 updateHUD();

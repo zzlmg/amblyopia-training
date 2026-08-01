@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>双眼拼图 · 太阳花弱视训练</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root { --blue:#F9A825; --blue-light:#FFF8E1; --pink:#EF6C00; --pink-light:#FFF3E0;
+  --green:#388E3C; --green-light:#E8F5E9; --purple:#1976D2; --purple-light:#E3F2FD;
+  --text:#3E2723; --text-muted:#8D6E63; --bg:#FFFBF0; --card-bg:#fff; --radius:24px; --radius-sm:16px; }
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--text);height:100vh;width:100vw;overflow:hidden;
+  display:flex;flex-direction:column;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+
+.top-bar{position:absolute;top:0;left:0;right:0;height:38px;z-index:11;
+  background:rgba(0,0,0,0.18);backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:space-between;padding:0 12px}
+.back-link{text-decoration:none;color:#FFD54F;font-weight:600;font-size:14px;display:flex;align-items:center;gap:4px}
+.hud{display:flex;align-items:center;gap:10px;color:#fff;font-size:14px;font-weight:700}
+.hud-timer{background:rgba(255,255,255,0.2);padding:2px 10px;border-radius:10px;display:none}
+.hud-score{background:rgba(255,215,79,0.3);padding:2px 8px;border-radius:8px;display:none}
+.sound-btn{background:none;border:none;color:#fff;font-size:16px;cursor:pointer;padding:2px 4px}
+
+.canvas-wrap{flex:1;width:100%;position:relative;overflow:hidden;background:#2a2a2a;display:flex;align-items:center;justify-content:center}
+canvas{position:absolute;display:block;max-width:100%;max-height:100%;touch-action:manipulation;cursor:pointer}
+#cL{z-index:1}#cR{z-index:2}
+
+.instruction{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:12;
+  background:rgba(0,0,0,0.4);color:#FFD54F;padding:3px 14px;border-radius:10px;font-size:12px;font-weight:600}
+.mascot{position:absolute;right:10px;bottom:80px;z-index:6;transition:all 0.4s}
+.mascot img{width:56px;height:56px;animation:mascot-float 3s ease-in-out infinite}
+@keyframes mascot-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
+.overlay.hidden{display:none}
+.overlay-card{background:var(--card-bg);border-radius:var(--radius);padding:28px 24px;max-width:420px;width:100%;text-align:center;border:2px solid #f0f0f5;box-shadow:0 6px 30px rgba(0,0,0,0.12)}
+.overlay-card h2{font-size:22px;margin-bottom:6px}
+.overlay-card p{font-size:14px;color:var(--text-muted);line-height:1.7;margin:6px 0}
+.diff-select{display:flex;gap:8px;margin:14px 0;justify-content:center}
+.diff-btn{padding:8px 18px;border-radius:24px;border:2px solid #e0e0e0;background:transparent;font-size:14px;font-weight:600;cursor:pointer;color:var(--text-muted);font-family:inherit}
+.diff-btn:hover{border-color:var(--blue);color:var(--blue)}
+.diff-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.glasses-box{background:#FFF8E1;border:2px solid #FFE082;border-radius:14px;padding:12px;margin:12px 0;font-size:12px;color:#F57C00;font-weight:600;line-height:1.6;text-align:left}
+.btn-go{display:inline-block;padding:12px 36px;border-radius:30px;font-size:16px;font-weight:700;cursor:pointer;border:none;background:linear-gradient(135deg,var(--blue),var(--pink));color:#fff;box-shadow:0 4px 20px rgba(249,168,37,0.4);transition:transform 0.15s;font-family:inherit;margin-top:10px}
+.btn-go:hover{transform:translateY(-2px)}.btn-go:active{transform:scale(0.96)}
+.result-score{font-size:44px;font-weight:900;color:var(--blue);margin:6px 0}
+@media(max-width:500px){.overlay-card{padding:22px 16px}}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <a href="index.html#games" class="back-link">&#8592; 返回游戏</a>
+  <div class="hud">
+    <span class="hud-score" id="scoreHud">⭐0</span>
+    <span class="hud-timer" id="timerHud">2:00</span>
+    <button class="sound-btn" id="soundBtn" onclick="toggleSound()">🔊</button><a href="contact.html" style="font-size:15px;text-decoration:none;margin-left:6px;color:var(--blue)" title="联系我们">📬</a>
+  </div>
+</div>
+<div class="canvas-wrap" id="canvasWrap">
+  <canvas id="cL"></canvas>
+  <canvas id="cR"></canvas>
+  <div class="instruction">👆 直接点击不同的那个图案</div>
+  <div class="mascot" id="mascot"><img src="mascot/sunflower-smile.png" alt="小葵" id="mascotImg"></div>
+</div>
+<div class="overlay" id="startOverlay">
+  <div class="overlay-card">
+    <h2>🧩 双眼拼图</h2>
+    <p>双眼融合训练 · 每只眼只看到图案的一半<br>戴上红蓝眼镜，大脑拼合才能认出完整图案<br>找到那个不一样的格子，<strong>直接点击它</strong>！</p>
+    <div class="diff-select" id="diffSelect">
+      <button class="diff-btn active" data-diff="easy">简单</button>
+      <button class="diff-btn" data-diff="medium">中等</button>
+      <button class="diff-btn" data-diff="hard">困难</button>
+    </div>
+    <div class="glasses-box">
+      ⚠ 必须戴红蓝眼镜（左蓝右红）· 双眼睁开 · 不能闭一只眼<br>
+      · 左眼蓝滤片 → 看左半边（青色）<br>
+      · 右眼红滤片 → 看右半边（红色）<br>
+      · 两只眼看到的图形拼在一起才是完整的<br>
+      · 摘掉眼镜/闭一只眼 → 每个格子只有半边，判断不了！
+    </div>
+    <button class="btn-go" onclick="startGame()">准备好了，开始！</button>
+  </div>
+</div>
+<div class="overlay hidden" id="endOverlay"><div class="overlay-card" id="endCard"></div></div>
+
+<script>
+var BASE_W=560,BASE_H=400;
+var EMOJIS=['🌟','🌙','🦋','🐶','🐱','🍎','🌸','🎯','💎','🫧','🍀','🐸','🐰','🐠','🎈','⭐'];
+var DIFFICULTY={
+  easy:{label:'简单',grid:2,cellSz:90,fontSz:56,split:0.5},
+  medium:{label:'中等',grid:3,cellSz:64,fontSz:38,split:0.5},
+  hard:{label:'困难',grid:4,cellSz:44,fontSz:26,split:0.55}
+};
+var currentDiff='easy',cfg=DIFFICULTY[currentDiff];
+var score=0,correct=0,total=0,running=false,timeLeft=120,timerId=null;
+var gridInfo={},oddIdx=0,answered=false;
+var audioCtx=null,soundOn=true;
+var cL,cR,ctxL,ctxR;
+
+function resizeCanvas(){
+  var wrap=document.getElementById('canvasWrap'),r=wrap.getBoundingClientRect(),w=r.width,h=r.height,dpr=window.devicePixelRatio||1;
+  [['cL','ctxL'],['cR','ctxR']].forEach(function(p){
+    var c=document.getElementById(p[0]);c.width=w*dpr;c.height=h*dpr;c.style.width=w+'px';c.style.height=h+'px';
+    window[p[1]]=c.getContext('2d');window[p[1]].setTransform(1,0,0,1,0,0);
+    var s=Math.min(dpr*w/BASE_W,dpr*h/BASE_H);
+    window[p[1]].translate((dpr*w-s*BASE_W)/2,(dpr*h-s*BASE_H)/2);window[p[1]].scale(s,s);
+  });
+  cL=document.getElementById('cL');cR=document.getElementById('cR');ctxL=cL.getContext('2d');ctxR=cR.getContext('2d');
+}
+resizeCanvas();window.addEventListener('resize',function(){resizeCanvas();if(running)drawGrid()});
+
+function initAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)()}
+function beep(f,d,v){if(!audioCtx||!soundOn)return;try{var o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(v,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+d);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+d)}catch(e){}}
+function playCorrect(){beep(660,0.08,0.06);setTimeout(function(){beep(880,0.1,0.06)},80)}
+function playWrong(){beep(200,0.12,0.04)}
+function toggleSound(){soundOn=!soundOn;document.getElementById('soundBtn').textContent=soundOn?'🔊':'🔇';if(soundOn)initAudio()}
+
+function drawGrid(){
+  ctxL.clearRect(0,0,BASE_W,BASE_H);ctxL.fillStyle='#2a2a2a';ctxL.fillRect(0,0,BASE_W,BASE_H);
+  ctxR.clearRect(0,0,BASE_W,BASE_H);
+
+  var n=cfg.grid,cs=cfg.cellSz,sp=cfg.split,gap=6;
+  var span=n*cs+(n-1)*gap,ox=(BASE_W-span)/2,oy=(BASE_H-span)/2;
+  gridInfo={n:n,cs:cs,ox:ox,oy:oy,gap:gap};
+
+  // Pick symbols
+  var pool=EMOJIS.slice(),base=pool[Math.floor(Math.random()*pool.length)];
+  pool=pool.filter(function(e){return e!==base});var odd=pool[Math.floor(Math.random()*pool.length)];
+  oddIdx=Math.floor(Math.random()*n*n);
+  gridInfo.symbols=[];
+  for(var i=0;i<n*n;i++)gridInfo.symbols.push(i===oddIdx?odd:base);
+
+  for(var i=0;i<n*n;i++){
+    var gx=ox+(i%n)*(cs+gap),gy=oy+Math.floor(i/n)*(cs+gap);
+    var sym=gridInfo.symbols[i];
+
+    // LEFT canvas: LEFT half of text clipped
+    ctxL.save();
+    ctxL.beginPath();ctxL.rect(gx,gy,cs*sp,cs);ctxL.clip();
+    ctxL.font='bold '+cfg.fontSz+'px sans-serif';ctxL.textAlign='center';ctxL.textBaseline='middle';
+    ctxL.fillStyle='rgba(0,210,210,0.9)';ctxL.fillText(sym,gx+cs/2,gy+cs/2);
+    ctxL.restore();
+
+    // RIGHT canvas: RIGHT half clipped
+    ctxR.save();
+    ctxR.beginPath();ctxR.rect(gx+cs*sp,gy,cs*(1-sp),cs);ctxR.clip();
+    ctxR.font='bold '+cfg.fontSz+'px sans-serif';ctxR.textAlign='center';ctxR.textBaseline='middle';
+    ctxR.fillStyle='rgba(210,0,0,0.9)';ctxR.fillText(sym,gx+cs/2,gy+cs/2);
+    ctxR.restore();
+
+    // Cell border hints (subtle)
+    ctxL.strokeStyle='rgba(255,255,255,0.06)';ctxL.lineWidth=1;ctxL.strokeRect(gx,gy,cs,cs);
+    ctxR.strokeStyle='rgba(255,255,255,0.06)';ctxR.lineWidth=1;ctxR.strokeRect(gx,gy,cs,cs);
+  }
+}
+
+function getCellAt(lx,ly){
+  var n=gridInfo.n,cs=gridInfo.cs,ox=gridInfo.ox,oy=gridInfo.oy,gap=gridInfo.gap;
+  for(var i=0;i<n*n;i++){
+    var gx=ox+(i%n)*(cs+gap),gy=oy+Math.floor(i/n)*(cs+gap);
+    if(lx>=gx&&lx<=gx+cs&&ly>=gy&&ly<=gy+cs)return i;
+  }
+  return -1;
+}
+
+function handleClick(clientX,clientY){
+  if(!running||answered)return;
+  var rect=cL.getBoundingClientRect();
+  var lx=(clientX-rect.left)/rect.width*BASE_W,ly=(clientY-rect.top)/rect.height*BASE_H;
+  var hit=getCellAt(lx,ly);if(hit<0)return;
+
+  answered=true;total++;
+  var isCorrect=(hit===oddIdx);
+
+  if(isCorrect){
+    correct++;score+=10;playCorrect();setMascot('celebrate');
+    document.getElementById('scoreHud').textContent='⭐'+score;
+    drawCellHighlight(hit,'rgba(249,168,37,0.7)');
+  }else{
+    playWrong();setMascot('worry');
+    drawCellHighlight(hit,'rgba(239,108,0,0.6)');
+    setTimeout(function(){drawCellHighlight(oddIdx,'rgba(56,142,60,0.7)')},600);
+  }
+  setTimeout(newRound,1600);
+}
+
+function drawCellHighlight(idx,color){
+  var n=gridInfo.n,cs=gridInfo.cs,ox=gridInfo.ox,oy=gridInfo.oy,gap=gridInfo.gap;
+  var gx=ox+(idx%n)*(cs+gap),gy=oy+Math.floor(idx/n)*(cs+gap);
+  [ctxL,ctxR].forEach(function(ctx){
+    ctx.strokeStyle=color;ctx.lineWidth=4;ctx.setLineDash([]);
+    ctx.strokeRect(gx-2,gy-2,cs+4,cs+4);
+  });
+}
+
+cR.addEventListener('pointerdown',function(e){e.preventDefault();handleClick(e.clientX,e.clientY)});
+cR.addEventListener('touchstart',function(e){e.preventDefault();for(var t of e.changedTouches)handleClick(t.clientX,t.clientY)},{passive:false});
+
+function newRound(){answered=false;drawGrid()}
+function setMascot(e){var img=document.getElementById('mascotImg');img.src='mascot/sunflower-'+e+'.png';img.onerror=function(){img.style.display='none'};img.onload=function(){img.style.display='block'}}
+function fmtTm(s){var m=Math.floor(s/60),sec=s%60;return m+':'+(sec<10?'0':'')+sec}
+function tick(){if(!running)return;timeLeft--;document.getElementById('timerHud').textContent=fmtTm(timeLeft);if(timeLeft<=30)document.getElementById('timerHud').style.color='#FFD54F';if(timeLeft<=0)endGame()}
+
+function startGame(){
+  initAudio();if(!audioCtx){var a=new(window.AudioContext||window.webkitAudioContext)();a.resume();audioCtx=a}
+  cfg=DIFFICULTY[currentDiff];score=0;correct=0;total=0;running=true;timeLeft=120;
+  document.getElementById('startOverlay').classList.add('hidden');document.getElementById('endOverlay').classList.add('hidden');
+  document.getElementById('scoreHud').style.display='inline';document.getElementById('scoreHud').textContent='⭐0';
+  document.getElementById('timerHud').style.display='inline';document.getElementById('timerHud').textContent='2:00';document.getElementById('timerHud').style.color='#fff';
+  setMascot('smile');timerId=setInterval(tick,1000);newRound();
+}
+function endGame(){
+  running=false;if(timerId){clearInterval(timerId);timerId=null}
+  document.getElementById('scoreHud').style.display='none';document.getElementById('timerHud').style.display='none';
+  var acc=total>0?Math.round(correct/total*100):0;
+  var grade=acc>=80?'🌻 双眼融合太棒了！':acc>=50?'💪 拼合感在进步！':'🌱 戴好眼镜双眼睁开！';
+  document.getElementById('endCard').innerHTML='<h2>训练结束</h2><div class="result-score">'+score+'</div><p>分</p><p>正确 '+correct+' / '+total+' · '+acc+'%</p><p style="font-size:16px;margin:8px 0">'+grade+'</p><div style="background:#FFF8E1;border:2px solid #FFE082;border-radius:14px;padding:12px;margin:12px 0;font-size:12px;color:#F57C00;line-height:1.6">👁 远眺2-5分钟休息<br>双眼训练每次≤15分钟</div><button class="btn-go" onclick="startGame()">再来一局</button><p style="margin-top:12px"><a href="index.html" style="color:var(--blue);font-size:13px;font-weight:600;text-decoration:none">← 返回首页</a></p>';
+  document.getElementById('endOverlay').classList.remove('hidden');
+  setMascot(acc>=80?'celebrate':acc>=50?'cheer':'smile');
+  _leSave('binocular-puzzle',{score:score,correct:correct,wrong:total-correct,difficulty:currentDiff,duration:120});
+  ctxL.fillStyle='#2a2a2a';ctxL.fillRect(0,0,BASE_W,BASE_H);ctxR.clearRect(0,0,BASE_W,BASE_H);
+}
+// ── 训练进度存档（自包含，与进度页共用 amblyopia_progress）──
+const _LE_KEY='amblyopia_progress';
+function _leToday(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function _leInit(){var r=localStorage.getItem(_LE_KEY);if(!r){var g={};['whack-a-mole','spot-difference','matching-game','maze-game','vernier-line','flash-spotter','chase-the-light','fly-swatter','zombie-whacker','schulte-grid','zombie-schulte-grid','dichoptic-dots','bubble-chase','fusion-color','blueberry-flash','crowding-breaker','gabor-orientation','aloe-detective','C1-E-contrast','find-fireflies','depth-pop','depth-order','stereo-match','binocular-puzzle'].forEach(function(id){g[id]={plays:0,bestScore:0,totalCorrect:0,totalWrong:0};});var p={version:1,totalPoints:0,streak:{current:0,best:0,lastDate:''},games:g,calendar:{},achievements:[],settings:{difficulties:{}}};localStorage.setItem(_LE_KEY,JSON.stringify(p));return p;}try{return JSON.parse(r);}catch(e){return null;}}
+function _leSave(id,data){var p=_leInit();if(!p)return;var g=p.games[id];if(!g)g=p.games[id]={plays:0,bestScore:0,totalCorrect:0,totalWrong:0};g.plays++;if(data.score>g.bestScore)g.bestScore=data.score;if(data.correct!==undefined)g.totalCorrect=(g.totalCorrect||0)+data.correct;if(data.wrong!==undefined)g.totalWrong=(g.totalWrong||0)+data.wrong;p.totalPoints+=(data.score||0);var t=_leToday();if(!p.calendar[t])p.calendar[t]={points:0,gamesPlayed:0,duration:0};p.calendar[t].points+=(data.score||0);p.calendar[t].gamesPlayed++;p.calendar[t].duration+=(data.duration||120);try{localStorage.setItem(_LE_KEY,JSON.stringify(p));}catch(e){}}
+
+document.querySelectorAll('#diffSelect .diff-btn').forEach(function(b){b.addEventListener('click',function(){
+  document.querySelectorAll('#diffSelect .diff-btn').forEach(function(x){x.classList.remove('active')});b.classList.add('active');
+  currentDiff=b.dataset.diff;cfg=DIFFICULTY[currentDiff];
+})});
+ctxL.fillStyle='#2a2a2a';ctxL.fillRect(0,0,BASE_W,BASE_H);
+</script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}</script>
+</body>
+</html>
