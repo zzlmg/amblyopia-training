@@ -32,13 +32,6 @@
 
 直接用浏览器打开 `index.html` 即可，无需构建、无需服务器。
 
-### 部署到 GitHub Pages
-
-1. 将本目录全部内容推送至 GitHub 仓库
-2. 仓库 Settings → Pages → 选择分支 `main` + 根目录（`/`）
-3. 保存后访问 `https://<用户名>.github.io/<仓库名>/`
-
-> `.nojekyll` 已包含，避免 Jekyll 处理；`start_url: "./"` 支持子路径部署。
 
 ### 安装为 APP（PWA）
 
